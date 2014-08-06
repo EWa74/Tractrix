@@ -15,7 +15,7 @@
 #
 #  ***** END GPL LICENSE BLOCK *****
 # Version: 100R
-# Next steps:  
+# Next steps:   
 
 # 
 
