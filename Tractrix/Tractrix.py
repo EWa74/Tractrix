@@ -80,7 +80,7 @@ def writelog(text=''):
     fout.write(localtime + " : " + str(text) + '\n')
     fout.close();
 
-
+ 
 class createMatrix(object):
     writelog('_____________________________________________________________________________')
     writelog('createMatrix')
