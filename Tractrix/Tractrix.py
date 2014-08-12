@@ -115,7 +115,7 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         # 1. Schleife von start_frame to end_frame
         int_fStart = bpy.data.scenes['Scene'].frame_start
         int_fStop = bpy.data.scenes['Scene'].frame_end
-        
+         
         int_Count = int_fStop-int_fStart
         
         for i in range(0,int_Count,1):
