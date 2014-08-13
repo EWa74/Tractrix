@@ -81,39 +81,55 @@ def writelog(text=''):
     fout.close();
 
 
-def tractrix3D(Traktor):
+def tractrix3D(Traktor, TrailerStartPos):
+    Mx = createMatrix(2,1)
+    My = createMatrix(2,1)
+    Mz = createMatrix(2,1)
+    Sx = createMatrix(2,1)
+    Sy = createMatrix(2,1)
+    Sz = createMatrix(2,1)
+    
+    T1 = 0
+    T2 = 1
+    Term1 = float()
+    
+    Sx[T1][0] = TrailerStartPos[0]
+    Sy[T1][0] = TrailerStartPos[1]
+    Sz[T1][0] = TrailerStartPos[2]
+    
+    int_Count = len(Traktor[0][:])
+    Trailer = createMatrix(int_Count,1)
+    Trailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
     
     # y0 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(G3-D3)+G3
     # y1 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(H3-E3)+H3
     # y2 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(I3-F3)+I3 
     #
     # mit DEF = Traktor(x,y,z) = M(x,y,z) und GHI = Trailer(x,y,z) = S(x,y,z) zum Zeitpunkt T1, T2
-    int_Count = len(Traktor[0][:])
+    int_Count = len(Traktor[:][:])
     
     for int_PCurve in range(1,int_Count,1):
         
         
         
-        [Mx[T1], My[T1], Mz[T1]] = [Traktor[int_PCurve][0], Traktor[int_PCurve][1], Traktor[int_PCurve][2]]
+        Mx[T1][0], My[T1][0], Mz[T1][0] = [Traktor[int_PCurve][0], Traktor[int_PCurve][1], Traktor[int_PCurve][2]]
+        Mx[T2][0], My[T2][0], Mz[T2][0] = [Traktor[int_PCurve+1][0], Traktor[int_PCurve+1][1], Traktor[int_PCurve+1][2]]
         
+        Term1 = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))*(Sx[T1][0]-Mx[T1][0])]
         
+        Sx[T2][0] = Term1[0] * (Sx[T1][0]-Mx[T1][0])+Sx[T1][0]
+        Sy[T2][0] = Term1[0] * (Sy[T1][0]-My[T1][0])+Sy[T1][0]
+        Sz[T2][0] = Term1[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0]
         
-        Term1 = ((Mx(T2)*Sx(T1)-Mx(T2)*Mx(T1)+Mx(T1)*Mx(T1)-Mx(T1)*Sx(T1))+(My(T2)*Sy(T1)-My(T2)*My(T1)+My(T1)*My(T1)-My(T1)*Sy(T1))+(Mz(T2)*Sz(T1)-Mz(T2)*Mz(T1)+Mz(T1)*Mz(T1)-Mz(T1)*Sz(T1)))*(Sx(T1)-Mx(T1))
+        Trailer[int_PCurve][0] = Sx[T2][0], Sx[T2][0], Sz[T2][0]
+        print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
         
-        
-        
-        Sx =Term1 *(Sx(T1)-Mx(T1))+Sx(T1)
-        Sy =Term1 *(Sy(T1)-My(T1))+Sy(T1)
-        Sz =Term1 *(Sz(T1)-Mz(T1))+Sz(T1)
-    
-    vec_Trailer3D = []
-    
-    return vec_Trailer3D
+    return Trailer
 
  
 class createMatrix(object):
-    writelog('_____________________________________________________________________________')
-    writelog('createMatrix')
+    #writelog('_____________________________________________________________________________')
+    #writelog('createMatrix')
     def __init__(self, rows, columns, default=0):
         self.m = []
         for i in range(rows):
@@ -144,7 +160,7 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         int_fMerker = bpy.data.scenes['Scene'].frame_current
         int_Curve = len(bpy.data.curves['NurbsPath'].splines[0].points)
         Traktor = createMatrix(int_Curve,3)
-        Trailer = Traktor
+        TrailerStartPos = bpy.data.objects['Trailer'].location
         
         # 1. Schleife von start_frame to end_frame
         int_fStart = bpy.data.scenes['Scene'].frame_start
@@ -161,10 +177,10 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         # Traktor-Nurbs errechnen
         # Beachte: ggf. später Koordinaten von local auf world transformieren
         for int_PCurve in range(0,int_Curve,1):
-            Traktor[int_PCurve][0:2] = [bpy.data.curves['NurbsPath'].splines[0].points[int_PCurve].co.x, bpy.data.curves['NurbsPath'].splines[0].points[int_PCurve].co.y, bpy.data.curves['NurbsPath'].splines[0].points[int_PCurve].co.z]
+            Traktor[int_PCurve][0:3] = [bpy.data.curves['NurbsPath'].splines[0].points[int_PCurve].co.x, bpy.data.curves['NurbsPath'].splines[0].points[int_PCurve].co.y, bpy.data.curves['NurbsPath'].splines[0].points[int_PCurve].co.z]
             print("Traktor"  + str(int_PCurve) + ": " + str(Traktor[int_PCurve]))
         print("Traktor" )
-        Trailer= tractrix3D(Traktor)
+        Trailer= tractrix3D(Traktor, TrailerStartPos)
        
        
        
