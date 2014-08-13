@@ -80,6 +80,36 @@ def writelog(text=''):
     fout.write(localtime + " : " + str(text) + '\n')
     fout.close();
 
+
+def tractrix3D(Traktor):
+    
+    # y0 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(G3-D3)+G3
+    # y1 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(H3-E3)+H3
+    # y2 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(I3-F3)+I3 
+    #
+    # mit DEF = Traktor(x,y,z) = M(x,y,z) und GHI = Trailer(x,y,z) = S(x,y,z) zum Zeitpunkt T1, T2
+    int_Count = len(Traktor[0][:])
+    
+    for int_PCurve in range(1,int_Count,1):
+        
+        
+        
+        [Mx[T1], My[T1], Mz[T1]] = [Traktor[int_PCurve][0], Traktor[int_PCurve][1], Traktor[int_PCurve][2]]
+        
+        
+        
+        Term1 = ((Mx(T2)*Sx(T1)-Mx(T2)*Mx(T1)+Mx(T1)*Mx(T1)-Mx(T1)*Sx(T1))+(My(T2)*Sy(T1)-My(T2)*My(T1)+My(T1)*My(T1)-My(T1)*Sy(T1))+(Mz(T2)*Sz(T1)-Mz(T2)*Mz(T1)+Mz(T1)*Mz(T1)-Mz(T1)*Sz(T1)))*(Sx(T1)-Mx(T1))
+        
+        
+        
+        Sx =Term1 *(Sx(T1)-Mx(T1))+Sx(T1)
+        Sy =Term1 *(Sy(T1)-My(T1))+Sy(T1)
+        Sz =Term1 *(Sz(T1)-Mz(T1))+Sz(T1)
+    
+    vec_Trailer3D = []
+    
+    return vec_Trailer3D
+
  
 class createMatrix(object):
     writelog('_____________________________________________________________________________')
@@ -111,27 +141,38 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     
     def execute(self, context):  
         
-        i= 0
+        int_fMerker = bpy.data.scenes['Scene'].frame_current
+        int_Curve = len(bpy.data.curves['NurbsPath'].splines[0].points)
+        Traktor = createMatrix(int_Curve,3)
+        Trailer = Traktor
+        
         # 1. Schleife von start_frame to end_frame
         int_fStart = bpy.data.scenes['Scene'].frame_start
         int_fStop = bpy.data.scenes['Scene'].frame_end
           
         int_Count = int_fStop-int_fStart
         
-        for i in range(0,int_Count,1):
-            print("int_fcurrent: " + str(i))
-            bpy.data.scenes['Scene'].frame_current= i
+        for int_fcurrent in range(1,int_Count,1):
+            print("int_fcurrent: " + str(int_fcurrent))
+            bpy.data.scenes['Scene'].frame_current= int_fcurrent
             
-        
-        #bpy.data.scenes['Scene'].frame_current
-        
-        
-        # 1.1 Position von Traktor in Abh.keit vom aktuellen frame
-        # 1.2 Traxtrix-Funktion fuettern
-        # 1.3-a entweder Keyframe für jedes Frame des Trailers setzen
-        # 1.3-b nur die Nurbspath Koordinaten nutzen und eine Trailer-Nurbs auf Basis der 
+        #Loesungsweg A):
+        # B1 Die Nurbspath Koordinaten nutzen und eine Trailer-Nurbs auf Basis der 
         # Traktor-Nurbs errechnen
+        # Beachte: ggf. später Koordinaten von local auf world transformieren
+        for int_PCurve in range(0,int_Curve,1):
+            Traktor[int_PCurve][0:2] = [bpy.data.curves['NurbsPath'].splines[0].points[int_PCurve].co.x, bpy.data.curves['NurbsPath'].splines[0].points[int_PCurve].co.y, bpy.data.curves['NurbsPath'].splines[0].points[int_PCurve].co.z]
+            print("Traktor"  + str(int_PCurve) + ": " + str(Traktor[int_PCurve]))
+        print("Traktor" )
+        Trailer= tractrix3D(Traktor)
        
+       
+       
+        #Loesungsweg B):
+        # B1.1 Position von Traktor in Abh.keit vom aktuellen frame bestimmen (-> local2world transformation -> Kuka -> get_absolute())
+        # und die Traxtrix-Funktion fuettern. 
+        # für (jeden?) Frame des Traktors ein Keyframe für den Trailers setzen
+        
        
        
         #Traktor = bpy.data.objects['Obj1']      
@@ -141,9 +182,9 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         #locID, rotID = FindFCurveID(Traktor, action)
         #action.fcurves[locID[0]].keyframe_points[0].co      
         
-        #bpy.data.curves[objCurve.name].splines
+        #
         
-        #get_absolute()
+        bpy.data.scenes['Scene'].frame_current = int_fMerker
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
        
