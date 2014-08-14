@@ -97,7 +97,7 @@ def tractrix3D(Traktor, TrailerStartPos):
     Sy[T1][0] = TrailerStartPos[1]
     Sz[T1][0] = TrailerStartPos[2]
     
-    int_Count = len(Traktor[0][:])
+    int_Count = len(Traktor[:][:])
     Trailer = createMatrix(int_Count,1)
     Trailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
     
@@ -106,7 +106,7 @@ def tractrix3D(Traktor, TrailerStartPos):
     # y2 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(I3-F3)+I3 
     #
     # mit DEF = Traktor(x,y,z) = M(x,y,z) und GHI = Trailer(x,y,z) = S(x,y,z) zum Zeitpunkt T1, T2
-    int_Count = len(Traktor[:][:])
+    
     
     for int_PCurve in range(1,int_Count,1):
         
@@ -123,6 +123,10 @@ def tractrix3D(Traktor, TrailerStartPos):
         
         Trailer[int_PCurve][0] = Sx[T2][0], Sx[T2][0], Sz[T2][0]
         print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
+        
+        Sx[T1][0] = deepcopy(Sx[T2][0])
+        Sy[T1][0] = deepcopy(Sy[T2][0])
+        Sz[T1][0] = deepcopy(Sz[T2][0])
         
     return Trailer
 
