@@ -108,7 +108,7 @@ def tractrix3D(Traktor, TrailerStartPos):
     # mit DEF = Traktor(x,y,z) = M(x,y,z) und GHI = Trailer(x,y,z) = S(x,y,z) zum Zeitpunkt T1, T2
     
     
-    for int_PCurve in range(1,int_Count,1):
+    for int_PCurve in range(1,int_Count-1,1):
         
         
         
@@ -121,7 +121,7 @@ def tractrix3D(Traktor, TrailerStartPos):
         Sy[T2][0] = Term1[0] * (Sy[T1][0]-My[T1][0])+Sy[T1][0]
         Sz[T2][0] = Term1[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0]
         
-        Trailer[int_PCurve][0] = Sx[T2][0], Sx[T2][0], Sz[T2][0]
+        Trailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
         print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
         
         Sx[T1][0] = deepcopy(Sx[T2][0])
@@ -162,9 +162,10 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     def execute(self, context):  
         
         int_fMerker = bpy.data.scenes['Scene'].frame_current
-        int_Curve = len(bpy.data.curves['NurbsPath'].splines[0].points)
+        int_Curve = len(bpy.data.curves['NurbsPath_Traktor'].splines[0].points)
         Traktor = createMatrix(int_Curve,3)
-        TrailerStartPos = bpy.data.objects['Trailer'].location
+        TrailerStartPos = [bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.x, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.y, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.z]
+        #bpy.data.objects['Trailer'].location
         
         # 1. Schleife von start_frame to end_frame
         int_fStart = bpy.data.scenes['Scene'].frame_start
@@ -181,11 +182,36 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         # Traktor-Nurbs errechnen
         # Beachte: ggf. später Koordinaten von local auf world transformieren
         for int_PCurve in range(0,int_Curve,1):
-            Traktor[int_PCurve][0:3] = [bpy.data.curves['NurbsPath'].splines[0].points[int_PCurve].co.x, bpy.data.curves['NurbsPath'].splines[0].points[int_PCurve].co.y, bpy.data.curves['NurbsPath'].splines[0].points[int_PCurve].co.z]
+            Traktor[int_PCurve][0:3] = [bpy.data.curves['NurbsPath_Traktor'].splines[0].points[int_PCurve].co.x, bpy.data.curves['NurbsPath_Traktor'].splines[0].points[int_PCurve].co.y, bpy.data.curves['NurbsPath_Traktor'].splines[0].points[int_PCurve].co.z]
             print("Traktor"  + str(int_PCurve) + ": " + str(Traktor[int_PCurve]))
         print("Traktor" )
         Trailer= tractrix3D(Traktor, TrailerStartPos)
-       
+        
+        for int_PCurve in range(0,int_Curve-1,1):
+            [bpy.data.curves['NurbsPath_Trailer'].splines[0].points[int_PCurve].co.x, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[int_PCurve].co.y, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
+            print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
+        print("Trailer" )
+        
+        # Set Objects to curve
+        
+        # parenting lösen, Obj positionieren, follow path wieder herstellen:
+        
+        ClearParenting(bpy.data.objects['NurbsPath_Trailer'],bpy.data.objects['Trailer'] )
+        ClearParenting(bpy.data.objects['NurbsPath_Traktor'],bpy.data.objects['Traktor'] )
+        
+        bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
+        bpy.data.objects['Trailer'].location, bpy.data.objects['Trailer'].rotation_euler = get_absolute(Vector(Trailer[0][0]), (0,0,0), bpy.data.objects['NurbsPath_Trailer'])
+        bpy.data.objects['Traktor'].location, bpy.data.objects['Traktor'].rotation_euler = get_absolute(Vector(Traktor[0]), (0,0,0), bpy.data.objects['NurbsPath_Traktor'])
+         
+        # todo: parenting
+        # Erg. pruefen
+        #Parenting(bpy.data.objects['NurbsPath_Trailer'],bpy.data.objects['Trailer'] )
+        #Parenting(bpy.data.objects['NurbsPath_Traktor'],bpy.data.objects['Traktor'] )
+        
+        
+        
+        #bpy.data.objects['Traktor'].location = Traktor[0] 
+        #todo: code cleaning
        
        
         #Loesungsweg B):
@@ -208,11 +234,40 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
        
+def Parenting(Mother, Child):
+    
+    # nach dem Skalieren wird das Parenting wieder hergestellt:
+    
+    # Deselect alle Objekte und in Objekte in richtiger Reihenfolge auswählen
+    bpy.ops.object.select_all(action='DESELECT')
+    Child.select= True
+    Mother.select = True
+    # Parenting wieder herstellen    
+    bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=False)
+    #bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
+    bpy.ops.object.select_all(action='DESELECT')
+    #Mother.select = True
+    
+    
+    
+def ClearParenting(Mother, Child):
+    
+    # - Deselect alle Objekte und in Objekte in richtiger Reihenfolge auswählen
+    bpy.ops.object.select_all(action='DESELECT')
+    Child.select= True
+    Mother.select = True
+    # - Parenting lösen    
+    bpy.ops.object.parent_clear(type='CLEAR') # CLEAR_KEEP_TRANSFORM
+    # - deselect all objects
+    bpy.ops.object.select_all(action='DESELECT')
+    # - Kurve selektieren
+    #Mother.select = True
 
-   
 
 
-def get_absolute(Obj_Koord, Obj_Angle, BASEPos_Koord, BASEPos_Angle):
+def get_absolute(Obj_Koord, Obj_Angle, objBase):
+    BASEPos_Koord = objBase.location
+    BASEPos_Angle = objBase.rotation_euler
     # Obj_Koord und Obj_Angle sind lokale Angaben bezogen auf Base
     # Aufruf bei Import
     # Obj_Koord, Obj_Angle [rad]: relativ
