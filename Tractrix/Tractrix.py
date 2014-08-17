@@ -18,8 +18,13 @@
 #  ***** END GPL LICENSE BLOCK *****
 # Version: 100R
 # Next steps:    
-
-# 
+# - Code Cleaning
+# - Laenge der Slave-Kurve automatisch anpassen
+# - Pruefung ob das Ergebnis des Trailers noch sinnvoll ist (Astand zum Traktor, delta Weg (-> proportional zu delta T)
+# - Parenting
+# - Menuefuehrung (Kurve auswählen, Objetk auswählen)
+# - Import/ Export
+# - Erbegnis "baken"
 
 
 '''
@@ -38,7 +43,7 @@ bl_info = {
     "api": 36147,
     "location": "View3D >Objects > Tractrix",
     "category": "Curve",
-    "description": "Calculate Tractrix for Trailer Object from Tractor Objekt.",
+    "description": "Calculate Tractrix for Trailer Object from Tractor Object.",
     "warning": "",
     "wiki_url": "http://...",
     "tracker_url": "http://..."
@@ -199,17 +204,29 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         
         ClearParenting(bpy.data.objects['NurbsPath_Trailer'],bpy.data.objects['Trailer'] )
         ClearParenting(bpy.data.objects['NurbsPath_Traktor'],bpy.data.objects['Traktor'] )
+        ClearParenting(bpy.data.objects['NurbsPath_Trailer'],bpy.data.objects['NurbsPath_Traktor'] )
+        ClearParenting(bpy.data.objects['Trailer'],bpy.data.objects['Traktor'] )
         
         bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
         bpy.data.objects['Trailer'].location, bpy.data.objects['Trailer'].rotation_euler = get_absolute(Vector(Trailer[0][0]), (0,0,0), bpy.data.objects['NurbsPath_Trailer'])
         bpy.data.objects['Traktor'].location, bpy.data.objects['Traktor'].rotation_euler = get_absolute(Vector(Traktor[0]), (0,0,0), bpy.data.objects['NurbsPath_Traktor'])
          
         # todo: parenting
-        # Erg. pruefen
-        #Parenting(bpy.data.objects['NurbsPath_Trailer'],bpy.data.objects['Trailer'] )
-        #Parenting(bpy.data.objects['NurbsPath_Traktor'],bpy.data.objects['Traktor'] )
+        '''
+        bpy.ops.object.select_all(action='DESELECT')
+        bpy.data.objects['NurbsPath_Trailer'].select= True
+        bpy.data.objects['Trailer'].select = True
+        bpy.context.scene.objects.active = bpy.data.objects['NurbsPath_Trailer']   
+        bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
+        bpy.ops.object.select_all(action='DESELECT')
         
-        
+        bpy.ops.object.select_all(action='DESELECT')
+        bpy.data.objects['NurbsPath_Traktor'].select= True
+        bpy.data.objects['Traktor'].select = True
+        bpy.context.scene.objects.active = bpy.data.objects['NurbsPath_Traktor']   
+        bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
+        bpy.ops.object.select_all(action='DESELECT')
+        '''
         
         #bpy.data.objects['Traktor'].location = Traktor[0] 
         #todo: code cleaning
@@ -234,22 +251,19 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         bpy.data.scenes['Scene'].frame_current = int_fMerker
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
-       
+
+
 def Parenting(Mother, Child):
     
-    # nach dem Skalieren wird das Parenting wieder hergestellt:
-    
-    # Deselect alle Objekte und in Objekte in richtiger Reihenfolge auswählen
     bpy.ops.object.select_all(action='DESELECT')
-    Child.select= True
-    Mother.select = True
+    bpy.data.objects[Mother].select= True
+    bpy.data.objects[Child].select = True
+    bpy.context.scene.objects.active = bpy.data.objects[Mother]
     # Parenting wieder herstellen    
-    bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=False)
+    bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
     #bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
     bpy.ops.object.select_all(action='DESELECT')
-    #Mother.select = True
-    
-    
+
     
 def ClearParenting(Mother, Child):
     
@@ -263,7 +277,6 @@ def ClearParenting(Mother, Child):
     bpy.ops.object.select_all(action='DESELECT')
     # - Kurve selektieren
     #Mother.select = True
-
 
 
 def get_absolute(Obj_Koord, Obj_Angle, objBase):
@@ -321,43 +334,7 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
        
     return Vtrans_abs, rotEuler
 
-def FindFCurveID(objEmpty_A6, action):
-    writelog('_____________________________________________________________________________')
-    writelog('FindFCurveID')
    
-    #ob_target = objEmpty_A6
-    # todo: Unklar: mehrere Actions moeglich?! -> fuehrt ggf. zu einer Liste als Rueckgabewert:
-    
-    writelog(action.name)
-    
-    locID  =[9999, 9999, 9999]
-    rotID  =[9999, 9999, 9999, 9999]
-    scaleID=[9999, 9999, 9999]
-    dlocID =[9999, 9999, 9999]
-         
-    action_data =action.fcurves
-    writelog(action_data)
-    
-    for v,action_data in enumerate(action_data):
-        if action_data.data_path == "location":
-            locID[action_data.array_index] = v
-            #ob_target.delta_location[action_data.array_index]=v
-            writelog("location[" + str(action_data.array_index) + "] to (" + str(v) + ").")
-        elif action_data.data_path == "rotation_quaternion":
-            rotID[action_data.array_index] = v
-            #ob_target.delta_rotation_euler[action_data.array_index]=v
-            writelog("rotation_quaternion[" + str(action_data.array_index) + "] to (" + str(v) + ").")
-        elif action_data.data_path == "scale":
-            scaleID[action_data.array_index] = v
-            #ob_target.delta_scale[action_data.array_index]=v
-            writelog("scale[" + str(action_data.array_index) + "] to (" + str(v) + ").")
-        elif action_data.data_path == "delta_location":
-            dlocID[action_data.array_index] = v
-            #ob_target.delta_scale[action_data.array_index]=v
-            writelog("delta_location[" + str(action_data.array_index) + "] to (" + str(v) + ").")
-        else:
-            writelog("Unsupported data_path [" + action_data.data_path + "].")
-    
       
 class Tractrx_PT_Panel(bpy.types.Panel):
     writelog('_____________________________________________________________________________')
