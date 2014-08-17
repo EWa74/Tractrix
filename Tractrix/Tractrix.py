@@ -91,7 +91,7 @@ def tractrix3D(Traktor, TrailerStartPos):
     
     T1 = 0
     T2 = 1
-    Term1 = float()
+    Term = float()
     
     Sx[T1][0] = TrailerStartPos[0]
     Sy[T1][0] = TrailerStartPos[1]
@@ -108,18 +108,19 @@ def tractrix3D(Traktor, TrailerStartPos):
     # mit DEF = Traktor(x,y,z) = M(x,y,z) und GHI = Trailer(x,y,z) = S(x,y,z) zum Zeitpunkt T1, T2
     
     
-    for int_PCurve in range(1,int_Count-1,1):
+    for int_PCurve in range(0,int_Count-1,1):
         
         
         
         Mx[T1][0], My[T1][0], Mz[T1][0] = [Traktor[int_PCurve][0], Traktor[int_PCurve][1], Traktor[int_PCurve][2]]
         Mx[T2][0], My[T2][0], Mz[T2][0] = [Traktor[int_PCurve+1][0], Traktor[int_PCurve+1][1], Traktor[int_PCurve+1][2]]
         
-        Term1 = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))*(Sx[T1][0]-Mx[T1][0])]
-        
-        Sx[T2][0] = Term1[0] * (Sx[T1][0]-Mx[T1][0])+Sx[T1][0]
-        Sy[T2][0] = Term1[0] * (Sy[T1][0]-My[T1][0])+Sy[T1][0]
-        Sz[T2][0] = Term1[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0]
+        # Term =((D4       *G3       -D4       *D3       +D3       *D3       -D3       *G3       )+(E4       *H3       -E4       *E3       +E3       *E3       -E3       *H3       )+(F4       *I3       -F4       *F3       +F3       *F3       -F3       *I3       ))
+        Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
+        print("Term : " + str(Term))
+        Sx[T2][0] = Term[0] * (Sx[T1][0]-Mx[T1][0])+Sx[T1][0]
+        Sy[T2][0] = Term[0] * (Sy[T1][0]-My[T1][0])+Sy[T1][0]
+        Sz[T2][0] = Term[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0]
         
         Trailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
         print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
