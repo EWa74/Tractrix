@@ -86,7 +86,10 @@ def writelog(text=''):
     fout.close();
 
 
-def tractrix3D(Traktor, TrailerStartPos):
+def Hundekurve3D(Traktor, TrailerStartPos):
+    
+    # ACHTUNG: Abstand NICHT konstant! Damit KEINE Tractrix (-> Hundekurve)
+    
     Mx = createMatrix(2,1)
     My = createMatrix(2,1)
     Mz = createMatrix(2,1)
@@ -126,6 +129,136 @@ def tractrix3D(Traktor, TrailerStartPos):
         Sx[T2][0] = Term[0] * (Sx[T1][0]-Mx[T1][0])+Sx[T1][0]
         Sy[T2][0] = Term[0] * (Sy[T1][0]-My[T1][0])+Sy[T1][0]
         Sz[T2][0] = Term[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0]
+        
+        Trailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
+        
+        Sx[T1][0] = deepcopy(Sx[T2][0])
+        Sy[T1][0] = deepcopy(Sy[T2][0])
+        Sz[T1][0] = deepcopy(Sz[T2][0])
+        
+    return Trailer
+
+def tractrix3D(Traktor, TrailerStartPos):
+    
+    # ACHTUNG: Abstand NICHT konstant! Damit KEINE Tractrix (-> Hundekurve)
+    # todo: Ergebnis 'seltsam'.....
+    
+    Mx = createMatrix(2,1)
+    My = createMatrix(2,1)
+    Mz = createMatrix(2,1)
+    Sx = createMatrix(2,1)
+    Sy = createMatrix(2,1)
+    Sz = createMatrix(2,1)
+    
+    T1 = 0
+    T2 = 1
+    Term = float()
+    
+    Sx[T1][0] = TrailerStartPos[0]
+    Sy[T1][0] = TrailerStartPos[1]
+    Sz[T1][0] = TrailerStartPos[2]
+    
+    int_Count = len(Traktor[:][:])
+    Trailer = createMatrix(int_Count,1)
+    Trailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
+    
+    
+    # y0 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(D5-G5)+G5
+    # y1 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(E5-H5)+H5
+    # y2 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(f5-g5)+i5
+    
+    #
+    # mit DEF = Traktor(x,y,z) = M(x,y,z) und GHI = Trailer(x,y,z) = S(x,y,z) zum Zeitpunkt T1, T2
+    
+    
+    for int_PCurve in range(0,int_Count-1,1):
+        
+        Mx[T1][0], My[T1][0], Mz[T1][0] = [Traktor[int_PCurve][0], Traktor[int_PCurve][1], Traktor[int_PCurve][2]]
+        Mx[T2][0], My[T2][0], Mz[T2][0] = [Traktor[int_PCurve+1][0], Traktor[int_PCurve+1][1], Traktor[int_PCurve+1][2]]
+        
+        # Schleppkurve V1 - Term = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)
+        # math.pow(PathPointA[i], 2)
+        
+        Term = ((Mx[T2][0]-Mx[T1][0])*(Mx[T1][0]-Sx[T1][0])+(My[T2][0]-My[T1][0])*(My[T1][0]-Sy[T1][0]))/math.pow((Mx[T1][0]-Sy[T1][0]),2)+ math.pow((My[T1][0]-Sy[T1][0]),2)
+        
+        
+        # Hundekurve - Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
+        print("Term : " + str(Term))
+        
+        # y0 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(D5-G5)+G5
+    # y1 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(E5-H5)+H5
+    # y2 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(f5-i5)+i5
+    
+        Sx[T2][0] = Term * (Mx[T1][0]-Sx[T1][0])+Sx[T1][0] # *(D5-G5)+G5
+        Sy[T2][0] = Term * (My[T1][0]-Sy[T1][0])+Sy[T1][0] # *(E5-H5)+H5
+        Sz[T2][0] = Term * (Mz[T1][0]-Sz[T1][0])+Sz[T1][0] # *(f5-i5)+i5
+        
+        Trailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
+        
+        Sx[T1][0] = deepcopy(Sx[T2][0])
+        Sy[T1][0] = deepcopy(Sy[T2][0])
+        Sz[T1][0] = deepcopy(Sz[T2][0])
+        
+    return Trailer
+
+
+def tractrix3Dinv(Traktor, TrailerStartPos):
+    
+    # ACHTUNG: Abstand NICHT konstant! Damit KEINE Tractrix (-> Hundekurve)
+    # under constr...
+    
+    Mx = createMatrix(2,1)
+    My = createMatrix(2,1)
+    Mz = createMatrix(2,1)
+    Sx = createMatrix(2,1)
+    Sy = createMatrix(2,1)
+    Sz = createMatrix(2,1)
+    
+    T1 = 0
+    T2 = 1
+    Term = float()
+    
+    Sx[T1][0] = TrailerStartPos[0]
+    Sy[T1][0] = TrailerStartPos[1]
+    Sz[T1][0] = TrailerStartPos[2]
+    
+    int_Count = len(Traktor[:][:])
+    Trailer = createMatrix(int_Count,1)
+    Trailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
+      
+    # y0 = D5+($B$5/((((E5-E4)/(D5-D4))^2+1)^0.5))
+    # y1 = E5+($B$5*(E5-E4)/((D5-D4)*(((E5-E4)/(D5-D4))^2+1)^0.5))
+    # mit B5 = d = Abstand Traktor/Trailer
+    
+    # mit DEF = Traktor(x,y,z) = M(x,y,z) und GHI = Trailer(x,y,z) = S(x,y,z) zum Zeitpunkt T1, T2
+    
+    
+    for int_PCurve in range(0,int_Count-1,1):
+        
+        Mx[T1][0], My[T1][0], Mz[T1][0] = [Traktor[int_PCurve][0], Traktor[int_PCurve][1], Traktor[int_PCurve][2]]
+        Mx[T2][0], My[T2][0], Mz[T2][0] = [Traktor[int_PCurve+1][0], Traktor[int_PCurve+1][1], Traktor[int_PCurve+1][2]]
+        
+        # Schleppkurve V1 - Term = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)
+        # math.pow(PathPointA[i], 2)
+        
+        # todo....
+        # ((E5-E4)/(D5-D4))^2+1)^0.5)  
+        Term = math.pow(((math.pow( (E5-E4)/(D5-D4) ),2)+1),0.5)
+        Term = ((Mx[T2][0]-Mx[T1][0])*(Mx[T1][0]-Sx[T1][0])+(My[T2][0]-My[T1][0])*(My[T1][0]-Sy[T1][0]))/math.pow((Mx[T1][0]-Sy[T1][0]),2)+ math.pow((My[T1][0]-Sy[T1][0]),2)
+        
+        
+        # Hundekurve - Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
+        print("Term : " + str(Term))
+        
+        # y0 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(D5-G5)+G5
+    # y1 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(E5-H5)+H5
+    # y2 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(f5-i5)+i5
+    
+        Sx[T2][0] = Term * (Mx[T1][0]-Sx[T1][0])+Sx[T1][0] # *(D5-G5)+G5
+        Sy[T2][0] = Term * (My[T1][0]-Sy[T1][0])+Sy[T1][0] # *(E5-H5)+H5
+        Sz[T2][0] = Term * (Mz[T1][0]-Sz[T1][0])+Sz[T1][0] # *(f5-i5)+i5
         
         Trailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
         print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
