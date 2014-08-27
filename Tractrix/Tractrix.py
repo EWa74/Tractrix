@@ -85,8 +85,8 @@ def writelog(text=''):
     fout.write(localtime + " : " + str(text) + '\n')
     fout.close();
 
-
 def Hundekurve3D(Traktor, TrailerStartPos):
+
     
     # ACHTUNG: Abstand NICHT konstant! Damit KEINE Tractrix (-> Hundekurve)
     
@@ -139,7 +139,7 @@ def Hundekurve3D(Traktor, TrailerStartPos):
         
     return Trailer
 
-def tractrix3D(Traktor, TrailerStartPos):
+def XXtractrix3D(Traktor, TrailerStartPos):
     
     # ACHTUNG: Abstand NICHT konstant! Damit KEINE Tractrix (-> Hundekurve)
     # todo: Ergebnis 'seltsam'.....
@@ -187,8 +187,8 @@ def tractrix3D(Traktor, TrailerStartPos):
         print("Term : " + str(Term))
         
         # y0 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(D5-G5)+G5
-    # y1 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(E5-H5)+H5
-    # y2 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(f5-i5)+i5
+        # y1 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(E5-H5)+H5
+        # y2 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(f5-i5)+i5
     
         Sx[T2][0] = Term * (Mx[T1][0]-Sx[T1][0])+Sx[T1][0] # *(D5-G5)+G5
         Sy[T2][0] = Term * (My[T1][0]-Sy[T1][0])+Sy[T1][0] # *(E5-H5)+H5
@@ -204,8 +204,8 @@ def tractrix3D(Traktor, TrailerStartPos):
     return Trailer
 
 
-def tractrix3Dinv(Traktor, TrailerStartPos):
-    
+#def tractrix3Dinv(Traktor, TrailerStartPos):
+def tractrix3D(Traktor, TrailerStartPos):    
     # ACHTUNG: Abstand NICHT konstant! Damit KEINE Tractrix (-> Hundekurve)
     # under constr...
     
@@ -224,6 +224,8 @@ def tractrix3Dinv(Traktor, TrailerStartPos):
     Sy[T1][0] = TrailerStartPos[1]
     Sz[T1][0] = TrailerStartPos[2]
     
+    d = math.sqrt(math.pow((Mx[T1][0]-Sx[T1][0]),2) + math.pow((My[T1][0]-Sy[T1][0]),2)+ math.pow((Mz[T1][0]-Sz[T1][0]),2))
+    
     int_Count = len(Traktor[:][:])
     Trailer = createMatrix(int_Count,1)
     Trailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
@@ -240,25 +242,25 @@ def tractrix3Dinv(Traktor, TrailerStartPos):
         Mx[T1][0], My[T1][0], Mz[T1][0] = [Traktor[int_PCurve][0], Traktor[int_PCurve][1], Traktor[int_PCurve][2]]
         Mx[T2][0], My[T2][0], Mz[T2][0] = [Traktor[int_PCurve+1][0], Traktor[int_PCurve+1][1], Traktor[int_PCurve+1][2]]
         
-        # Schleppkurve V1 - Term = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)
+        # Schleppkurve V2 - Term = ((E5-E4)/(D5-D4))^2+1)^0.5)
         # math.pow(PathPointA[i], 2)
         
         # todo....
-        # ((E5-E4)/(D5-D4))^2+1)^0.5)  
-        Term = math.pow(((math.pow( (E5-E4)/(D5-D4) ),2)+1),0.5)
-        Term = ((Mx[T2][0]-Mx[T1][0])*(Mx[T1][0]-Sx[T1][0])+(My[T2][0]-My[T1][0])*(My[T1][0]-Sy[T1][0]))/math.pow((Mx[T1][0]-Sy[T1][0]),2)+ math.pow((My[T1][0]-Sy[T1][0]),2)
-        
+        #   
+               
+        Term = math.pow((math.pow( (My[T2][0]-My[T1][0])/(Mx[T2][0]-Mx[T1][0]),2)+1),0.5)
         
         # Hundekurve - Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
         print("Term : " + str(Term))
         
-        # y0 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(D5-G5)+G5
-    # y1 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(E5-H5)+H5
-    # y2 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(f5-i5)+i5
+        # y0 = D5+($B$5/(term)
+        # 
+        # y1 = E5+($B$5*(E5-E4)/((D5-D4)*Term)
+        #
     
-        Sx[T2][0] = Term * (Mx[T1][0]-Sx[T1][0])+Sx[T1][0] # *(D5-G5)+G5
-        Sy[T2][0] = Term * (My[T1][0]-Sy[T1][0])+Sy[T1][0] # *(E5-H5)+H5
-        Sz[T2][0] = Term * (Mz[T1][0]-Sz[T1][0])+Sz[T1][0] # *(f5-i5)+i5
+        Sx[T2][0] = Mx[T2][0] + d / Term  # 
+        Sy[T2][0] = My[T2][0] + d * ((My[T2][0]-My[T1][0]) / ((Mx[T2][0]-Mx[T1][0])*Term))
+        Sz[T2][0] = Sz[T1][0] # 
         
         Trailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
         print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
@@ -296,8 +298,13 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  
     #                                  parameters of this operator interactively 
     #                                  (in the Tools pane) 
-
+    tractrixname='1'
     
+    def __init__(self, tractrixname): 
+        self.tractrixname = tractrixname 
+        #self.salary = salary 
+        #Tractrix_OT_Main.empCount += 1 
+      
     def execute(self, context):  
         
         int_fMerker = bpy.data.scenes['Scene'].frame_current
@@ -324,7 +331,11 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
             Traktor[int_PCurve][0:3] = [bpy.data.curves['NurbsPath_Traktor'].splines[0].points[int_PCurve].co.x, bpy.data.curves['NurbsPath_Traktor'].splines[0].points[int_PCurve].co.y, bpy.data.curves['NurbsPath_Traktor'].splines[0].points[int_PCurve].co.z]
             print("Traktor"  + str(int_PCurve) + ": " + str(Traktor[int_PCurve]))
         print("Traktor" )
-        Trailer= tractrix3D(Traktor, TrailerStartPos)
+        
+        if self.tractrixname =='1':
+            Trailer= tractrix3D(Traktor, TrailerStartPos)
+        
+        
         
         for int_PCurve in range(0,int_Curve-1,1):
             [bpy.data.curves['NurbsPath_Trailer'].splines[0].points[int_PCurve].co.x, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[int_PCurve].co.y, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
@@ -469,10 +480,10 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
 
    
       
-class Tractrx_PT_Panel(bpy.types.Panel):
+class Tractrix_PT_Panel(bpy.types.Panel):
     writelog('_____________________________________________________________________________')
     writelog()
-    writelog('Tractrx_PT_Panel....')
+    writelog('Tractrix_PT_Panel....')
     writelog()
     """Creates a Panel in the scene context of the properties editor"""
     bl_label = "Tractrix Panel" # heading of panel
@@ -500,21 +511,26 @@ class Tractrx_PT_Panel(bpy.types.Panel):
     def draw(self, context):
         
         ob = context.object
-        
         layout = self.layout
-
         scene = context.scene
-        
-        
-        # Import Button:
-        
-        layout.label(text="object.tractrix:")
         row = layout.row(align=True)
         
-        row.operator("object.tractrix")  
+        # Create two columns, by using a split layout.
+        split = layout.split()
+
+        # First column
+        col = split.column()
+        col.label(text="Schleppkurven:")
+        
+        # Import Button:
+        col.operator("object.tractrix", text="Traktrix-Traktor-Leitkuve v const.")
+        col.operator("object.tractrix", text="Hundekurve")
+        
+        col.operator("object.tractrix", text="Traktrix-Traktor-Leitkurve d const")
+        col.operator("object.tractrix", text="Traktrix-Trailer-Leitkurve d const")
         
            
-    writelog('Tractrx_PT_Panel done')
+    writelog('Tractrix_PT_Panel done')
     writelog('_____________________________________________________________________________')
 
 
@@ -533,11 +549,11 @@ class Tractrx_PT_Panel(bpy.types.Panel):
 #--- ### Register
 #ToDo: KUKA Operator nicht regestriert....
 def register():
-    bpy.utils.register_class(Tractrx_PT_Panel)  
+    bpy.utils.register_class(Tractrix_PT_Panel)  
     register_module(__name__)
     
 def unregister():
-    bpy.utils.unregister_class(Tractrx_PT_Panel) 
+    bpy.utils.unregister_class(Tractrix_PT_Panel) 
     unregister_module(__name__)
 
 #--- ### Main code    
