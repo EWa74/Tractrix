@@ -298,7 +298,7 @@ class Tractrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  
     #                                  parameters of this operator interactively 
     #                                  (in the Tools pane) 
-    tractrixname='1'
+    tractrixname='1' 
     
     def __init__(self, tractrixname): 
         self.tractrixname = tractrixname 
