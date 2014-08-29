@@ -424,7 +424,7 @@ def tractrix3D(Traktor, TrailerStartPos):
 
 def tractrix3Dinv(Traktor, TrailerStartPos):
     # Leipnitzschule Hannover Schleppkurve 2D
-    # Abstand konstant
+    # Abstand konstant 
     
     # ACHTUNG: Leitkurve ist Trailer; Traktor wird berechnet
     # under constr...
