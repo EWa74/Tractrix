@@ -129,10 +129,10 @@ class Tractrix_PT_Panel(bpy.types.Panel):
         col.label(text="Schleppkurven:")
         
         # Import Button:
-        col.operator("object.hundekurve", text="Hundekurve")
-        col.operator("object.tractrix3d", text="Traktrix-Traktor-Leitkuve v const.")
-        col.operator("object.tractrix3dinv", text="Traktrix-Traktor-Leitkurve d const")
-        col.operator("object.tractrix3dtbd", text="Traktrix-Trailer-Leitkurve d const")
+        col.operator("object.hundekurve", text="Hundekurve [OK]")
+        col.operator("object.tractrix3d", text="3D Traktrix-Traktor-Leitkuve v const.[ongoing]")
+        col.operator("object.tractrix3dinv", text="2D Traktrix-Traktor-Leitkurve d const[ongoing]")
+        col.operator("object.tractrix3dtbd", text="tbd...")
         
            
     writelog('Tractrix_PT_Panel done')
@@ -233,7 +233,7 @@ class Hundekurve_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     
     
 class Tractrix3d_OT_Main (bpy.types.Operator): # OT fuer Operator Type
-   
+    # Arbeitsblatt 'Gewoehnliche DGL'
     bl_idname = "object.tractrix3d"
     bl_label = "Tractrix_OT_Main (TB)" #Toolbar - Label
     bl_description = "Calculate Tractrix for Trailer Object from Tractor Object." # Kommentar im Specials Kontextmenue
@@ -256,6 +256,7 @@ class Tractrix3d_OT_Main (bpy.types.Operator): # OT fuer Operator Type
 
 
 class Tractrix3dinv_OT_Main (bpy.types.Operator): # OT fuer Operator Type
+    # Traktrix-Traktor-Leitkurve-v-const
     bl_idname = "object.tractrix3dinv"
     bl_label = "Tractrix_OT_Main (TB)" #Toolbar - Label
     bl_description = "Calculate Tractrix for Trailer Object from Tractor Object." # Kommentar im Specials Kontextmenue
@@ -297,7 +298,7 @@ class Tractrix3dtbd_OT_Main (bpy.types.Operator): # OT fuer Operator Type
 
 
 def Hundekurve3D(Traktor, TrailerStartPos):
-
+    # Ableitung aus Java-Script (link einfuegen...)
     
     # ACHTUNG: Abstand NICHT konstant! Damit KEINE Tractrix (-> Hundekurve)
     
@@ -351,6 +352,9 @@ def Hundekurve3D(Traktor, TrailerStartPos):
     return Trailer
 
 def tractrix3D(Traktor, TrailerStartPos):
+    # Arbeitsblatt 'Gewoehnliche DGL'
+    # Anstand konstant
+    # v (Geschw.) immer in Richtung Traktor
     
     # ACHTUNG: Abstand NICHT konstant! Damit KEINE Tractrix (-> Hundekurve)
     # todo: Ergebnis 'seltsam'.....
@@ -379,6 +383,7 @@ def tractrix3D(Traktor, TrailerStartPos):
     # y1 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(E5-H5)+H5
     # y2 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(f5-g5)+i5
     
+    # y2 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5)+(f6-f5)*(f5-g5))/((D5-H5)^2+(E5-H5)^2+(f5-g5)^2)))*(f5-g5)+i5
     #
     # mit DEF = Traktor(x,y,z) = M(x,y,z) und GHI = Trailer(x,y,z) = S(x,y,z) zum Zeitpunkt T1, T2
     
@@ -388,10 +393,11 @@ def tractrix3D(Traktor, TrailerStartPos):
         Mx[T1][0], My[T1][0], Mz[T1][0] = [Traktor[int_PCurve][0], Traktor[int_PCurve][1], Traktor[int_PCurve][2]]
         Mx[T2][0], My[T2][0], Mz[T2][0] = [Traktor[int_PCurve+1][0], Traktor[int_PCurve+1][1], Traktor[int_PCurve+1][2]]
         
-        # Schleppkurve V1 - Term = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)
+        # Schleppkurve V1 - Term = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))                /((D5-H5)^2+(E5-H5)^2))
+        # Schleppkurve V1 - Term = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5)+(f6-f5)*(f5-g5))/((D5-H5)^2+(E5-H5)^2+(f5-g5)^2)))
         # math.pow(PathPointA[i], 2)
         
-        Term = ((Mx[T2][0]-Mx[T1][0])*(Mx[T1][0]-Sx[T1][0])+(My[T2][0]-My[T1][0])*(My[T1][0]-Sy[T1][0]))/math.pow((Mx[T1][0]-Sy[T1][0]),2)+ math.pow((My[T1][0]-Sy[T1][0]),2)
+        Term = ((Mx[T2][0]-Mx[T1][0])*(Mx[T1][0]-Sx[T1][0])+(My[T2][0]-My[T1][0])*(My[T1][0]-Sy[T1][0])+(Mz[T2][0]-Mz[T1][0])*(Mz[T1][0]-Sz[T1][0]))/(math.pow((Mx[T1][0]-Sx[T1][0]),2)+ math.pow((My[T1][0]-Sy[T1][0]),2)+ math.pow((Mz[T1][0]-Sz[T1][0]),2))
         
        
         # Hundekurve - Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
@@ -417,6 +423,8 @@ def tractrix3D(Traktor, TrailerStartPos):
 
 
 def tractrix3Dinv(Traktor, TrailerStartPos):
+    # Leipnitzschule Hannover Schleppkurve 2D
+    # Abstand konstant
     
     # ACHTUNG: Leitkurve ist Trailer; Traktor wird berechnet
     # under constr...
