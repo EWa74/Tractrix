@@ -133,6 +133,8 @@ class Tractrix_PT_Panel(bpy.types.Panel):
         col.operator("object.tractrix3d", text="3D Traktrix-Traktor-Leitkuve v const.[ongoing]")
         col.operator("object.tractrix3dinv", text="2D Traktrix-Traktor-Leitkurve d const[ongoing]")
         col.operator("object.tractrix3dtbd", text="tbd...")
+        col.operator("object.parenttraktor", text="parent TRAKTOR...")
+        col.operator("object.parenttrailer", text="parent TRAILER...")
         
            
     writelog('Tractrix_PT_Panel done')
@@ -192,23 +194,24 @@ def SetObjToCurve(TrailerObj, TrailerCurve, TraktorObj, TraktorCurve):
     bpy.data.objects['Trailer'].location, bpy.data.objects['Trailer'].rotation_euler = get_absolute(Vector(TrailerCurve[0][0]), (0,0,0), bpy.data.objects['NurbsPath_Trailer'])
     bpy.data.objects['Traktor'].location, bpy.data.objects['Traktor'].rotation_euler = get_absolute(Vector(TraktorCurve[0]), (0,0,0), bpy.data.objects['NurbsPath_Traktor'])
      
-    # todo: parenting
-    '''
-    bpy.ops.object.select_all(action='DESELECT')
-    bpy.data.objects['NurbsPath_Trailer'].select= True
-    bpy.data.objects['Trailer'].select = True
-    bpy.context.scene.objects.active = bpy.data.objects['NurbsPath_Trailer']   
-    bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
-    bpy.ops.object.select_all(action='DESELECT')
+       
     
+    '''    
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects['NurbsPath_Traktor'].select= True
     bpy.data.objects['Traktor'].select = True
     bpy.context.scene.objects.active = bpy.data.objects['NurbsPath_Traktor']   
     bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
     bpy.ops.object.select_all(action='DESELECT')
-    '''
     
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.data.objects['NurbsPath_Trailer'].select= True
+    bpy.data.objects['Trailer'].select = True
+    bpy.context.scene.objects.active = bpy.data.objects['NurbsPath_Trailer']   
+    bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
+    bpy.ops.object.select_all(action='DESELECT')
+    '''    
+        
 class Hundekurve_OT_Main (bpy.types.Operator): # OT fuer Operator Type
    
     bl_idname = "object.hundekurve"
@@ -296,7 +299,48 @@ class Tractrix3dtbd_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')   
 
+class parenttraktor_OT_Main (bpy.types.Operator): # OT fuer Operator Type
+    bl_idname = "object.parenttraktor"
+    bl_label = "parent traktor" #Toolbar - Label
+    bl_description = "parent traktor to curve" # Kommentar im Specials Kontextmenue
+    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
 
+    def execute(self, context):
+        TraktorCurve = [1,1,1]
+        
+        ClearParenting(bpy.data.objects['NurbsPath_Traktor'],bpy.data.objects['Traktor'] )
+        bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
+        TraktorCurve = [bpy.data.curves['NurbsPath_Traktor'].splines[0].points[0].co.x, bpy.data.curves['NurbsPath_Traktor'].splines[0].points[0].co.y, bpy.data.curves['NurbsPath_Traktor'].splines[0].points[0].co.z]
+        bpy.data.objects['Traktor'].location, bpy.data.objects['Traktor'].rotation_euler = get_absolute(Vector(TraktorCurve), (0,0,0), bpy.data.objects['NurbsPath_Traktor'])
+         
+            
+        Parenting('NurbsPath_Traktor', 'Traktor')    
+        #Parenting('NurbsPath_Trailer', 'Trailer') 
+       
+        return {'FINISHED'} 
+    writelog('- - parenttraktor_OT_Main done- - - - - - -')   
+
+class parenttrailer_OT_Main (bpy.types.Operator): # OT fuer Operator Type
+    bl_idname = "object.parenttrailer"
+    bl_label = "parent trailer" #Toolbar - Label
+    bl_description = "parent trailer to curve" # Kommentar im Specials Kontextmenue
+    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
+
+    def execute(self, context):
+        TrailerrCurve = [1,1,1]
+        ClearParenting(bpy.data.objects['NurbsPath_Trailer'],bpy.data.objects['Trailer'] )
+        
+        bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
+        TrailerrCurve = [bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.x, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.y, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.z]
+        
+        bpy.data.objects['Trailer'].location, bpy.data.objects['Trailer'].rotation_euler = get_absolute(Vector(TrailerrCurve), (0,0,0), bpy.data.objects['NurbsPath_Trailer'])
+           
+        #Parenting('NurbsPath_Traktor', 'Traktor')    
+        Parenting('NurbsPath_Trailer', 'Trailer') 
+       
+        return {'FINISHED'} 
+    writelog('- - parenttrailer_OT_Main done- - - - - - -')   
+    
 def Hundekurve3D(Traktor, TrailerStartPos):
     # Ableitung aus Java-Script (link einfuegen...)
     
@@ -611,6 +655,8 @@ def register():
     bpy.utils.register_class(Tractrix3d_OT_Main) 
     bpy.utils.register_class(Tractrix3dinv_OT_Main) 
     bpy.utils.register_class(Tractrix3dtbd_OT_Main) 
+    bpy.utils.register_class(parenttraktor_OT_Main)
+    bpy.utils.register_class(parenttrailer_OT_Main)
     register_module(__name__)
     
 def unregister():
@@ -619,6 +665,8 @@ def unregister():
     bpy.utils.unregister_class(Tractrix3d_OT_Main) 
     bpy.utils.unregister_class(Tractrix3dinv_OT_Main) 
     bpy.utils.unregister_class(Tractrix3dtbd_OT_Main) 
+    bpy.utils.unregister_class(parenttraktor_OT_Main)
+    bpy.utils.unregister_class(parenttrailer_OT_Main)
     unregister_module(__name__)
 
 #--- ### Main code    
