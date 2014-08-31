@@ -73,6 +73,12 @@ from symbol import except_clause
 from copy import deepcopy # fuer OptimizeRotation
 
 # Global Variables:
+objTrailerPath = bpy.data.objects['TrailerPath']
+objTraktorPath = bpy.data.objects['TraktorPath']
+objTrailer = bpy.data.objects['Trailer']
+objTraktor = bpy.data.objects['Traktor']
+curTraktor = bpy.data.curves[objTraktorPath.data.name]
+curTrailer = bpy.data.curves[objTrailerPath.data.name]
 
 # create variable containing width
 bpy.types.Scene.pyramide_width = FloatProperty( name = "pyramide's width", default = 2.0, subtype = 'DISTANCE', unit = 'LENGTH', description = "Enter the pyramide's width!" )
@@ -135,28 +141,28 @@ class Tractrix_PT_Panel(bpy.types.Panel):
         col.operator("object.tractrix3dtbd", text="tbd...")
         col.operator("object.parenttraktor", text="parent TRAKTOR...")
         col.operator("object.parenttrailer", text="parent TRAILER...")
-        
+        col.operator("object.clearparent", text="clear parents...")
            
     writelog('Tractrix_PT_Panel done')
     writelog('_____________________________________________________________________________')
 
 
-def ReadCurveTraktor():
-    
-    int_Curve = len(bpy.data.curves['NurbsPath_Traktor'].splines[0].points)
-    Traktor = createMatrix(int_Curve,3)
+def ReadCurve(objPath):
+    curObj = bpy.data.curves[objPath.data.name]
+    int_Curve = len(bpy.data.curves[objPath.data.name].splines[0].points)
+    datPath = createMatrix(int_Curve,3)
     
     
     for int_PCurve in range(0,int_Curve,1):
-        Traktor[int_PCurve][0:3] = [bpy.data.curves['NurbsPath_Traktor'].splines[0].points[int_PCurve].co.x, bpy.data.curves['NurbsPath_Traktor'].splines[0].points[int_PCurve].co.y, bpy.data.curves['NurbsPath_Traktor'].splines[0].points[int_PCurve].co.z]
-        print("Traktor"  + str(int_PCurve) + ": " + str(Traktor[int_PCurve]))
+        datPath[int_PCurve][0:3] = [curObj.splines[0].points[int_PCurve].co.x, curObj.splines[0].points[int_PCurve].co.y, curObj.splines[0].points[int_PCurve].co.z]
+        print("Traktor"  + str(int_PCurve) + ": " + str(datPath[int_PCurve]))
     
     print("Traktor" )
     
     
-    return int_Curve, Traktor
+    return int_Curve, datPath
     '''
-    #bpy.data.objects['Trailer'].location
+    #bpy.data.objects[objTrailer.name].location
     int_fMerker = bpy.data.scenes['Scene'].frame_current
     # 1. Schleife von start_frame to end_frame
     int_fStart = bpy.data.scenes['Scene'].frame_start
@@ -174,43 +180,38 @@ def ReadCurveTraktor():
 def WriteCurveTrailer(int_Curve, Trailer):
     
     
+    
     for int_PCurve in range(0,int_Curve-1,1):
-        [bpy.data.curves['NurbsPath_Trailer'].splines[0].points[int_PCurve].co.x, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[int_PCurve].co.y, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
+        [curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
         print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
     print("Trailer" )
     
 
-def SetObjToCurve(TrailerObj, TrailerCurve, TraktorObj, TraktorCurve):
+def SetObjToCurve(TrailerObj, datTrailerCurve, TraktorObj, datTraktorCurve):
     # Set Objects to curve
         
     # parenting lösen, Obj positionieren, follow path wieder herstellen:
     
-    ClearParenting(bpy.data.objects['NurbsPath_Trailer'],bpy.data.objects['Trailer'] )
-    ClearParenting(bpy.data.objects['NurbsPath_Traktor'],bpy.data.objects['Traktor'] )
-    ClearParenting(bpy.data.objects['NurbsPath_Trailer'],bpy.data.objects['NurbsPath_Traktor'] )
-    ClearParenting(bpy.data.objects['Trailer'],bpy.data.objects['Traktor'] )
+    ClearParenting(objTrailer,objTrailerPath )
+    ClearParenting(objTrailer,objTraktorPath )
+    ClearParenting(objTrailer,objTraktor )
+    
+    ClearParenting(objTraktor,objTrailerPath )
+    ClearParenting(objTraktor,objTraktorPath )
+    ClearParenting(objTraktor,objTrailer )
+    
     
     bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
-    bpy.data.objects['Trailer'].location, bpy.data.objects['Trailer'].rotation_euler = get_absolute(Vector(TrailerCurve[0][0]), (0,0,0), bpy.data.objects['NurbsPath_Trailer'])
-    bpy.data.objects['Traktor'].location, bpy.data.objects['Traktor'].rotation_euler = get_absolute(Vector(TraktorCurve[0]), (0,0,0), bpy.data.objects['NurbsPath_Traktor'])
+    objTrailer.location, objTrailer.rotation_euler = get_absolute(Vector(datTrailerCurve[0][0]), (0,0,0), objTrailerPath)
+    objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve[0]), (0,0,0), objTraktorPath)
      
-       
+    '''   
+    Parenting(objTraktorPath, objTraktor)
+    Parenting(objTraktorPath, objTraktor)
+    Parenting(objTrailerPath, objTrailer)
+    Parenting(objTrailerPath, objTrailer)
+    '''
     
-    '''    
-    bpy.ops.object.select_all(action='DESELECT')
-    bpy.data.objects['NurbsPath_Traktor'].select= True
-    bpy.data.objects['Traktor'].select = True
-    bpy.context.scene.objects.active = bpy.data.objects['NurbsPath_Traktor']   
-    bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
-    bpy.ops.object.select_all(action='DESELECT')
-    
-    bpy.ops.object.select_all(action='DESELECT')
-    bpy.data.objects['NurbsPath_Trailer'].select= True
-    bpy.data.objects['Trailer'].select = True
-    bpy.context.scene.objects.active = bpy.data.objects['NurbsPath_Trailer']   
-    bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
-    bpy.ops.object.select_all(action='DESELECT')
-    '''    
         
 class Hundekurve_OT_Main (bpy.types.Operator): # OT fuer Operator Type
    
@@ -221,15 +222,15 @@ class Hundekurve_OT_Main (bpy.types.Operator): # OT fuer Operator Type
 
     def execute(self, context):  
         
-        int_Curve, TraktorCurve = ReadCurveTraktor()  
-        TrailerStartPos = [bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.x, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.y, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.z]
+        int_Curve, datTraktorCurve = ReadCurve(objTraktorPath)  
         
-        TrailerCurve= Hundekurve3D(TraktorCurve, TrailerStartPos)
+        datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
         
-        WriteCurveTrailer(int_Curve, TrailerCurve)
-        TrailerObj = bpy.data.objects['Trailer']
-        TraktorObj = bpy.data.objects['Traktor']
-        SetObjToCurve(TrailerObj, TrailerCurve, TraktorObj, TraktorCurve)
+        datTrailerCurve= Hundekurve3D(datTraktorCurve, datTrailerStart)
+        
+        WriteCurveTrailer(int_Curve, datTrailerCurve)
+        
+        SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
         
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
@@ -244,15 +245,15 @@ class Tractrix3d_OT_Main (bpy.types.Operator): # OT fuer Operator Type
 
     def execute(self, context):  
         
-        int_Curve, TraktorCurve = ReadCurveTraktor()  
-        TrailerStartPos = [bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.x, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.y, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.z]
+        int_Curve, datTraktorCurve = ReadCurve(objTraktorPath)  
+          
+        datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
         
-        TrailerCurve= tractrix3D(TraktorCurve, TrailerStartPos)
+        datTrailerCurve= tractrix3D(datTraktorCurve, datTrailerStart)
         
-        WriteCurveTrailer(int_Curve, TrailerCurve)
-        TrailerObj = bpy.data.objects['Trailer']
-        TraktorObj = bpy.data.objects['Traktor']
-        SetObjToCurve(TrailerObj, TrailerCurve, TraktorObj, TraktorCurve)
+        WriteCurveTrailer(int_Curve, datTrailerCurve)
+        
+        SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
         
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
@@ -266,15 +267,15 @@ class Tractrix3dinv_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
 
     def execute(self, context):  
-        int_Curve, TraktorCurve = ReadCurveTraktor()  
-        TrailerStartPos = [bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.x, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.y, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.z]
+        int_Curve, datTraktorCurve = ReadCurve(objTraktorPath)  
+        
+        datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
        
-        TrailerCurve= tractrix3Dinv(TraktorCurve, TrailerStartPos)
+        datTrailerCurve= tractrix3Dinv(datTraktorCurve, datTrailerStart)
        
-        WriteCurveTrailer(int_Curve, TrailerCurve)
-        TrailerObj = bpy.data.objects['Trailer']
-        TraktorObj = bpy.data.objects['Traktor']
-        SetObjToCurve(TrailerObj, TrailerCurve, TraktorObj, TraktorCurve)
+        WriteCurveTrailer(int_Curve, datTrailerCurve)
+        
+        SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
        
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
@@ -286,15 +287,15 @@ class Tractrix3dtbd_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
 
     def execute(self, context):  
-        int_Curve, TraktorCurve = ReadCurveTraktor()  
-        TrailerStartPos = [bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.x, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.y, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.z]
+        int_Curve, datTraktorCurve = ReadCurve(objTraktorPath)  
+        
+        datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
        
-        TrailerCurve= tractrix3Dtbd(TraktorCurve, TrailerStartPos)
+        datTrailerCurve= tractrix3Dtbd(datTraktorCurve, datTrailerStart)
        
-        WriteCurveTrailer(int_Curve, TrailerCurve)
-        TrailerObj = bpy.data.objects['Trailer']
-        TraktorObj = bpy.data.objects['Traktor']
-        SetObjToCurve(TrailerObj, TrailerCurve, TraktorObj, TraktorCurve)
+        WriteCurveTrailer(int_Curve, datTrailerCurve)
+        
+        SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
        
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')   
@@ -306,16 +307,16 @@ class parenttraktor_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
 
     def execute(self, context):
-        TraktorCurve = [1,1,1]
         
-        ClearParenting(bpy.data.objects['NurbsPath_Traktor'],bpy.data.objects['Traktor'] )
+
+        ClearParenting(objTraktorPath, objTraktor )
         bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
-        TraktorCurve = [bpy.data.curves['NurbsPath_Traktor'].splines[0].points[0].co.x, bpy.data.curves['NurbsPath_Traktor'].splines[0].points[0].co.y, bpy.data.curves['NurbsPath_Traktor'].splines[0].points[0].co.z]
-        bpy.data.objects['Traktor'].location, bpy.data.objects['Traktor'].rotation_euler = get_absolute(Vector(TraktorCurve), (0,0,0), bpy.data.objects['NurbsPath_Traktor'])
+        datTraktorCurve = [curTraktor.splines[0].points[0].co.x, curTraktor.splines[0].points[0].co.y, curTraktor.splines[0].points[0].co.z]
+        objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), bpy.data.objects[objTraktorPath])
          
             
-        Parenting('NurbsPath_Traktor', 'Traktor')    
-        #Parenting('NurbsPath_Trailer', 'Trailer') 
+        Parenting(objTraktorPath, objTraktor.name)    
+        #Parenting(objTrailerPath, objTrailer.name) 
        
         return {'FINISHED'} 
     writelog('- - parenttraktor_OT_Main done- - - - - - -')   
@@ -327,21 +328,41 @@ class parenttrailer_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
 
     def execute(self, context):
-        TrailerrCurve = [1,1,1]
-        ClearParenting(bpy.data.objects['NurbsPath_Trailer'],bpy.data.objects['Trailer'] )
+        
+        ClearParenting(bpy.data.objects[objTrailerPath],bpy.data.objects[objTrailer.name] )
         
         bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
-        TrailerrCurve = [bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.x, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.y, bpy.data.curves['NurbsPath_Trailer'].splines[0].points[0].co.z]
+        datTrailerrCurve = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
         
-        bpy.data.objects['Trailer'].location, bpy.data.objects['Trailer'].rotation_euler = get_absolute(Vector(TrailerrCurve), (0,0,0), bpy.data.objects['NurbsPath_Trailer'])
+        objTrailer.location,objTrailer.rotation_euler = get_absolute(Vector(datTrailerrCurve), (0,0,0), bpy.data.objects[objTrailerPath])
            
-        #Parenting('NurbsPath_Traktor', 'Traktor')    
-        Parenting('NurbsPath_Trailer', 'Trailer') 
+        #Parenting(objTraktorPath, objTraktor.name)    
+        Parenting(objTrailerPath, objTrailer.name) 
        
         return {'FINISHED'} 
-    writelog('- - parenttrailer_OT_Main done- - - - - - -')   
+    writelog('- - parenttrailer_OT_Main done- - - - - - -') 
     
-def Hundekurve3D(Traktor, TrailerStartPos):
+    
+class clearparent_OT_Main (bpy.types.Operator): # OT fuer Operator Type
+    bl_idname = "object.clearparent"
+    bl_label = "parent trailer" #Toolbar - Label
+    bl_description = "clear parent from curve" # Kommentar im Specials Kontextmenue
+    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
+
+    def execute(self, context):
+        ClearParenting(objTrailerPath,objTrailer )
+        ClearParenting(objTrailerPath,objTraktor )
+        ClearParenting(objTraktorPath,objTraktor )
+        ClearParenting(objTraktorPath,objTrailer )
+        ClearParenting(objTrailerPath,objTraktorPath )
+        ClearParenting(objTraktorPath,objTrailerPath )
+        
+       
+        return {'FINISHED'} 
+    writelog('- - parenttrailer_OT_Main done- - - - - - -') 
+      
+    
+def Hundekurve3D(datTraktor, datTrailerStart):
     # Ableitung aus Java-Script (link einfuegen...)
     
     # ACHTUNG: Abstand NICHT konstant! Damit KEINE Tractrix (-> Hundekurve)
@@ -357,13 +378,13 @@ def Hundekurve3D(Traktor, TrailerStartPos):
     T2 = 1
     Term = float()
     
-    Sx[T1][0] = TrailerStartPos[0]
-    Sy[T1][0] = TrailerStartPos[1]
-    Sz[T1][0] = TrailerStartPos[2]
+    Sx[T1][0] = datTrailerStart[0]
+    Sy[T1][0] = datTrailerStart[1]
+    Sz[T1][0] = datTrailerStart[2]
     
-    int_Count = len(Traktor[:][:])
-    Trailer = createMatrix(int_Count,1)
-    Trailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
+    int_Count = len(datTraktor[:][:])
+    datTrailer = createMatrix(int_Count,1)
+    datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
     
     # y0 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(G3-D3)+G3
     # y1 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(H3-E3)+H3
@@ -376,8 +397,8 @@ def Hundekurve3D(Traktor, TrailerStartPos):
         
         
         
-        Mx[T1][0], My[T1][0], Mz[T1][0] = [Traktor[int_PCurve][0], Traktor[int_PCurve][1], Traktor[int_PCurve][2]]
-        Mx[T2][0], My[T2][0], Mz[T2][0] = [Traktor[int_PCurve+1][0], Traktor[int_PCurve+1][1], Traktor[int_PCurve+1][2]]
+        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
+        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
         
         # Term =((D4       *G3       -D4       *D3       +D3       *D3       -D3       *G3       )+(E4       *H3       -E4       *E3       +E3       *E3       -E3       *H3       )+(F4       *I3       -F4       *F3       +F3       *F3       -F3       *I3       ))
         Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
@@ -386,16 +407,16 @@ def Hundekurve3D(Traktor, TrailerStartPos):
         Sy[T2][0] = Term[0] * (Sy[T1][0]-My[T1][0])+Sy[T1][0]
         Sz[T2][0] = Term[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0]
         
-        Trailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
-        print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
+        datTrailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
         
         Sx[T1][0] = deepcopy(Sx[T2][0])
         Sy[T1][0] = deepcopy(Sy[T2][0])
         Sz[T1][0] = deepcopy(Sz[T2][0])
         
-    return Trailer
+    return datTrailer
 
-def tractrix3D(Traktor, TrailerStartPos):
+def tractrix3D(datTraktor, datTrailerStart):
     # Arbeitsblatt 'Gewoehnliche DGL'
     # Anstand konstant
     # v (Geschw.) immer in Richtung Traktor
@@ -414,13 +435,13 @@ def tractrix3D(Traktor, TrailerStartPos):
     T2 = 1
     Term = float()
     
-    Sx[T1][0] = TrailerStartPos[0]
-    Sy[T1][0] = TrailerStartPos[1]
-    Sz[T1][0] = TrailerStartPos[2]
+    Sx[T1][0] = datTrailerStart[0]
+    Sy[T1][0] = datTrailerStart[1]
+    Sz[T1][0] = datTrailerStart[2]
     
-    int_Count = len(Traktor[:][:])
-    Trailer = createMatrix(int_Count,1)
-    Trailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
+    int_Count = len(datTraktor[:][:])
+    datTrailer = createMatrix(int_Count,1)
+    datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
     
     
     # y0 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(D5-G5)+G5
@@ -434,8 +455,8 @@ def tractrix3D(Traktor, TrailerStartPos):
     
     for int_PCurve in range(0,int_Count-1,1):
         
-        Mx[T1][0], My[T1][0], Mz[T1][0] = [Traktor[int_PCurve][0], Traktor[int_PCurve][1], Traktor[int_PCurve][2]]
-        Mx[T2][0], My[T2][0], Mz[T2][0] = [Traktor[int_PCurve+1][0], Traktor[int_PCurve+1][1], Traktor[int_PCurve+1][2]]
+        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
+        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
         
         # Schleppkurve V1 - Term = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))                /((D5-H5)^2+(E5-H5)^2))
         # Schleppkurve V1 - Term = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5)+(f6-f5)*(f5-g5))/((D5-H5)^2+(E5-H5)^2+(f5-g5)^2)))
@@ -455,18 +476,18 @@ def tractrix3D(Traktor, TrailerStartPos):
         Sy[T2][0] = Term * (My[T1][0]-Sy[T1][0])+Sy[T1][0] # *(E5-H5)+H5
         Sz[T2][0] = Term * (Mz[T1][0]-Sz[T1][0])+Sz[T1][0] # *(f5-i5)+i5
         
-        Trailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
-        print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
+        datTrailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
         
         Sx[T1][0] = deepcopy(Sx[T2][0])
         Sy[T1][0] = deepcopy(Sy[T2][0])
         Sz[T1][0] = deepcopy(Sz[T2][0])
         
-    return Trailer
+    return datTrailer
 
 
 
-def tractrix3Dinv(Traktor, TrailerStartPos):
+def tractrix3Dinv(datTraktor, datTrailerStart):
     # Leipnitzschule Hannover Schleppkurve 2D
     # Abstand konstant 
     
@@ -484,15 +505,15 @@ def tractrix3Dinv(Traktor, TrailerStartPos):
     T2 = 1
     Term = float()
     
-    Sx[T1][0] = TrailerStartPos[0]
-    Sy[T1][0] = TrailerStartPos[1]
-    Sz[T1][0] = TrailerStartPos[2]
+    Sx[T1][0] = datTrailerStart[0]
+    Sy[T1][0] = datTrailerStart[1]
+    Sz[T1][0] = datTrailerStart[2]
     
     d = math.sqrt(math.pow((Mx[T1][0]-Sx[T1][0]),2) + math.pow((My[T1][0]-Sy[T1][0]),2)+ math.pow((Mz[T1][0]-Sz[T1][0]),2))
     
-    int_Count = len(Traktor[:][:])
-    Trailer = createMatrix(int_Count,1)
-    Trailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
+    int_Count = len(datTraktor[:][:])
+    datTrailer = createMatrix(int_Count,1)
+    datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
       
     # y0 = D5+($B$5/((((E5-E4)/(D5-D4))^2+1)^0.5))
     # y1 = E5+($B$5*(E5-E4)/((D5-D4)*(((E5-E4)/(D5-D4))^2+1)^0.5))
@@ -503,8 +524,8 @@ def tractrix3Dinv(Traktor, TrailerStartPos):
     
     for int_PCurve in range(0,int_Count-1,1):
         
-        Mx[T1][0], My[T1][0], Mz[T1][0] = [Traktor[int_PCurve][0], Traktor[int_PCurve][1], Traktor[int_PCurve][2]]
-        Mx[T2][0], My[T2][0], Mz[T2][0] = [Traktor[int_PCurve+1][0], Traktor[int_PCurve+1][1], Traktor[int_PCurve+1][2]]
+        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
+        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
         
         # Schleppkurve V2 - Term = ((E5-E4)/(D5-D4))^2+1)^0.5)
         # math.pow(PathPointA[i], 2)
@@ -526,16 +547,16 @@ def tractrix3Dinv(Traktor, TrailerStartPos):
         Sy[T2][0] = My[T2][0] + d * ((My[T2][0]-My[T1][0]) / ((Mx[T2][0]-Mx[T1][0])*Term))
         Sz[T2][0] = Sz[T1][0] # 
         
-        Trailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
-        print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
+        datTrailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
         
         Sx[T1][0] = deepcopy(Sx[T2][0])
         Sy[T1][0] = deepcopy(Sy[T2][0])
         Sz[T1][0] = deepcopy(Sz[T2][0])
         
-    return Trailer
+    return datTrailer
 
-def tractrix3Dtbd(TraktorCurve, TrailerStartPos):
+def tractrix3Dtbd(datTraktorCurve, datTrailerStart):
     print('under construction...')
  
 class createMatrix(object):
@@ -554,9 +575,9 @@ class createMatrix(object):
 def Parenting(Mother, Child):
     
     bpy.ops.object.select_all(action='DESELECT')
-    bpy.data.objects[Mother].select= True
-    bpy.data.objects[Child].select = True
-    bpy.context.scene.objects.active = bpy.data.objects[Mother]
+    Mother.select= True
+    Child.select = True
+    bpy.context.scene.objects.active = Mother
     # Parenting wieder herstellen    
     bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
     #bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
