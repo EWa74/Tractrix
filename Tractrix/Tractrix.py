@@ -312,10 +312,10 @@ class parenttraktor_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         ClearParenting(objTraktorPath, objTraktor )
         bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
         datTraktorCurve = [curTraktor.splines[0].points[0].co.x, curTraktor.splines[0].points[0].co.y, curTraktor.splines[0].points[0].co.z]
-        objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), bpy.data.objects[objTraktorPath])
+        objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), objTraktorPath)
          
             
-        Parenting(objTraktorPath, objTraktor.name)    
+        Parenting(objTraktorPath, objTraktor)    
         #Parenting(objTrailerPath, objTrailer.name) 
        
         return {'FINISHED'} 
@@ -329,15 +329,15 @@ class parenttrailer_OT_Main (bpy.types.Operator): # OT fuer Operator Type
 
     def execute(self, context):
         
-        ClearParenting(bpy.data.objects[objTrailerPath],bpy.data.objects[objTrailer.name] )
+        ClearParenting(objTrailerPath,objTrailer)
         
         bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
-        datTrailerrCurve = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
+        datTrailerCurve = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
         
-        objTrailer.location,objTrailer.rotation_euler = get_absolute(Vector(datTrailerrCurve), (0,0,0), bpy.data.objects[objTrailerPath])
+        objTrailer.location,objTrailer.rotation_euler = get_absolute(Vector(datTrailerCurve), (0,0,0), objTrailerPath)
            
-        #Parenting(objTraktorPath, objTraktor.name)    
-        Parenting(objTrailerPath, objTrailer.name) 
+        #Parenting(objTraktorPath, objTraktor.name)     
+        Parenting(objTrailerPath, objTrailer) 
        
         return {'FINISHED'} 
     writelog('- - parenttrailer_OT_Main done- - - - - - -') 
