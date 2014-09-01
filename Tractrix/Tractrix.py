@@ -18,10 +18,16 @@
 #  ***** END GPL LICENSE BLOCK *****
 # Version: 100R
 # Next steps:    
-# - Code Cleaning
-# - Laenge der Slave-Kurve automatisch anpassen
 # - Pruefung ob das Ergebnis des Trailers noch sinnvoll ist (Astand zum Traktor, delta Weg (-> proportional zu delta T)
-# - Parenting
+ 
+# - Code Cleaning
+# - Beachte: wenn die Punkte die die Kurve beschreiben zu weit auseinander liegen, 
+#   erhaelt man ein unsinniges Ergebnis. Loesung:
+#   fuer beide Kurven: -> EditMode [TAB] -> [A] alle auswaehlen 
+#   [w] für specials menue druecken -> Subdivide 
+#   (Achtung: die Kurvenpunkte für Trailer muss >= der des Traktors sein)
+# - Laenge der Slave-Kurve automatisch anpassen
+# - Parenting (nochmals druecken, falls Verhalten falsch) Loesung:??? 
 # - Menuefuehrung (Kurve auswählen, Objetk auswählen)
 # - Import/ Export
 # - Erbegnis "baken"
