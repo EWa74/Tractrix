@@ -19,8 +19,11 @@
 # Version: 100R
 # Next steps:    
 # - Pruefung ob das Ergebnis des Trailers noch sinnvoll ist (Astand zum Traktor, delta Weg (-> proportional zu delta T)
- 
+
+# => Vermutung: follow path verfaelscht das Erg. besser ueber keyframes loesen!!!! 
+
 # - Code Cleaning
+ 
 # - Beachte: wenn die Punkte die die Kurve beschreiben zu weit auseinander liegen, 
 #   erhaelt man ein unsinniges Ergebnis. Loesung:
 #   fuer beide Kurven: -> EditMode [TAB] -> [A] alle auswaehlen 
