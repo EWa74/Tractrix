@@ -34,6 +34,9 @@
 # - Menuefuehrung (Kurve auswählen, Objetk auswählen)
 # - Import/ Export
 # - Erbegnis "baken"
+# - Abstand Abpruefen bei Berechnung und auf Fehler hinweisen
+# - Traktorkurve, Traktor/ Trailerobjekte per Menue auswaehlen
+# - Kurven funktonieren z.Zt. NUR wenn der Origin auf [0,0,0] ist!!!
 
 
 '''
@@ -146,7 +149,7 @@ class Tractrix_PT_Panel(bpy.types.Panel):
         col.label(text="Schleppkurven:")
         
         # Import Button:
-        col.operator("object.hundekurve", text="Hundekurve [OK]")
+        col.operator("object.traktrix", text="Traktrix [OK]")
         col.operator("object.tractrix3d", text="3D Traktrix-Traktor-Leitkuve v const.[ongoing]")
         col.operator("object.tractrix3dinv", text="2D Traktrix-Traktor-Leitkurve d const[ongoing]")
         col.operator("object.tractrix3dtbd", text="tbd...")
@@ -276,9 +279,9 @@ def SetObjToCurve(TrailerObj, datTrailerCurve, TraktorObj, datTraktorCurve):
     '''
     
         
-class Hundekurve_OT_Main (bpy.types.Operator): # OT fuer Operator Type
+class Traktrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
    
-    bl_idname = "object.hundekurve"
+    bl_idname = "object.traktrix"
     bl_label = "Tractrix_OT_Main (TB)" #Toolbar - Label
     bl_description = "Calculate Tractrix for Trailer Object from Tractor Object." # Kommentar im Specials Kontextmenue
     bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
@@ -289,7 +292,7 @@ class Hundekurve_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         
         datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
         
-        datTrailerCurve= Hundekurve3D(datTraktorCurve, datTrailerStart)
+        datTrailerCurve= Traktrix3D(datTraktorCurve, datTrailerStart)
         
         WriteCurveTrailer(int_Curve, datTrailerCurve)
         
@@ -452,10 +455,10 @@ class clearparent_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     writelog('- - parenttrailer_OT_Main done- - - - - - -') 
       
     
-def Hundekurve3D(datTraktor, datTrailerStart):
+def Traktrix3D(datTraktor, datTrailerStart):
     # Ableitung aus Java-Script (link einfuegen...)
     
-    # ACHTUNG: Abstand NICHT konstant! Damit KEINE Tractrix (-> Hundekurve)
+    # ACHTUNG: follow path fuehrte zu falschen Erg. -> Setkeyframes; wichtig: genuegend dichte Punkte!
     
     Mx = createMatrix(2,1)
     My = createMatrix(2,1)
@@ -511,7 +514,7 @@ def tractrix3D(datTraktor, datTrailerStart):
     # Anstand konstant
     # v (Geschw.) immer in Richtung Traktor
     
-    # ACHTUNG: Abstand NICHT konstant! Damit KEINE Tractrix (-> Hundekurve)
+    # ACHTUNG: Abstand NICHT konstant! todo: Fehlersuche.... 
     # todo: Ergebnis 'seltsam'.....
     
     Mx = createMatrix(2,1)
@@ -555,7 +558,7 @@ def tractrix3D(datTraktor, datTrailerStart):
         Term = ((Mx[T2][0]-Mx[T1][0])*(Mx[T1][0]-Sx[T1][0])+(My[T2][0]-My[T1][0])*(My[T1][0]-Sy[T1][0])+(Mz[T2][0]-Mz[T1][0])*(Mz[T1][0]-Sz[T1][0]))/(math.pow((Mx[T1][0]-Sx[T1][0]),2)+ math.pow((My[T1][0]-Sy[T1][0]),2)+ math.pow((Mz[T1][0]-Sz[T1][0]),2))
         
        
-        # Hundekurve - Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
+        # Traktrix - Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
         print("Term : " + str(Term))
         
         # y0 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(D5-G5)+G5
@@ -625,7 +628,7 @@ def tractrix3Dinv(datTraktor, datTrailerStart):
                
         Term = math.pow((math.pow( (My[T2][0]-My[T1][0])/(Mx[T2][0]-Mx[T1][0]),2)+1),0.5)
         
-        # Hundekurve - Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
+        # Traktrix - Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
         print("Term : " + str(Term))
         
         # y0 = D5+($B$5/(term)
@@ -762,7 +765,7 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
 #ToDo: KUKA Operator nicht regestriert....
 def register():
     bpy.utils.register_class(Tractrix_PT_Panel)  
-    bpy.utils.register_class(Hundekurve_OT_Main) 
+    bpy.utils.register_class(Traktrix_OT_Main) 
     bpy.utils.register_class(Tractrix3d_OT_Main) 
     bpy.utils.register_class(Tractrix3dinv_OT_Main) 
     bpy.utils.register_class(Tractrix3dtbd_OT_Main) 
@@ -772,7 +775,7 @@ def register():
     
 def unregister():
     bpy.utils.unregister_class(Tractrix_PT_Panel) 
-    bpy.utils.unregister_class(Hundekurve_OT_Main) 
+    bpy.utils.unregister_class(Traktrix_OT_Main) 
     bpy.utils.unregister_class(Tractrix3d_OT_Main) 
     bpy.utils.unregister_class(Tractrix3dinv_OT_Main) 
     bpy.utils.unregister_class(Tractrix3dtbd_OT_Main) 
