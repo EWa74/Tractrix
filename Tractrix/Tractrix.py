@@ -88,6 +88,8 @@ objTrailer = bpy.data.objects['Trailer']
 objTraktor = bpy.data.objects['Traktor']
 curTraktor = bpy.data.curves[objTraktorPath.data.name]
 curTrailer = bpy.data.curves[objTrailerPath.data.name]
+#TIMEPTS = bpy.props.FloatProperty()
+
 
 # create variable containing width
 bpy.types.Scene.pyramide_width = FloatProperty( name = "pyramide's width", default = 2.0, subtype = 'DISTANCE', unit = 'LENGTH', description = "Enter the pyramide's width!" )
@@ -194,7 +196,59 @@ def WriteCurveTrailer(int_Curve, Trailer):
         [curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
         print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
     print("Trailer" )
+
+def time_to_frame(time_value):
+    fps = bpy.context.scene.render.fps
+    frame_number = (time_value * fps) +1
+    return int(round(frame_number, 0)) 
+
+def SetKeyFrames(obj, cur, int_Curve, TIMEPTS):
     
+    
+    # objEmpty_A6 -> objTraktor
+    # TargetObjList -> datTraktorCurve
+    # TIMEPTS -> tbd
+    
+    original_type         = bpy.context.area.type
+    bpy.context.area.type = "VIEW_3D"
+    bpy.ops.object.select_all(action='DESELECT')
+          
+    #scene = bpy.context.scene
+    #fps = scene.render.fps
+    #fps_base = scene.render.fps_base
+     
+    raw_time=[]
+    frame_number=[]
+    
+    bpy.context.scene.objects.active = obj
+    
+    obj.select = True
+    bpy.ops.anim.keyframe_clear_v3d() #Remove all keyframe animation for selected objects
+
+    ob = bpy.context.active_object
+    ob.rotation_mode = 'QUATERNION' #'XYZ'
+    
+    
+    #QuaternionList = OptimizeRotationQuaternion(TargetObjList, TIMEPTSCount)
+    for n in range(0,int_Curve-1,1):
+        # Trailer[int_PCurve][0]
+        writelog(n)
+        bpy.context.scene.frame_set(time_to_frame(TIMEPTS[n])) 
+        ob.location = [cur.splines[0].points[n].co.x, cur.splines[0].points[n].co.y, cur.splines[0].points[n].co.z]
+        #ob.location = bpy.data.objects[TargetObjList[n]].location
+                
+        # todo: ob.rotation_quaternion = bpy.data.objects[TargetObjList[n]].rotation_euler.to_quaternion()
+           
+        ob.keyframe_insert(data_path="location", index=-1)
+
+        # file:///F:/EWa_WWW_Tutorials/Scripting/blender_python_reference_2_68_5/bpy.types.bpy_struct.html#bpy.types.bpy_struct.keyframe_insert
+        
+        # todo: ob.keyframe_insert(data_path="rotation_quaternion", index=-1)
+        
+        #ob.keyframe_insert(data_path="rotation_euler", index=-1)
+    bpy.context.area.type = original_type 
+    writelog(n)
+
 
 def SetObjToCurve(TrailerObj, datTrailerCurve, TraktorObj, datTraktorCurve):
     # Set Objects to curve
@@ -239,7 +293,18 @@ class Hundekurve_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         
         WriteCurveTrailer(int_Curve, datTrailerCurve)
         
-        SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
+        #SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
+        TIMEPTS = []
+        for int_PCurve in range(0,int_Curve-1,1):
+            TIMEPTS = TIMEPTS + [int_PCurve/12]
+        
+        
+        SetKeyFrames(objTraktor, curTraktor, int_Curve, TIMEPTS)
+        SetKeyFrames(objTrailer, curTrailer, int_Curve, TIMEPTS)
+    
+    
+    
+        
         
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
@@ -262,7 +327,15 @@ class Tractrix3d_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         
         WriteCurveTrailer(int_Curve, datTrailerCurve)
         
-        SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
+        #SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
+        
+        TIMEPTS = []
+        for int_PCurve in range(0,int_Curve-1,1):
+            TIMEPTS = TIMEPTS + [int_PCurve/12]
+        
+        
+        SetKeyFrames(objTraktor, curTraktor, int_Curve, TIMEPTS)
+        SetKeyFrames(objTrailer, curTrailer, int_Curve, TIMEPTS)
         
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
@@ -304,8 +377,16 @@ class Tractrix3dtbd_OT_Main (bpy.types.Operator): # OT fuer Operator Type
        
         WriteCurveTrailer(int_Curve, datTrailerCurve)
         
-        SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
-       
+        #SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
+        
+        TIMEPTS = []
+        for int_PCurve in range(0,int_Curve-1,1):
+            TIMEPTS = TIMEPTS + [int_PCurve/12]
+        
+        
+        SetKeyFrames(objTraktor, curTraktor, int_Curve, TIMEPTS)
+        SetKeyFrames(objTrailer, curTrailer, int_Curve, TIMEPTS)
+        
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')   
 
@@ -703,7 +784,7 @@ def unregister():
 if __name__ == '__main__':
     register()
 
-#todo: code cleaning
+#todo: code cleaning aasdf  
 #Loesungsweg A):
 # B1 Die Nurbspath Koordinaten nutzen und eine Trailer-Nurbs auf Basis der 
 # Traktor-Nurbs errechnen
