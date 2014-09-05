@@ -205,7 +205,7 @@ def time_to_frame(time_value):
     frame_number = (time_value * fps) +1
     return int(round(frame_number, 0)) 
 
-def SetKeyFrames(obj, cur, int_Curve, TIMEPTS):
+def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
     
     
     # objEmpty_A6 -> objTraktor
@@ -237,7 +237,13 @@ def SetKeyFrames(obj, cur, int_Curve, TIMEPTS):
         # Trailer[int_PCurve][0]
         writelog(n)
         bpy.context.scene.frame_set(time_to_frame(TIMEPTS[n])) 
+        
+        # 04.09.2014 todo.....
+        #c = Vector([cur.splines[0].points[n].co.x, cur.splines[0].points[n].co.y, cur.splines[0].points[n].co.z])
+        #a, b = get_absolute(c, (0,0,0), objPath)
+        
         ob.location = [cur.splines[0].points[n].co.x, cur.splines[0].points[n].co.y, cur.splines[0].points[n].co.z]
+        
         #ob.location = bpy.data.objects[TargetObjList[n]].location
                 
         # todo: ob.rotation_quaternion = bpy.data.objects[TargetObjList[n]].rotation_euler.to_quaternion()
@@ -301,9 +307,9 @@ class Traktrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         for int_PCurve in range(0,int_Curve-1,1):
             TIMEPTS = TIMEPTS + [int_PCurve/12]
         
-        
-        SetKeyFrames(objTraktor, curTraktor, int_Curve, TIMEPTS)
-        SetKeyFrames(objTrailer, curTrailer, int_Curve, TIMEPTS)
+        # 04.09.2014 todo.....
+        SetKeyFrames(objTraktor, curTraktor, objTraktorPath, int_Curve, TIMEPTS)
+        SetKeyFrames(objTrailer, curTrailer, objTrailerPath, int_Curve, TIMEPTS)
     
     
     
@@ -496,9 +502,12 @@ def Traktrix3D(datTraktor, datTrailerStart):
         # Term =((D4       *G3       -D4       *D3       +D3       *D3       -D3       *G3       )+(E4       *H3       -E4       *E3       +E3       *E3       -E3       *H3       )+(F4       *I3       -F4       *F3       +F3       *F3       -F3       *I3       ))
         Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
         print("Term : " + str(Term))
+        
+        Gravity =  0* Sz[T1][0] - 0.1 * math.pow((T2-T1),2) 
+        
         Sx[T2][0] = Term[0] * (Sx[T1][0]-Mx[T1][0])+Sx[T1][0]
         Sy[T2][0] = Term[0] * (Sy[T1][0]-My[T1][0])+Sy[T1][0]
-        Sz[T2][0] = Term[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0]
+        Sz[T2][0] = Term[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0] + (Gravity)
         
         datTrailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
         print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
