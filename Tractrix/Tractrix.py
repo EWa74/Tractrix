@@ -485,6 +485,9 @@ def Traktrix3D(datTraktor, datTrailerStart):
     datTrailer = createMatrix(int_Count,1)
     datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
     
+    
+    Abstand = math.pow(math.pow((datTraktor[0][0]-Sx[T1][0]),2)+math.pow((datTraktor[0][1]-Sy[T1][0]),2)+math.pow((datTraktor[0][2]-Sz[T1][0]),2), 0.5)
+    
     # y0 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(G3-D3)+G3
     # y1 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(H3-E3)+H3
     # y2 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(I3-F3)+I3 
@@ -505,11 +508,13 @@ def Traktrix3D(datTraktor, datTrailerStart):
         
         Gravity =  0* Sz[T1][0] - 0.1 * math.pow((T2-T1),2) 
         
-        Sx[T2][0] = Term[0] * (Sx[T1][0]-Mx[T1][0])+Sx[T1][0]
-        Sy[T2][0] = Term[0] * (Sy[T1][0]-My[T1][0])+Sy[T1][0]
-        Sz[T2][0] = Term[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0] + (Gravity)
         
-        datTrailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        # todo: Abstand richtig implementieren. Funktion nur OK solange Abstand =1
+        Sx[T2][0] = (1/Abstand) * Term[0] * (Sx[T1][0]-Mx[T1][0])+Sx[T1][0]
+        Sy[T2][0] = (1/Abstand) * Term[0] * (Sy[T1][0]-My[T1][0])+Sy[T1][0]
+        Sz[T2][0] = (1/Abstand) * Term[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0] #+ (Gravity)
+        
+        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
         print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
         
         Sx[T1][0] = deepcopy(Sx[T2][0])
