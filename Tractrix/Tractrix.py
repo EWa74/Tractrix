@@ -193,11 +193,9 @@ def ReadCurve(objPath):
     
 def WriteCurveTrailer(int_Curve, Trailer):
     
-    
-    
     for int_PCurve in range(0,int_Curve-1,1):
         [curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
-        print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
+        #print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
     print("Trailer" )
 
 def time_to_frame(time_value):
@@ -465,13 +463,20 @@ def Traktrix3D(datTraktor, datTrailerStart):
     # Ableitung aus Java-Script (link einfuegen...)
     
     # ACHTUNG: follow path fuehrte zu falschen Erg. -> Setkeyframes; wichtig: genuegend dichte Punkte!
-    
+    # mit   Traktor [1,0,0] und Trailer [0,0,0] -> grosser Fehler
+    # aber: Traktor [1,0,0] und Trailer [0.1,0.1,0.1] -> kleiner Fehler -> Warum?
+    # Vermutung: 
+    # a) die Wegpunkte vom Master/ Traktor muessen absolut aequidistant sein...
+    # b) die Geschwindigkeit vom Slave/ Trailer darf nicht gegen Null gehen (vgl. Formel)
+     
+    # Funktion versucht immer den Abstand von ca. 1 zu erreichen. Warum? 
+      
     Mx = createMatrix(2,1)
     My = createMatrix(2,1)
     Mz = createMatrix(2,1)
     Sx = createMatrix(2,1)
-    Sy = createMatrix(2,1)
-    Sz = createMatrix(2,1)
+    Sy = createMatrix(2,1) 
+    Sz = createMatrix(2,1) 
     
     T1 = 0
     T2 = 1
@@ -484,9 +489,6 @@ def Traktrix3D(datTraktor, datTrailerStart):
     int_Count = len(datTraktor[:][:])
     datTrailer = createMatrix(int_Count,1)
     datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
-    
-    
-    Abstand = math.pow(math.pow((datTraktor[0][0]-Sx[T1][0]),2)+math.pow((datTraktor[0][1]-Sy[T1][0]),2)+math.pow((datTraktor[0][2]-Sz[T1][0]),2), 0.5)
     
     # y0 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(G3-D3)+G3
     # y1 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(H3-E3)+H3
@@ -504,18 +506,20 @@ def Traktrix3D(datTraktor, datTrailerStart):
         
         # Term =((D4       *G3       -D4       *D3       +D3       *D3       -D3       *G3       )+(E4       *H3       -E4       *E3       +E3       *E3       -E3       *H3       )+(F4       *I3       -F4       *F3       +F3       *F3       -F3       *I3       ))
         Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
-        print("Term : " + str(Term))
+        #print("Term : " + str(Term))
         
-        Gravity =  0* Sz[T1][0] - 0.1 * math.pow((T2-T1),2) 
+        #Gravity =  0* Sz[T1][0] - 0.1 * math.pow((T2-T1),2) 
+        #Abstand = math.pow(math.pow((datTraktor[0][0]-Sx[T1][0]),2)+math.pow((datTraktor[0][1]-Sy[T1][0]),2)+math.pow((datTraktor[0][2]-Sz[T1][0]),2), 0.5)
+        AbstandT1 = math.pow(math.pow((datTraktor[int_PCurve][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][2]-Sz[T1][0]),2), 0.5)
+        AbstandT2 = math.pow(math.pow((datTraktor[int_PCurve][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][2]-Sz[T1][0]),2), 0.5)
+
+        Sx[T2][0] = Term[0] * (Sx[T1][0]-Mx[T1][0])+Sx[T1][0]
+        Sy[T2][0] = Term[0] * (Sy[T1][0]-My[T1][0])+Sy[T1][0]
+        Sz[T2][0] = Term[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0] #+ (Gravity)
         
-        
-        # todo: Abstand richtig implementieren. Funktion nur OK solange Abstand =1
-        Sx[T2][0] = (1/Abstand) * Term[0] * (Sx[T1][0]-Mx[T1][0])+Sx[T1][0]
-        Sy[T2][0] = (1/Abstand) * Term[0] * (Sy[T1][0]-My[T1][0])+Sy[T1][0]
-        Sz[T2][0] = (1/Abstand) * Term[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0] #+ (Gravity)
-        
-        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
-        print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
+        datTrailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        print("AbstandT1 :  "  + str(int_PCurve) + " -> " + str(AbstandT1))
+        #print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
         
         Sx[T1][0] = deepcopy(Sx[T2][0])
         Sy[T1][0] = deepcopy(Sy[T2][0])
