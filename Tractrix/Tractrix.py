@@ -94,6 +94,7 @@ curTrailer = bpy.data.curves[objTrailerPath.data.name]
 #TIMEPTS = bpy.props.FloatProperty()
 
 
+
 # create variable containing width
 bpy.types.Scene.pyramide_width = FloatProperty( name = "pyramide's width", default = 2.0, subtype = 'DISTANCE', unit = 'LENGTH', description = "Enter the pyramide's width!" )
 bpy.types.Scene.traktrix_curvetype = '1' 
@@ -233,7 +234,7 @@ def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
     #QuaternionList = OptimizeRotationQuaternion(TargetObjList, TIMEPTSCount)
     for n in range(0,int_Curve-1,1):
         # Trailer[int_PCurve][0]
-        writelog(n)
+        #writelog(n)
         bpy.context.scene.frame_set(time_to_frame(TIMEPTS[n])) 
         
         # 04.09.2014 todo.....
@@ -254,7 +255,7 @@ def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
         
         #ob.keyframe_insert(data_path="rotation_euler", index=-1)
     bpy.context.area.type = original_type 
-    writelog(n)
+    #writelog(n)
 
 
 def SetObjToCurve(TrailerObj, datTrailerCurve, TraktorObj, datTraktorCurve):
@@ -458,19 +459,124 @@ class clearparent_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         return {'FINISHED'} 
     writelog('- - parenttrailer_OT_Main done- - - - - - -') 
       
+def Traktrix3D_core(datTraktor, datTrailerStart):
+    # Ableitung aus Java-Script
+      
+    Mx = createMatrix(2,1)
+    My = createMatrix(2,1)
+    Mz = createMatrix(2,1)
+    Sx = createMatrix(2,1)
+    Sy = createMatrix(2,1) 
+    Sz = createMatrix(2,1) 
+     
+    
+    T1 = 0
+    T2 = 1
+    Term = float()
+    
+    Sx[T1][0] = datTrailerStart[0]
+    Sy[T1][0] = datTrailerStart[1]
+    Sz[T1][0] = datTrailerStart[2]
+    
+    int_Count = len(datTraktor[:][:])
+    datTrailer = createMatrix(int_Count,1)
+    datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
+        
+    for int_PCurve in range(0,int_Count-1,1):
+        
+        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0],   datTraktor[int_PCurve][1],   datTraktor[int_PCurve][2]]
+        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
+        
+        Term = ((Mx[T2][0]*Sx[T1][0] -Mx[T2][0]*Mx[T1][0] +Mx[T1][0]*Mx[T1][0] -Mx[T1][0]*Sx[T1][0]) +
+                (My[T2][0]*Sy[T1][0] -My[T2][0]*My[T1][0] +My[T1][0]*My[T1][0] -My[T1][0]*Sy[T1][0]) +
+                (Mz[T2][0]*Sz[T1][0] -Mz[T2][0]*Mz[T1][0] +Mz[T1][0]*Mz[T1][0] -Mz[T1][0]*Sz[T1][0]))
+                
+        Sx[T2][0] = Sx[T1][0] + Term * (Sx[T1][0]-Mx[T1][0])
+        Sy[T2][0] = Sy[T1][0] + Term * (Sy[T1][0]-My[T1][0])
+        Sz[T2][0] = Sz[T1][0] + Term * (Sz[T1][0]-Mz[T1][0])
+        
+        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        
+        Sx[T1][0] = deepcopy(Sx[T2][0])
+        Sy[T1][0] = deepcopy(Sy[T2][0])
+        Sz[T1][0] = deepcopy(Sz[T2][0])
+        
+    return datTrailer
+
+
     
 def Traktrix3D(datTraktor, datTrailerStart):
     # Ableitung aus Java-Script (link einfuegen...)
-    
+    # Status: OK
     # ACHTUNG: follow path fuehrte zu falschen Erg. -> Setkeyframes; wichtig: genuegend dichte Punkte!
-    # mit   Traktor [1,0,0] und Trailer [0,0,0] -> grosser Fehler
-    # aber: Traktor [1,0,0] und Trailer [0.1,0.1,0.1] -> kleiner Fehler -> Warum?
-    # Vermutung: 
-    # a) die Wegpunkte vom Master/ Traktor muessen absolut aequidistant sein...
+    # Pruefen: 
+    # a) die Wegpunkte vom Master/ Traktor muessen absolut aequidistant sein... 
+    # --> gegeben (vgl. Traktor Wegpunkte)
     # b) die Geschwindigkeit vom Slave/ Trailer darf nicht gegen Null gehen (vgl. Formel)
-     
-    # Funktion versucht immer den Abstand von ca. 1 zu erreichen. Warum? 
-      
+    # --> tbc
+          
+    Mx = createMatrix(2,1)
+    My = createMatrix(2,1)
+    Mz = createMatrix(2,1)
+    Sx = createMatrix(2,1)
+    Sy = createMatrix(2,1) 
+    Sz = createMatrix(2,1) 
+    n  = [0,1,2,3]
+    
+    T1 = 0
+    T2 = 1
+    Term = float()
+    
+    Sx[T1][0] = datTrailerStart[0]
+    Sy[T1][0] = datTrailerStart[1]
+    Sz[T1][0] = datTrailerStart[2]
+    
+    int_Count = len(datTraktor[:][:])
+    datTrailer = createMatrix(int_Count,1)
+    datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
+    
+    for int_PCurve in range(0,int_Count-1,1):
+        
+        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
+        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
+        
+        nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
+            
+        n[1] = (Sx[T1][0] - Mx[T1][0])/nn
+        n[2] = (Sy[T1][0] - My[T1][0])/nn
+        n[3] = (Sz[T1][0] - Mz[T1][0])/nn
+        
+        Term = ((Mx[T2][0] -Mx[T1][0]) *n[1]+
+                (My[T2][0] -My[T1][0]) *n[2]+
+                (Mz[T2][0] -Mz[T1][0]) *n[3])
+        
+        #print("Term : " + str(Term))
+        
+        #Gravity =  0* Sz[T1][0] - 0.1 * math.pow((T2-T1),2) 
+        #Abstand = math.pow(math.pow((datTraktor[0][0]-Sx[T1][0]),2)+math.pow((datTraktor[0][1]-Sy[T1][0]),2)+math.pow((datTraktor[0][2]-Sz[T1][0]),2), 0.5)
+        AbstandT1 = math.pow(math.pow((datTraktor[int_PCurve][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][2]-Sz[T1][0]),2), 0.5)
+        AbstandT2 = math.pow(math.pow((datTraktor[int_PCurve][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][2]-Sz[T1][0]),2), 0.5)
+
+        Sx[T2][0] = Sx[T1][0] + Term * n[1]
+        Sy[T2][0] = Sy[T1][0] + Term * n[2]
+        Sz[T2][0] = Sz[T1][0] + Term * n[3]  #+ (Gravity)
+        
+        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        print("AbstandT1 :  "  + str(int_PCurve) + " -> " + str(AbstandT1))
+        writelog("AbstandT1 :  "  + str(int_PCurve) + " -> " + str(AbstandT1))
+        #print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
+        
+        Sx[T1][0] = deepcopy(Sx[T2][0])
+        Sy[T1][0] = deepcopy(Sy[T2][0])
+        Sz[T1][0] = deepcopy(Sz[T2][0])
+        
+    return datTrailer
+
+
+
+def Traktrix3D_222222(datTraktor, datTrailerStart):
+    # Ableitung aus Java-Script
+    # Status: bug...  
     Mx = createMatrix(2,1)
     My = createMatrix(2,1)
     Mz = createMatrix(2,1)
@@ -489,41 +595,31 @@ def Traktrix3D(datTraktor, datTrailerStart):
     int_Count = len(datTraktor[:][:])
     datTrailer = createMatrix(int_Count,1)
     datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
-    
-    # y0 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(G3-D3)+G3
-    # y1 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(H3-E3)+H3
-    # y2 =((D4*G3-D4*D3+D3*D3-D3*G3)+(E4*H3-E4*E3+E3*E3-E3*H3)+(F4*I3-F4*F3+F3*F3-F3*I3))*(I3-F3)+I3 
-    #
-    # mit DEF = Traktor(x,y,z) = M(x,y,z) und GHI = Trailer(x,y,z) = S(x,y,z) zum Zeitpunkt T1, T2
-    
-    
+        
     for int_PCurve in range(0,int_Count-1,1):
         
-        
-        
-        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
+        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0],   datTraktor[int_PCurve][1],   datTraktor[int_PCurve][2]]
         Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
         
-        # Term =((D4       *G3       -D4       *D3       +D3       *D3       -D3       *G3       )+(E4       *H3       -E4       *E3       +E3       *E3       -E3       *H3       )+(F4       *I3       -F4       *F3       +F3       *F3       -F3       *I3       ))
-        Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
-        #print("Term : " + str(Term))
+        Term = ((Mx[T2][0] -Mx[T1][0]) +
+                (My[T2][0] -My[T1][0]) +
+                (Mz[T2][0] -Mz[T1][0]) )
+       
         
-        #Gravity =  0* Sz[T1][0] - 0.1 * math.pow((T2-T1),2) 
-        #Abstand = math.pow(math.pow((datTraktor[0][0]-Sx[T1][0]),2)+math.pow((datTraktor[0][1]-Sy[T1][0]),2)+math.pow((datTraktor[0][2]-Sz[T1][0]),2), 0.5)
-        AbstandT1 = math.pow(math.pow((datTraktor[int_PCurve][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][2]-Sz[T1][0]),2), 0.5)
-        AbstandT2 = math.pow(math.pow((datTraktor[int_PCurve][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][2]-Sz[T1][0]),2), 0.5)
-
-        Sx[T2][0] = Term[0] * (Sx[T1][0]-Mx[T1][0])+Sx[T1][0]
-        Sy[T2][0] = Term[0] * (Sy[T1][0]-My[T1][0])+Sy[T1][0]
-        Sz[T2][0] = Term[0] * (Sz[T1][0]-Mz[T1][0])+Sz[T1][0] #+ (Gravity)
+        Rnorm= 1/ math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
+                
+        Sx[T2][0] = Sx[T1][0] + Term * (Sx[T1][0]-Mx[T1][0]) * Rnorm
+        Sy[T2][0] = Sy[T1][0] + Term * (Sy[T1][0]-My[T1][0]) * Rnorm
+        Sz[T2][0] = Sz[T1][0] + Term * (Sz[T1][0]-Mz[T1][0]) * Rnorm
         
-        datTrailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
-        print("AbstandT1 :  "  + str(int_PCurve) + " -> " + str(AbstandT1))
-        #print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
+        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
         
         Sx[T1][0] = deepcopy(Sx[T2][0])
         Sy[T1][0] = deepcopy(Sy[T2][0])
         Sz[T1][0] = deepcopy(Sz[T2][0])
+        
+        AbstandT1 = math.pow(math.pow((datTraktor[int_PCurve][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][2]-Sz[T1][0]),2), 0.5)
+        print("AbstandT1 :  "  + str(int_PCurve) + " -> " + str(AbstandT1))
         
     return datTrailer
 
@@ -587,7 +683,7 @@ def tractrix3D(datTraktor, datTrailerStart):
         Sy[T2][0] = Term * (My[T1][0]-Sy[T1][0])+Sy[T1][0] # *(E5-H5)+H5
         Sz[T2][0] = Term * (Mz[T1][0]-Sz[T1][0])+Sz[T1][0] # *(f5-i5)+i5
         
-        datTrailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
         print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
         
         Sx[T1][0] = deepcopy(Sx[T2][0])
@@ -658,7 +754,7 @@ def tractrix3Dinv(datTraktor, datTrailerStart):
         Sy[T2][0] = My[T2][0] + d * ((My[T2][0]-My[T1][0]) / ((Mx[T2][0]-Mx[T1][0])*Term))
         Sz[T2][0] = Sz[T1][0] # 
         
-        datTrailer[int_PCurve][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
         print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
         
         Sx[T1][0] = deepcopy(Sx[T2][0])
@@ -734,13 +830,13 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
     
     Mtrans     = mathutils.Matrix.Translation(Vector(BASEPos_Koord))
     Vtrans_rel = Obj_Koord                              #lokal 
-    writelog('Vtrans_rel'+ str(Vtrans_rel))  # neuer Bezugspunkt
+    #writelog('Vtrans_rel'+ str(Vtrans_rel))  # neuer Bezugspunkt
       
     MrotX = mathutils.Matrix.Rotation(BASEPos_Angle[0], 3, 'X') # C = -179 Global
     MrotY = mathutils.Matrix.Rotation(BASEPos_Angle[1], 3, 'Y') # B = -20
     MrotZ = mathutils.Matrix.Rotation(BASEPos_Angle[2], 3, 'Z') # A = -35
     Mrot = MrotZ * MrotY * MrotX
-    writelog('Mrot'+ str(Mrot))
+    #writelog('Mrot'+ str(Mrot))
     
     Mworld = Mtrans * Mrot.to_4x4()
     
@@ -748,19 +844,19 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
     Mrot_relY = mathutils.Matrix.Rotation(Obj_Angle[1], 3, 'Y') # 0,20,35 = X = -C, Y = -B, Z = -A
     Mrot_relZ = mathutils.Matrix.Rotation(Obj_Angle[2], 3, 'Z')
     Mrot_rel = Mrot_relZ * Mrot_relY * Mrot_relX # KUKA Erg.
-    writelog('Mrot_rel'+ str(Mrot_rel))
+    #writelog('Mrot_rel'+ str(Mrot_rel))
 
     Mrot_abs = Mrot_rel.transposed() * Mrot.transposed()       
     Mrot_abs = Mrot_abs.transposed()
     rotEuler =Mrot_abs.to_euler('XYZ')
     
-    writelog('rotEuler'+ str(rotEuler))
-    writelog('rotEuler[0] :'+ str(rotEuler[0]*360/(2*math.pi)))
-    writelog('rotEuler[1] :'+ str(rotEuler[1]*360/(2*math.pi)))
-    writelog('rotEuler[2] :'+ str(rotEuler[2]*360/(2*math.pi)))
+    #writelog('rotEuler'+ str(rotEuler))
+    #writelog('rotEuler[0] :'+ str(rotEuler[0]*360/(2*math.pi)))
+    #writelog('rotEuler[1] :'+ str(rotEuler[1]*360/(2*math.pi)))
+    #writelog('rotEuler[2] :'+ str(rotEuler[2]*360/(2*math.pi)))
         
     Vtrans_abs = Mworld *Vtrans_rel
-    writelog('Vtrans_abs :'+ str(Vtrans_abs))
+    #writelog('Vtrans_abs :'+ str(Vtrans_abs))
        
     return Vtrans_abs, rotEuler
 
