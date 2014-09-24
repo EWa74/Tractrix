@@ -459,61 +459,20 @@ class clearparent_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         return {'FINISHED'} 
     writelog('- - parenttrailer_OT_Main done- - - - - - -') 
       
-def Traktrix3D_core(datTraktor, datTrailerStart):
-    # Ableitung aus Java-Script
-      
-    Mx = createMatrix(2,1)
-    My = createMatrix(2,1)
-    Mz = createMatrix(2,1)
-    Sx = createMatrix(2,1)
-    Sy = createMatrix(2,1) 
-    Sz = createMatrix(2,1) 
-     
-    
-    T1 = 0
-    T2 = 1
-    Term = float()
-    
-    Sx[T1][0] = datTrailerStart[0]
-    Sy[T1][0] = datTrailerStart[1]
-    Sz[T1][0] = datTrailerStart[2]
-    
-    int_Count = len(datTraktor[:][:])
-    datTrailer = createMatrix(int_Count,1)
-    datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
-        
-    for int_PCurve in range(0,int_Count-1,1):
-        
-        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0],   datTraktor[int_PCurve][1],   datTraktor[int_PCurve][2]]
-        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
-        
-        Term = ((Mx[T2][0]*Sx[T1][0] -Mx[T2][0]*Mx[T1][0] +Mx[T1][0]*Mx[T1][0] -Mx[T1][0]*Sx[T1][0]) +
-                (My[T2][0]*Sy[T1][0] -My[T2][0]*My[T1][0] +My[T1][0]*My[T1][0] -My[T1][0]*Sy[T1][0]) +
-                (Mz[T2][0]*Sz[T1][0] -Mz[T2][0]*Mz[T1][0] +Mz[T1][0]*Mz[T1][0] -Mz[T1][0]*Sz[T1][0]))
-                
-        Sx[T2][0] = Sx[T1][0] + Term * (Sx[T1][0]-Mx[T1][0])
-        Sy[T2][0] = Sy[T1][0] + Term * (Sy[T1][0]-My[T1][0])
-        Sz[T2][0] = Sz[T1][0] + Term * (Sz[T1][0]-Mz[T1][0])
-        
-        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
-        
-        Sx[T1][0] = deepcopy(Sx[T2][0])
-        Sy[T1][0] = deepcopy(Sy[T2][0])
-        Sz[T1][0] = deepcopy(Sz[T2][0])
-        
-    return datTrailer
-
-
     
 def Traktrix3D(datTraktor, datTrailerStart):
     # Ableitung aus Java-Script (link einfuegen...)
-    # Status: OK
+    # Status (Variante 1): OK (Zeigt geringeren Rechenfehler als Variante 2.
+    # -> Rechenfehler optimieren indem Berechnungen in der Schleife reduziert werden. -> Variante 1a
+    
     # ACHTUNG: follow path fuehrte zu falschen Erg. -> Setkeyframes; wichtig: genuegend dichte Punkte!
     # Pruefen: 
-    # a) die Wegpunkte vom Master/ Traktor muessen absolut aequidistant sein... 
+    # a) die Wegpunkte vom Master/ Traktor muessen absolut aequidistant sein?... 
     # --> gegeben (vgl. Traktor Wegpunkte)
-    # b) die Geschwindigkeit vom Slave/ Trailer darf nicht gegen Null gehen (vgl. Formel)
-    # --> tbc
+    # b) die Geschwindigkeit vom Slave/ Trailer darf nicht gegen Null gehen? (vgl. Formel)
+    # Todo: 
+    # - Rechenfehler (Abweichung von soll/ ist Distanz) --> ggf. mehr Wegpunkte notwendig;
+    # - moeglich nicht alle Keyframes zu setzten? bzw. Verteilung ueber GUI steuern. 
           
     Mx = createMatrix(2,1)
     My = createMatrix(2,1)
@@ -570,13 +529,14 @@ def Traktrix3D(datTraktor, datTrailerStart):
         Sy[T1][0] = deepcopy(Sy[T2][0])
         Sz[T1][0] = deepcopy(Sz[T2][0])
         
-    return datTrailer
+    return datTrailer 
 
 
 
 def Traktrix3D_222222(datTraktor, datTrailerStart):
     # Ableitung aus Java-Script
-    # Status: bug...  
+    # Status (Variante 2): OK (Zeigt groesseren Rechenfehler als Variante 1.) 
+    
     Mx = createMatrix(2,1)
     My = createMatrix(2,1)
     Mz = createMatrix(2,1)
@@ -601,16 +561,17 @@ def Traktrix3D_222222(datTraktor, datTrailerStart):
         Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0],   datTraktor[int_PCurve][1],   datTraktor[int_PCurve][2]]
         Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
         
-        Term = ((Mx[T2][0] -Mx[T1][0]) +
-                (My[T2][0] -My[T1][0]) +
-                (Mz[T2][0] -Mz[T1][0]) )
+        Rnorm= 1/ math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
+         
+        Term = ((Mx[T2][0] -Mx[T1][0]) * (Sx[T1][0] - Mx[T1][0])/ Rnorm +
+                (My[T2][0] -My[T1][0]) * (Sy[T1][0] - My[T1][0])/ Rnorm +
+                (Mz[T2][0] -Mz[T1][0]) * (Sz[T1][0] - Mz[T1][0])/ Rnorm)
        
         
-        Rnorm= 1/ math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
-                
-        Sx[T2][0] = Sx[T1][0] + Term * (Sx[T1][0]-Mx[T1][0]) * Rnorm
-        Sy[T2][0] = Sy[T1][0] + Term * (Sy[T1][0]-My[T1][0]) * Rnorm
-        Sz[T2][0] = Sz[T1][0] + Term * (Sz[T1][0]-Mz[T1][0]) * Rnorm
+               
+        Sx[T2][0] = Sx[T1][0] + Term * (Sx[T1][0]-Mx[T1][0]) / Rnorm
+        Sy[T2][0] = Sy[T1][0] + Term * (Sy[T1][0]-My[T1][0]) / Rnorm
+        Sz[T2][0] = Sz[T1][0] + Term * (Sz[T1][0]-Mz[T1][0]) / Rnorm
         
         datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
         
@@ -620,7 +581,7 @@ def Traktrix3D_222222(datTraktor, datTrailerStart):
         
         AbstandT1 = math.pow(math.pow((datTraktor[int_PCurve][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][2]-Sz[T1][0]),2), 0.5)
         print("AbstandT1 :  "  + str(int_PCurve) + " -> " + str(AbstandT1))
-        
+        writelog("AbstandT1 :  "  + str(int_PCurve) + " -> " + str(AbstandT1))
     return datTrailer
 
 def tractrix3D(datTraktor, datTrailerStart):
