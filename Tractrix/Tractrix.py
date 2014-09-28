@@ -1,5 +1,3 @@
-# location in Abh.keit vom frame
-
 #  ***** BEGIN GPL LICENSE BLOCK *****ewa 
 #  https://github.com/EWa74/KUKA_Simulator.git
 #  This program is free software: you can redistribute it and/or modify
@@ -20,8 +18,6 @@
 # Next steps:    
 # - Pruefung ob das Ergebnis des Trailers noch sinnvoll ist (Astand zum Traktor, delta Weg (-> proportional zu delta T)
 
-# => Vermutung: follow path verfaelscht das Erg. besser ueber keyframes loesen!!!! 
-
 # - Code Cleaning
  
 # - Beachte: wenn die Punkte die die Kurve beschreiben zu weit auseinander liegen, 
@@ -36,7 +32,7 @@
 # - Erbegnis "baken"
 # - Abstand Abpruefen bei Berechnung und auf Fehler hinweisen
 # - Traktorkurve, Traktor/ Trailerobjekte per Menue auswaehlen
-# - Kurven funktonieren z.Zt. NUR wenn der Origin auf [0,0,0] ist!!!
+# - Kurven funktonieren z.Zt. NUR wenn der Origin auf [0,0,0] ist!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 '''
@@ -460,7 +456,10 @@ class clearparent_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     writelog('- - parenttrailer_OT_Main done- - - - - - -') 
       
     
-def Traktrix3D(datTraktor, datTrailerStart):
+def Traktrix3Dxxxx(datTraktor, datTrailerStart):
+    
+    # Variante 3
+    
     # Ableitung aus Java-Script (link einfuegen...)
     # Status (Variante 1): OK (Zeigt geringeren Rechenfehler als Variante 2.
     # -> Rechenfehler optimieren indem Berechnungen in der Schleife reduziert werden. -> Variante 1a
@@ -497,12 +496,11 @@ def Traktrix3D(datTraktor, datTrailerStart):
     
     Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[0][0], datTraktor[0][1], datTraktor[0][2]]
     DistOrg = math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
-    # todo.....    Berechnungsfehlter minimieren (nn, n[1..3] vor die Schleife gezogen -> läuft aber nicht richtig....
+    # todo.....    Berechnungsfehlter minimieren (nn, n[1..3] vor die Schleife gezogen 
+    # -> ergibt groessere Schwankungen waehrend der Strecke bei gleichem Endpunkt....
     nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
             
-    n[1] = (Sx[T1][0] - Mx[T1][0])/nn
-    n[2] = (Sy[T1][0] - My[T1][0])/nn
-    n[3] = (Sz[T1][0] - Mz[T1][0])/nn
+    
     
         
     for int_PCurve in range(0,int_Count-1,1):
@@ -522,6 +520,11 @@ def Traktrix3D(datTraktor, datTrailerStart):
         #Abstand = math.pow(math.pow((datTraktor[0][0]-Sx[T1][0]),2)+math.pow((datTraktor[0][1]-Sy[T1][0]),2)+math.pow((datTraktor[0][2]-Sz[T1][0]),2), 0.5)
         AbstandT1 = math.pow(math.pow((datTraktor[int_PCurve][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][2]-Sz[T1][0]),2), 0.5)
         
+        
+        n[1] = (Sx[T1][0] - Mx[T1][0])/nn
+        n[2] = (Sy[T1][0] - My[T1][0])/nn
+        n[3] = (Sz[T1][0] - Mz[T1][0])/nn
+        
         Sx[T2][0] = Sx[T1][0] + Term * n[1]
         Sy[T2][0] = Sy[T1][0] + Term * n[2]
         Sz[T2][0] = Sz[T1][0] + Term * n[3]  #+ (Gravity)
@@ -539,12 +542,14 @@ def Traktrix3D(datTraktor, datTrailerStart):
     return datTrailer 
 
 
-def Traktrix3D_org(datTraktor, datTrailerStart):
+def Traktrix3D(datTraktor, datTrailerStart):
+    
+    # Variante 1
+    
     # Ableitung aus Java-Script (link einfuegen...)
     # Status (Variante 1): OK (Zeigt geringeren Rechenfehler als Variante 2.
     # -> Rechenfehler optimieren indem Berechnungen in der Schleife reduziert werden. -> Variante 1a
     
-    # ACHTUNG: follow path fuehrte zu falschen Erg. -> Setkeyframes; wichtig: genuegend dichte Punkte!
     # Pruefen: 
     # a) die Wegpunkte vom Master/ Traktor muessen absolut aequidistant sein?... 
     # --> gegeben (vgl. Traktor Wegpunkte)
@@ -607,6 +612,9 @@ def Traktrix3D_org(datTraktor, datTrailerStart):
 
 
 def Traktrix3D_222222(datTraktor, datTrailerStart):
+    
+    # Variante 2
+    
     # Ableitung aus Java-Script
     # Status (Variante 2): OK (Zeigt groesseren Rechenfehler als Variante 1.) 
     
