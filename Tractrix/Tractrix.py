@@ -667,7 +667,7 @@ def Traktrix3D_222222(datTraktor, datTrailerStart):
 
 def tractrix3D(datTraktor, datTrailerStart):
     # Arbeitsblatt 'Gewoehnliche DGL'
-    # Anstand konstant
+    # Abstand konstant
     # v (Geschw.) immer in Richtung Traktor
     
     # ACHTUNG: Abstand NICHT konstant! todo: Fehlersuche.... 
