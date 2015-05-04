@@ -19,7 +19,7 @@
 # Next steps:    
 # - Pruefung ob das Ergebnis des Trailers noch sinnvoll ist (Astand zum Traktor, delta Weg (-> proportional zu delta T)
 
-# - Code Cleaning
+# - Code Cleaning 
  
 # - Beachte: wenn die Punkte die die Kurve beschreiben zu weit auseinander liegen, 
 #   erhaelt man ein unsinniges Ergebnis. Loesung:
