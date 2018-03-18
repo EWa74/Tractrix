@@ -1,4 +1,10 @@
-# delete this line (commit and push test 2015 from dell) 234
+# -*- coding: utf-8 -*-    
+#!/usr/bin/env python 
+# -*- coding: utf-8 -*-
+# coding Angabe in Zeilen 1 und 2 fuer Eclipse Luna/ Pydev 3.9 notwendig
+# cp1252
+
+
 #  ***** BEGIN GPL LICENSE BLOCK *****ewa 
 #  https://github.com/EWa74/KUKA_Simulator.git
 #  This program is free software: you can redistribute it and/or modify
@@ -25,11 +31,11 @@
 # - Beachte: wenn die Punkte die die Kurve beschreiben zu weit auseinander liegen, 
 #   erhaelt man ein unsinniges Ergebnis. Loesung:
 #   fuer beide Kurven: -> EditMode [TAB] -> [A] alle auswaehlen 
-#   [w] für specials menue druecken -> Subdivide 
-#   (Achtung: die Kurvenpunkte für Trailer muss >= der des Traktors sein)
+#   [w] fï¿½r specials menue druecken -> Subdivide 
+#   (Achtung: die Kurvenpunkte fï¿½r Trailer muss >= der des Traktors sein)
 # - Laenge der Slave-Kurve automatisch anpassen
 # - Parenting (nochmals druecken, falls Verhalten falsch) Loesung:??? 
-# - Menuefuehrung (Kurve auswählen, Objetk auswählen)
+# - Menuefuehrung (Kurve auswï¿½hlen, Objetk auswï¿½hlen)
 # - Import/ Export
 # - Erbegnis "baken"
 # - Abstand Abpruefen bei Berechnung und auf Fehler hinweisen
@@ -58,6 +64,10 @@ bl_info = {
     "wiki_url": "http://...",
     "tracker_url": "http://..."
     }
+
+#import pydevd 
+#pydevd.settrace()  #<-- debugger stops at the next statement 
+import pydevd;pydevd.settrace() # notwendig weil breakpoints uebersprungen werden. warum auch immer
 
      
 #--- ### Imports
@@ -259,7 +269,7 @@ def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
 def SetObjToCurve(TrailerObj, datTrailerCurve, TraktorObj, datTraktorCurve):
     # Set Objects to curve
         
-    # parenting lösen, Obj positionieren, follow path wieder herstellen:
+    # parenting lï¿½sen, Obj positionieren, follow path wieder herstellen:
     
     ClearParenting(objTrailer,objTrailerPath )
     ClearParenting(objTrailer,objTraktorPath )
@@ -837,11 +847,11 @@ def Parenting(Mother, Child):
     
 def ClearParenting(Mother, Child):
     
-    # - Deselect alle Objekte und in Objekte in richtiger Reihenfolge auswählen
+    # - Deselect alle Objekte und in Objekte in richtiger Reihenfolge auswï¿½hlen
     bpy.ops.object.select_all(action='DESELECT')
     Child.select= True
     Mother.select = True
-    # - Parenting lösen    
+    # - Parenting lï¿½sen    
     bpy.ops.object.parent_clear(type='CLEAR') # CLEAR_KEEP_TRANSFORM
     # - deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
@@ -949,11 +959,11 @@ if __name__ == '__main__':
 #Loesungsweg A):
 # B1 Die Nurbspath Koordinaten nutzen und eine Trailer-Nurbs auf Basis der 
 # Traktor-Nurbs errechnen
-# Beachte: ggf. später Koordinaten von local auf world transformieren       
+# Beachte: ggf. spï¿½ter Koordinaten von local auf world transformieren       
 #Loesungsweg B):
 # B1.1 Position von Traktor in Abh.keit vom aktuellen frame bestimmen (-> local2world transformation -> Kuka -> get_absolute())
 # und die Traxtrix-Funktion fuettern. 
-# für (jeden?) Frame des Traktors ein Keyframe für den Trailers setzen
+# fï¿½r (jeden?) Frame des Traktors ein Keyframe fï¿½r den Trailers setzen
 
 #Traktor = bpy.data.objects['Obj1']      
 #action_name = bpy.data.objects[Traktor.name].animation_data.action.name
