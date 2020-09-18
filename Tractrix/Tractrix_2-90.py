@@ -100,7 +100,7 @@ from bpy.props import PointerProperty # 2020-09-14
 
 # Global Variables:
 objTrailerPath = bpy.data.objects['TrailerPath']
-objTraktorPath = bpy.data.objects['TraktorPath']
+#objTraktorPath = bpy.data.objects['TraktorPath']
 objTrailer = bpy.data.objects['Trailer']
 objTraktor = bpy.data.objects['Traktor']
 curTraktor = bpy.data.curves[objTraktorPath.data.name]
@@ -177,7 +177,7 @@ class Tractrix_PT_Panel(bpy.types.Panel):
         
         
         # Import Button:
-        col.operator("object.traktrix", text="Traktrix [OK]")
+        col.operator("object.traktrix", text="Traktrix")
           
         col.operator("object.parenttraktor", text="parent TRAKTOR...")
         col.operator("object.parenttrailer", text="parent TRAILER...")
