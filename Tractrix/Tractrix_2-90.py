@@ -126,16 +126,17 @@ class Tractrix_PT_Panel(bpy.types.Panel):
     writelog('Tractrix_PT_Panel....')
     writelog()
     """Creates a Panel in the scene context of the properties editor"""
-    bl_label = "Tractrix Panel" # heading of panel
-    #bl_idname = "SCENE_PT_layout"
-    bl_idname = "OBJECT_PT_layout"
-    
+
     # bpy.ops.OBJECT_PT_layout.module....
+    bl_idname = "VIEW3D_PT_layout"
+    bl_label = "Tractrix"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_context = "objectmode"
+    bl_category = "Create"
+    bl_options = {'DEFAULT_CLOSED'}
+
     
-    bl_space_type = 'PROPERTIES' # window type panel is displayed in
-    bl_region_type = 'WINDOW' # region of window panel is displayed in
-    bl_context = "object"
-    #bl_context = "scene"
     
     # check poll() to avoid exception.
     '''
@@ -178,9 +179,6 @@ class Tractrix_PT_Panel(bpy.types.Panel):
         # Import Button:
         col.operator("object.traktrix", text="Traktrix [OK]")
           
-        col.operator("object.tractrix3d", text="3D Traktrix-Traktor-Leitkuve v const.[ongoing]")
-        col.operator("object.tractrix3dinv", text="2D Traktrix-Traktor-Leitkurve d const[ongoing]")
-        col.operator("object.tractrix3dtbd", text="tbd...")
         col.operator("object.parenttraktor", text="parent TRAKTOR...")
         col.operator("object.parenttrailer", text="parent TRAILER...")
         col.operator("object.clearparent", text="clear parents...")
@@ -381,54 +379,7 @@ class Tractrix3d_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     writelog('- - Tractrix_OT_Main done- - - - - - -')
 
 
-class Tractrix3dinv_OT_Main (bpy.types.Operator): # OT fuer Operator Type
-    # Traktrix-Traktor-Leitkurve-v-const
-    bl_idname = "object.tractrix3dinv"
-    bl_label = "Tractrix_OT_Main (TB)" #Toolbar - Label
-    bl_description = "Calculate Tractrix for Trailer Object from Tractor Object." # Kommentar im Specials Kontextmenue
-    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
 
-    def execute(self, context):  
-        int_Curve, datTraktorCurve = ReadCurve(objTraktorPath)  
-        
-        datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-       
-        datTrailerCurve= tractrix3Dinv(datTraktorCurve, datTrailerStart)
-       
-        WriteCurveTrailer(int_Curve, datTrailerCurve)
-        
-        SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
-       
-        return {'FINISHED'} 
-    writelog('- - Tractrix_OT_Main done- - - - - - -')
-
-class Tractrix3dtbd_OT_Main (bpy.types.Operator): # OT fuer Operator Type
-    bl_idname = "object.tractrix3dtbd"
-    bl_label = "Tractrix_OT_Main (TB)" #Toolbar - Label
-    bl_description = "Calculate Tractrix for Trailer Object from Tractor Object." # Kommentar im Specials Kontextmenue
-    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
-
-    def execute(self, context):  
-        int_Curve, datTraktorCurve = ReadCurve(objTraktorPath)  
-        
-        datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-       
-        datTrailerCurve= tractrix3Dtbd(datTraktorCurve, datTrailerStart)
-       
-        WriteCurveTrailer(int_Curve, datTrailerCurve)
-        
-        #SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
-        
-        TIMEPTS = []
-        for int_PCurve in range(0,int_Curve-1,1):
-            TIMEPTS = TIMEPTS + [int_PCurve/12]
-        
-        
-        SetKeyFrames(objTraktor, curTraktor, int_Curve, TIMEPTS)
-        SetKeyFrames(objTrailer, curTrailer, int_Curve, TIMEPTS)
-        
-        return {'FINISHED'} 
-    writelog('- - Tractrix_OT_Main done- - - - - - -')   
 
 class parenttraktor_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     bl_idname = "object.parenttraktor"
@@ -492,90 +443,7 @@ class clearparent_OT_Main (bpy.types.Operator): # OT fuer Operator Type
     writelog('- - parenttrailer_OT_Main done- - - - - - -') 
       
     
-def Traktrix3Dxxxx(datTraktor, datTrailerStart):
-    
-    # Variante 3
-    
-    # Ableitung aus Java-Script (link einfuegen...)
-    # Status (Variante 1): OK (Zeigt geringeren Rechenfehler als Variante 2.
-    # -> Rechenfehler optimieren indem Berechnungen in der Schleife reduziert werden. -> Variante 1a
-    
-    # ACHTUNG: follow path fuehrte zu falschen Erg. -> Setkeyframes; wichtig: genuegend dichte Punkte!
-    # Pruefen: 
-    # a) die Wegpunkte vom Master/ Traktor muessen absolut aequidistant sein?... 
-    # --> gegeben (vgl. Traktor Wegpunkte)
-    # b) die Geschwindigkeit vom Slave/ Trailer darf nicht gegen Null gehen? (vgl. Formel)
-    # Todo: 
-    # - Rechenfehler (Abweichung von soll/ ist Distanz) --> ggf. mehr Wegpunkte notwendig;
-    # - moeglich nicht alle Keyframes zu setzten? bzw. Verteilung ueber GUI steuern. 
-    # --> Residuen zum minimieren des Fehlers...
-          
-    Mx = createMatrix(2,1)
-    My = createMatrix(2,1)
-    Mz = createMatrix(2,1)
-    Sx = createMatrix(2,1)
-    Sy = createMatrix(2,1) 
-    Sz = createMatrix(2,1) 
-    n  = [0,1,2,3]
-    
-    T1 = 0
-    T2 = 1
-    Term = float()
-    
-    Sx[T1][0] = datTrailerStart[0]
-    Sy[T1][0] = datTrailerStart[1]
-    Sz[T1][0] = datTrailerStart[2]
-    
-    int_Count = len(datTraktor[:][:])
-    datTrailer = createMatrix(int_Count,1)
-    datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
-    
-    Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[0][0], datTraktor[0][1], datTraktor[0][2]]
-    DistOrg = math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
-    # todo.....    Berechnungsfehlter minimieren (nn, n[1..3] vor die Schleife gezogen 
-    # -> ergibt groessere Schwankungen waehrend der Strecke bei gleichem Endpunkt....
-    nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
-            
-    
-    
-        
-    for int_PCurve in range(0,int_Count-1,1):
-        
-        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
-        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
-        
-        
-        
-        Term = ((Mx[T2][0] -Mx[T1][0]) *n[1]+
-                (My[T2][0] -My[T1][0]) *n[2]+
-                (Mz[T2][0] -Mz[T1][0]) *n[3])
-        
-        
-        
-        #Gravity =  0* Sz[T1][0] - 0.1 * math.pow((T2-T1),2) 
-        #Abstand = math.pow(math.pow((datTraktor[0][0]-Sx[T1][0]),2)+math.pow((datTraktor[0][1]-Sy[T1][0]),2)+math.pow((datTraktor[0][2]-Sz[T1][0]),2), 0.5)
-        AbstandT1 = math.pow(math.pow((datTraktor[int_PCurve][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][2]-Sz[T1][0]),2), 0.5)
-        
-        
-        n[1] = (Sx[T1][0] - Mx[T1][0])/nn
-        n[2] = (Sy[T1][0] - My[T1][0])/nn
-        n[3] = (Sz[T1][0] - Mz[T1][0])/nn
-        
-        Sx[T2][0] = Sx[T1][0] + Term * n[1]
-        Sy[T2][0] = Sy[T1][0] + Term * n[2]
-        Sz[T2][0] = Sz[T1][0] + Term * n[3]  #+ (Gravity)
-        
-        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
-                
-        Sx[T1][0] = deepcopy(Sx[T2][0])
-        Sy[T1][0] = deepcopy(Sy[T2][0])
-        Sz[T1][0] = deepcopy(Sz[T2][0])
-    
-    print("AbstandT1 :  " + str(AbstandT1))
-    writelog("AbstandT1 :  "  + str(AbstandT1))
-    print("DistOrg :  " + str(DistOrg))
-    writelog("DistOrg :  "  + str(DistOrg))
-    return datTrailer 
+
 
 
 def Traktrix3D(datTraktor, datTrailerStart):
@@ -646,203 +514,6 @@ def Traktrix3D(datTraktor, datTrailerStart):
     
     return datTrailer 
 
-
-def Traktrix3D_222222(datTraktor, datTrailerStart):
-    
-    # Variante 2
-    
-    # Ableitung aus Java-Script
-    # Status (Variante 2): OK (Zeigt groesseren Rechenfehler als Variante 1.) 
-    
-    Mx = createMatrix(2,1)
-    My = createMatrix(2,1)
-    Mz = createMatrix(2,1)
-    Sx = createMatrix(2,1)
-    Sy = createMatrix(2,1) 
-    Sz = createMatrix(2,1) 
-    
-    T1 = 0
-    T2 = 1
-    Term = float()
-    
-    Sx[T1][0] = datTrailerStart[0]
-    Sy[T1][0] = datTrailerStart[1]
-    Sz[T1][0] = datTrailerStart[2]
-    
-    int_Count = len(datTraktor[:][:])
-    datTrailer = createMatrix(int_Count,1)
-    datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
-        
-    for int_PCurve in range(0,int_Count-1,1):
-        
-        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0],   datTraktor[int_PCurve][1],   datTraktor[int_PCurve][2]]
-        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
-        
-        Rnorm= 1/ math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
-         
-        Term = ((Mx[T2][0] -Mx[T1][0]) * (Sx[T1][0] - Mx[T1][0])/ Rnorm +
-                (My[T2][0] -My[T1][0]) * (Sy[T1][0] - My[T1][0])/ Rnorm +
-                (Mz[T2][0] -Mz[T1][0]) * (Sz[T1][0] - Mz[T1][0])/ Rnorm)
-       
-        
-               
-        Sx[T2][0] = Sx[T1][0] + Term * (Sx[T1][0]-Mx[T1][0]) / Rnorm
-        Sy[T2][0] = Sy[T1][0] + Term * (Sy[T1][0]-My[T1][0]) / Rnorm
-        Sz[T2][0] = Sz[T1][0] + Term * (Sz[T1][0]-Mz[T1][0]) / Rnorm
-        
-        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
-        
-        Sx[T1][0] = deepcopy(Sx[T2][0])
-        Sy[T1][0] = deepcopy(Sy[T2][0])
-        Sz[T1][0] = deepcopy(Sz[T2][0])
-        
-        AbstandT1 = math.pow(math.pow((datTraktor[int_PCurve][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][2]-Sz[T1][0]),2), 0.5)
-        print("AbstandT1 :  "  + str(int_PCurve) + " -> " + str(AbstandT1))
-        writelog("AbstandT1 :  "  + str(int_PCurve) + " -> " + str(AbstandT1))
-    return datTrailer
-
-def tractrix3D(datTraktor, datTrailerStart):
-    # Arbeitsblatt 'Gewoehnliche DGL'
-    # Abstand konstant
-    # v (Geschw.) immer in Richtung Traktor
-    
-    # ACHTUNG: Abstand NICHT konstant! todo: Fehlersuche.... 
-    # todo: Ergebnis 'seltsam'.....
-    
-    Mx = createMatrix(2,1)
-    My = createMatrix(2,1)
-    Mz = createMatrix(2,1)
-    Sx = createMatrix(2,1)
-    Sy = createMatrix(2,1)
-    Sz = createMatrix(2,1)
-    
-    T1 = 0
-    T2 = 1
-    Term = float()
-    
-    Sx[T1][0] = datTrailerStart[0]
-    Sy[T1][0] = datTrailerStart[1]
-    Sz[T1][0] = datTrailerStart[2]
-    
-    int_Count = len(datTraktor[:][:])
-    datTrailer = createMatrix(int_Count,1)
-    datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
-    
-    
-    # y0 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(D5-G5)+G5
-    # y1 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(E5-H5)+H5
-    # y2 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(f5-g5)+i5
-    
-    # y2 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5)+(f6-f5)*(f5-g5))/((D5-H5)^2+(E5-H5)^2+(f5-g5)^2)))*(f5-g5)+i5
-    #
-    # mit DEF = Traktor(x,y,z) = M(x,y,z) und GHI = Trailer(x,y,z) = S(x,y,z) zum Zeitpunkt T1, T2
-    
-    
-    for int_PCurve in range(0,int_Count-1,1):
-        
-        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
-        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
-        
-        # Schleppkurve V1 - Term = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))                /((D5-H5)^2+(E5-H5)^2))
-        # Schleppkurve V1 - Term = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5)+(f6-f5)*(f5-g5))/((D5-H5)^2+(E5-H5)^2+(f5-g5)^2)))
-        # math.pow(PathPointA[i], 2)
-        
-        Term = ((Mx[T2][0]-Mx[T1][0])*(Mx[T1][0]-Sx[T1][0])+(My[T2][0]-My[T1][0])*(My[T1][0]-Sy[T1][0])+(Mz[T2][0]-Mz[T1][0])*(Mz[T1][0]-Sz[T1][0]))/(math.pow((Mx[T1][0]-Sx[T1][0]),2)+ math.pow((My[T1][0]-Sy[T1][0]),2)+ math.pow((Mz[T1][0]-Sz[T1][0]),2))
-        
-       
-        # Traktrix - Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
-        #print("Term : " + str(Term))
-        
-        # y0 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(D5-G5)+G5
-        # y1 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(E5-H5)+H5
-        # y2 = (((D6-D5)*(D5-G5)+(E6-E5)*(E5-H5))/(D5-H5)^2+(E5-H5)^2)*(f5-i5)+i5
-    
-        Sx[T2][0] = Term * (Mx[T1][0]-Sx[T1][0])+Sx[T1][0] # *(D5-G5)+G5
-        Sy[T2][0] = Term * (My[T1][0]-Sy[T1][0])+Sy[T1][0] # *(E5-H5)+H5
-        Sz[T2][0] = Term * (Mz[T1][0]-Sz[T1][0])+Sz[T1][0] # *(f5-i5)+i5
-        
-        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
-        #print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
-        
-        Sx[T1][0] = deepcopy(Sx[T2][0])
-        Sy[T1][0] = deepcopy(Sy[T2][0])
-        Sz[T1][0] = deepcopy(Sz[T2][0])
-        
-    return datTrailer
-
-
-
-def tractrix3Dinv(datTraktor, datTrailerStart):
-    # Leipnitzschule Hannover Schleppkurve 2D
-    # Abstand konstant 
-    
-    # ACHTUNG: Leitkurve ist Trailer; Traktor wird berechnet
-    # under constr...
-    
-    Mx = createMatrix(2,1)
-    My = createMatrix(2,1)
-    Mz = createMatrix(2,1)
-    Sx = createMatrix(2,1)
-    Sy = createMatrix(2,1)
-    Sz = createMatrix(2,1)
-    
-    T1 = 0
-    T2 = 1
-    Term = float()
-    
-    Sx[T1][0] = datTrailerStart[0]
-    Sy[T1][0] = datTrailerStart[1]
-    Sz[T1][0] = datTrailerStart[2]
-    
-    d = math.sqrt(math.pow((Mx[T1][0]-Sx[T1][0]),2) + math.pow((My[T1][0]-Sy[T1][0]),2)+ math.pow((Mz[T1][0]-Sz[T1][0]),2))
-    
-    int_Count = len(datTraktor[:][:])
-    datTrailer = createMatrix(int_Count,1)
-    datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
-      
-    # y0 = D5+($B$5/((((E5-E4)/(D5-D4))^2+1)^0.5))
-    # y1 = E5+($B$5*(E5-E4)/((D5-D4)*(((E5-E4)/(D5-D4))^2+1)^0.5))
-    # mit B5 = d = Abstand Traktor/Trailer
-    
-    # mit DEF = Traktor(x,y,z) = M(x,y,z) und GHI = Trailer(x,y,z) = S(x,y,z) zum Zeitpunkt T1, T2
-    
-    
-    for int_PCurve in range(0,int_Count-1,1):
-        
-        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
-        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
-        
-        # Schleppkurve V2 - Term = ((E5-E4)/(D5-D4))^2+1)^0.5)
-        # math.pow(PathPointA[i], 2)
-        
-        # todo....
-        #   
-               
-        Term = math.pow((math.pow( (My[T2][0]-My[T1][0])/(Mx[T2][0]-Mx[T1][0]),2)+1),0.5)
-        
-        # Traktrix - Term = [((Mx[T2][0]*Sx[T1][0]-Mx[T2][0]*Mx[T1][0]+Mx[T1][0]*Mx[T1][0]-Mx[T1][0]*Sx[T1][0])+(My[T2][0]*Sy[T1][0]-My[T2][0]*My[T1][0]+My[T1][0]*My[T1][0]-My[T1][0]*Sy[T1][0])+(Mz[T2][0]*Sz[T1][0]-Mz[T2][0]*Mz[T1][0]+Mz[T1][0]*Mz[T1][0]-Mz[T1][0]*Sz[T1][0]))] 
-        print("Term : " + str(Term))
-        
-        # y0 = D5+($B$5/(term)
-        # 
-        # y1 = E5+($B$5*(E5-E4)/((D5-D4)*Term)
-        #
-    
-        Sx[T2][0] = Mx[T2][0] + d / Term  # 
-        Sy[T2][0] = My[T2][0] + d * ((My[T2][0]-My[T1][0]) / ((Mx[T2][0]-Mx[T1][0])*Term))
-        Sz[T2][0] = Sz[T1][0] # 
-        
-        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
-        print("Trailer"  + str(int_PCurve) + ": " + str(datTrailer[int_PCurve]))
-        
-        Sx[T1][0] = deepcopy(Sx[T2][0])
-        Sy[T1][0] = deepcopy(Sy[T2][0])
-        Sz[T1][0] = deepcopy(Sz[T2][0])
-        
-    return datTrailer
-
-def tractrix3Dtbd(datTraktorCurve, datTrailerStart):
-    print('under construction...')
  
 class createMatrix(object):
     #writelog('_____________________________________________________________________________')
@@ -860,15 +531,12 @@ class createMatrix(object):
 def Parenting(Mother, Child):
     
     bpy.ops.object.select_all(action='DESELECT')
-    #290 Mother.select= True
     Mother.select_set(True)
-    #290 Child.select = True
+
     Child.select_set(True)
-    #290 bpy.context.scene.objects.active = Mother
     bpy.context.view_layer.objects.active = Mother
     # Parenting wieder herstellen    
     bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
-    #bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
     bpy.ops.object.select_all(action='DESELECT')
 
     
@@ -876,9 +544,7 @@ def ClearParenting(Mother, Child):
     
     # - Deselect alle Objekte und in Objekte in richtiger Reihenfolge ausw�hlen
     bpy.ops.object.select_all(action='DESELECT')
-    #290 Mother.select= True
     Mother.select_set(True)
-    #290 Child.select = True
     Child.select_set(True)
     # - Parenting l�sen    
     bpy.ops.object.parent_clear(type='CLEAR') # CLEAR_KEEP_TRANSFORM
@@ -951,18 +617,18 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
 
 
 
-    
-
-
-
 # ________________________________________________________________________________________________________________________
 
 
 #--- ### Register
 #ToDo: KUKA Operator nicht regestriert....
 
-classes = [Tractrix_PT_Panel, Traktrix_OT_Main, Tractrix3d_OT_Main, Tractrix3dinv_OT_Main, 
-           Tractrix3dtbd_OT_Main, parenttraktor_OT_Main, parenttrailer_OT_Main, clearparent_OT_Main]
+classes = [Tractrix_PT_Panel, Traktrix_OT_Main, Tractrix3d_OT_Main,  
+           parenttraktor_OT_Main, parenttrailer_OT_Main, clearparent_OT_Main]
+
+# classes = [Tractrix_PT_Panel, Traktrix_OT_Main, Tractrix3d_OT_Main, Tractrix3dinv_OT_Main, 
+#           Tractrix3dtbd_OT_Main, parenttraktor_OT_Main, parenttrailer_OT_Main, clearparent_OT_Main]
+
 
 def register():
     
@@ -970,32 +636,11 @@ def register():
     
     for cls in classes:
         bpy.utils.register_class(cls)
-    '''
-    bpy.utils.register_class(Tractrix_PT_Panel)  
-    bpy.utils.register_class(Traktrix_OT_Main) 
-    bpy.utils.register_class(Tractrix3d_OT_Main) 
-    bpy.utils.register_class(Tractrix3dinv_OT_Main) 
-    bpy.utils.register_class(Tractrix3dtbd_OT_Main) 
-    bpy.utils.register_class(parenttraktor_OT_Main)
-    bpy.utils.register_class(parenttrailer_OT_Main)
-    bpy.utils.register_class(clearparent_OT_Main)
-    '''
     register_module(__name__)
     
 def unregister():
     for cls in classes:
         bpy.unutils.register_class(cls)
-    '''
-    bpy.utils.unregister_class(Tractrix_PT_Panel) 
-    bpy.utils.unregister_class(Traktrix_OT_Main) 
-    bpy.utils.unregister_class(Tractrix3d_OT_Main) 
-    bpy.utils.unregister_class(Tractrix3dinv_OT_Main) 
-    bpy.utils.unregister_class(Tractrix3dtbd_OT_Main) 
-    bpy.utils.unregister_class(parenttraktor_OT_Main)
-    bpy.utils.unregister_class(parenttrailer_OT_Main)
-    bpy.utils.unregister_class(clearparent_OT_Main)
-    '''
-        
     unregister_module(__name__)
 
 #--- ### Main code    
