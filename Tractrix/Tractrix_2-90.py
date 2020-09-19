@@ -32,10 +32,10 @@
 #   erhaelt man ein unsinniges Ergebnis. Loesung:
 #   fuer beide Kurven: -> EditMode [TAB] -> [A] alle auswaehlen 
 #   [w] f�r specials menue druecken -> Subdivide 
-#   (Achtung: die Kurvenpunkte f�r Trailer muss >= der des Traktors sein)
+#   (Achtung: die Kurvenpunkte fuer Trailer muss >= der des Traktors sein)
 # - Laenge der Slave-Kurve automatisch anpassen
 # - Parenting (nochmals druecken, falls Verhalten falsch) Loesung:??? 
-# - Menuefuehrung (Kurve ausw�hlen, Objetk ausw�hlen)
+# - Menuefuehrung (Kurve auswaehlen, Objetk auswaehlen)
 # - Import/ Export
 # - Erbegnis "baken"
 # - Abstand Abpruefen bei Berechnung und auf Fehler hinweisen
@@ -431,11 +431,11 @@ class createMatrix(object):
     
 def ClearParenting(Mother, Child):
     
-    # - Deselect alle Objekte und in Objekte in richtiger Reihenfolge ausw�hlen
+    # - Deselect alle Objekte und in Objekte in richtiger Reihenfolge auswaehlen
     bpy.ops.object.select_all(action='DESELECT')
     Child.select= True
     Mother.select = True
-    # - Parenting l�sen    
+    # - Parenting loesen    
     bpy.ops.object.parent_clear(type='CLEAR') # CLEAR_KEEP_TRANSFORM
     # - deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
