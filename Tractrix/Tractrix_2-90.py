@@ -100,7 +100,7 @@ from bpy.props import PointerProperty # 2020-09-14
 
 # Global Variables:
 objTrailerPath = bpy.data.objects['TrailerPath']
-#objTraktorPath = bpy.data.objects['TraktorPath']
+objTraktorPath = bpy.data.objects['TraktorPath']
 objTrailer = bpy.data.objects['Trailer']
 objTraktor = bpy.data.objects['Traktor']
 curTraktor = bpy.data.curves[objTraktorPath.data.name]
@@ -126,7 +126,10 @@ class Tractrix_PT_Panel(bpy.types.Panel):
     writelog('Tractrix_PT_Panel....')
     writelog()
     """Creates a Panel in the scene context of the properties editor"""
-
+    bl_label = "Tractrix Panel" # heading of panel
+    #bl_idname = "SCENE_PT_layout"
+    bl_idname = "OBJECT_PT_layout"
+    
     # bpy.ops.OBJECT_PT_layout.module....
     bl_idname = "VIEW3D_PT_layout"
     bl_label = "Tractrix"
@@ -136,8 +139,7 @@ class Tractrix_PT_Panel(bpy.types.Panel):
     bl_category = "Create"
     bl_options = {'DEFAULT_CLOSED'}
 
-    
-    
+
     # check poll() to avoid exception.
     '''
     if bpy.ops.object.mode_set.poll():
@@ -172,17 +174,12 @@ class Tractrix_PT_Panel(bpy.types.Panel):
         #col.prop(scene, "prop")
         col.prop_search(scene, "prop", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Traktor path")
         objTraktorPath = bpy.data.scenes['Scene'].prop
-        print("Ausgewaehlt: ", objTraktorPath.name)
+        print('1. Tractrix_PT_Panel - objTraktorPath: ' + objTraktorPath.name)
         col = layout.column()
-        
         
         # Import Button:
         col.operator("object.traktrix", text="Traktrix")
-          
-        col.operator("object.parenttraktor", text="parent TRAKTOR...")
-        col.operator("object.parenttrailer", text="parent TRAILER...")
-        col.operator("object.clearparent", text="clear parents...")
-           
+                     
     writelog('Tractrix_PT_Panel done')
     writelog('_____________________________________________________________________________')
 
@@ -323,6 +320,8 @@ class Traktrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
 
     def execute(self, context):  
         
+        objTraktorPath = bpy.data.scenes['Scene'].prop
+        
         int_Curve, datTraktorCurve = ReadCurve(objTraktorPath)  
         
         datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
@@ -347,105 +346,6 @@ class Traktrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
     
-    
-class Tractrix3d_OT_Main (bpy.types.Operator): # OT fuer Operator Type
-    # Arbeitsblatt 'Gewoehnliche DGL'
-    bl_idname = "object.tractrix3d"
-    bl_label = "Tractrix_OT_Main (TB)" #Toolbar - Label
-    bl_description = "Calculate Tractrix for Trailer Object from Tractor Object." # Kommentar im Specials Kontextmenue
-    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
-
-    def execute(self, context):  
-        
-        int_Curve, datTraktorCurve = ReadCurve(objTraktorPath)  
-          
-        datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-        
-        datTrailerCurve= tractrix3D(datTraktorCurve, datTrailerStart)
-        
-        WriteCurveTrailer(int_Curve, datTrailerCurve)
-        
-        #SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
-        
-        TIMEPTS = []
-        for int_PCurve in range(0,int_Curve-1,1):
-            TIMEPTS = TIMEPTS + [int_PCurve/12]
-        
-        
-        SetKeyFrames(objTraktor, curTraktor, int_Curve, TIMEPTS)
-        SetKeyFrames(objTrailer, curTrailer, int_Curve, TIMEPTS)
-        
-        return {'FINISHED'} 
-    writelog('- - Tractrix_OT_Main done- - - - - - -')
-
-
-
-
-class parenttraktor_OT_Main (bpy.types.Operator): # OT fuer Operator Type
-    bl_idname = "object.parenttraktor"
-    bl_label = "parent traktor" #Toolbar - Label
-    bl_description = "parent traktor to curve" # Kommentar im Specials Kontextmenue
-    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
-
-    def execute(self, context):
-        
-
-        ClearParenting(objTraktorPath, objTraktor )
-        bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
-        datTraktorCurve = [curTraktor.splines[0].points[0].co.x, curTraktor.splines[0].points[0].co.y, curTraktor.splines[0].points[0].co.z]
-        objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), objTraktorPath)
-         
-            
-        Parenting(objTraktorPath, objTraktor)    
-        #Parenting(objTrailerPath, objTrailer.name) 
-       
-        return {'FINISHED'} 
-    writelog('- - parenttraktor_OT_Main done- - - - - - -')   
-
-class parenttrailer_OT_Main (bpy.types.Operator): # OT fuer Operator Type
-    bl_idname = "object.parenttrailer"
-    bl_label = "parent trailer" #Toolbar - Label
-    bl_description = "parent trailer to curve" # Kommentar im Specials Kontextmenue
-    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
-
-    def execute(self, context):
-        
-        ClearParenting(objTrailerPath,objTrailer)
-        
-        bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
-        datTrailerCurve = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-        
-        objTrailer.location,objTrailer.rotation_euler = get_absolute(Vector(datTrailerCurve), (0,0,0), objTrailerPath)
-           
-        #Parenting(objTraktorPath, objTraktor.name)     
-        Parenting(objTrailerPath, objTrailer) 
-       
-        return {'FINISHED'} 
-    writelog('- - parenttrailer_OT_Main done- - - - - - -') 
-    
-    
-class clearparent_OT_Main (bpy.types.Operator): # OT fuer Operator Type
-    bl_idname = "object.clearparent"
-    bl_label = "parent trailer" #Toolbar - Label
-    bl_description = "clear parent from curve" # Kommentar im Specials Kontextmenue
-    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
-
-    def execute(self, context):
-        ClearParenting(objTrailerPath,objTrailer )
-        ClearParenting(objTrailerPath,objTraktor )
-        ClearParenting(objTraktorPath,objTraktor )
-        ClearParenting(objTraktorPath,objTrailer )
-        ClearParenting(objTrailerPath,objTraktorPath )
-        ClearParenting(objTraktorPath,objTrailerPath )
-        
-       
-        return {'FINISHED'} 
-    writelog('- - parenttrailer_OT_Main done- - - - - - -') 
-      
-    
-
-
-
 def Traktrix3D(datTraktor, datTrailerStart):
     
     # Variante 1
@@ -513,8 +413,9 @@ def Traktrix3D(datTraktor, datTrailerStart):
         Sz[T1][0] = deepcopy(Sz[T2][0])
     
     return datTrailer 
-
  
+
+
 class createMatrix(object):
     #writelog('_____________________________________________________________________________')
     #writelog('createMatrix')
@@ -527,32 +428,20 @@ class createMatrix(object):
     writelog('createMatrix done')
     writelog('_____________________________________________________________________________')  
 
-
-def Parenting(Mother, Child):
-    
-    bpy.ops.object.select_all(action='DESELECT')
-    Mother.select_set(True)
-
-    Child.select_set(True)
-    bpy.context.view_layer.objects.active = Mother
-    # Parenting wieder herstellen    
-    bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
-    bpy.ops.object.select_all(action='DESELECT')
-
     
 def ClearParenting(Mother, Child):
     
     # - Deselect alle Objekte und in Objekte in richtiger Reihenfolge ausw�hlen
     bpy.ops.object.select_all(action='DESELECT')
-    Mother.select_set(True)
-    Child.select_set(True)
+    Child.select= True
+    Mother.select = True
     # - Parenting l�sen    
     bpy.ops.object.parent_clear(type='CLEAR') # CLEAR_KEEP_TRANSFORM
     # - deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
     # - Kurve selektieren
     #Mother.select = True
-
+    
 
 def get_absolute(Obj_Koord, Obj_Angle, objBase):
     BASEPos_Koord = objBase.location
@@ -617,25 +506,24 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
 
 
 
+    
+
+
+
 # ________________________________________________________________________________________________________________________
 
 
 #--- ### Register
 #ToDo: KUKA Operator nicht regestriert....
 
-classes = [Tractrix_PT_Panel, Traktrix_OT_Main, Tractrix3d_OT_Main,  
-           parenttraktor_OT_Main, parenttrailer_OT_Main, clearparent_OT_Main]
-
-# classes = [Tractrix_PT_Panel, Traktrix_OT_Main, Tractrix3d_OT_Main, Tractrix3dinv_OT_Main, 
-#           Tractrix3dtbd_OT_Main, parenttraktor_OT_Main, parenttrailer_OT_Main, clearparent_OT_Main]
-
+classes = [Tractrix_PT_Panel, Traktrix_OT_Main]
 
 def register():
     
     bpy.types.Scene.prop = PointerProperty(type=bpy.types.Object) # 2020-09-14
     
     for cls in classes:
-        bpy.utils.register_class(cls)
+        bpy.utils.register_class(cls) 
     register_module(__name__)
     
 def unregister():
