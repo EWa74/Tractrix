@@ -563,10 +563,12 @@ class ObjectSettings(bpy.types.PropertyGroup): # self, context,
     # bpy.context.object.tractrix.trailer
     # >>> bpy.data.objects[0].tractrix.trailer
     
-    traktor = bpy.props.StringProperty()
+    traktor = bpy.props.StringProperty(name="Test Prop", default="NurbsPath")
     trailer = bpy.props.StringProperty()
     traktorpath = bpy.props.StringProperty()
+    traktorpath_count = bpy.props.IntProperty(name="Test Prop", default=0)
     trailerpath = bpy.props.StringProperty()
+    trailerpath_count = bpy.props.IntProperty()
 
 bpy.utils.register_class(ObjectSettings)
 
