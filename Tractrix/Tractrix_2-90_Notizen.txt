@@ -1,0 +1,59 @@
+
+
+
+
+Dropdown-Menu um Objekte auszuwählen:
+# https://blender.stackexchange.com/questions/30487/object-selection-box-with-eyedropper/159155#159155 
+# https://blender.stackexchange.com/questions/159041/how-to-draw-object-selection-with-eyedropper-layout-using-python-script
+# https://www.youtube.com/watch?v=fF9o8atwcT4&list=PLboXykqtm8dw-TCdMNrxz4cEemox0jBn0&index=22
+        
+#col.prop(scene, "name", icon = 'CURVE_BEZCURVE') # 2020-09-14 ... ongoing (Selection-Field fuer Traktor-Pfad)
+#col.prop(scene, "prop")
+
+
+
+def ReadCurve(objPath):
+    '''
+    #bpy.data.objects[objTrailer.name].location
+    int_fMerker = bpy.data.scenes['Scene'].frame_current
+    # 1. Schleife von start_frame to end_frame
+    int_fStart = bpy.data.scenes['Scene'].frame_start
+    int_fStop = bpy.data.scenes['Scene'].frame_end
+      
+    int_Count = int_fStop-int_fStart
+    
+    for int_fcurrent in range(1,int_Count,1):
+        print("int_fcurrent: " + str(int_fcurrent))
+        bpy.data.scenes['Scene'].frame_current= int_fcurrent
+    bpy.data.scenes['Scene'].frame_current = int_fMerker
+    '''
+    
+________________   
+col.prop_search(scene, "prop", scene, "objects", icon = 'OBJECT_DATA', text = "Traktor")
+objTraktor = bpy.data.scenes['Scene'].prop 
+print('1. Tractrix_PT_Panel - objTraktor: ' + bpy.context.object.tractrix.traktor)
+________________  
+ https://docs.blender.org/api/blender_python_api_2_78_0/bpy.types.PropertyGroup.html?highlight=custom%20property
+
+import bpy
+from bpy.props import PointerProperty
+ 
+class ObjectSettings(bpy.types.PropertyGroup): # self, context, 
+    
+    # Access it e.g. like
+    # bpy.context.object.tractrix.trailer
+    # bpy.context.tractrix.trailer
+    
+    traktor = bpy.props.StringProperty()
+    trailer = bpy.props.StringProperty()
+    traktorpath = bpy.props.StringProperty()
+    trailerpath = bpy.props.StringProperty()
+
+bpy.utils.register_class(ObjectSettings)
+
+bpy.types.Object.tractrix = \
+    bpy.props.PointerProperty(type=ObjectSettings) 
+    
+>>> bpy.data.objects[0].tractrix.trailer
+________________
+    
