@@ -56,4 +56,19 @@ bpy.types.Object.tractrix = \
     
 >>> bpy.data.objects[0].tractrix.trailer
 ________________
+https://blender.stackexchange.com/questions/129473/typeerror-element-wise-multiplication-not-supported-between-matrix-and-vect
+
+Blender 2.79:
+Vtrans_abs = Mworld *Vtrans_rel
+Blender 2.8:
+Vtrans_abs = Mworld @Vtrans_rel
+________________
+
+    #290 bpy.context.scene.objects.active = obj
+    bpy.context.view_layer.objects.active = obj
+    oder
+    bpy.context.active_object --> Achtung: read only
+    oder
+    bpy.context.object --> Achtung: read only
+
     
