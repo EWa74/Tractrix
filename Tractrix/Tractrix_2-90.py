@@ -68,13 +68,21 @@ bl_info = {
 #import pydevd 
 #pydevd.settrace()  #<-- debugger stops at the next statement 
 
-import pydevd;pydevd.settrace() # notwendig weil breakpoints uebersprungen werden. warum auch immer
+#import pydevd;pydevd.settrace() # notwendig weil breakpoints uebersprungen werden. warum auch immer
 
      
 #--- ### Imports
 
+
 import bpy
 
+# https://blender.stackexchange.com/questions/8702/attributeerror-restrictdata-object-has-no-attribute-filepath
+#from bpy.app.handlers import persistent
+from bpy.app.handlers import persistent
+
+@persistent
+def foobar(scene):
+    bpy.data.filepath
 
 
 # ExportHelper is a helper class, defines filename and
@@ -84,7 +92,7 @@ from bpy_extras.io_utils import ImportHelper
 import time # um Zeitstempel im Logfile zu schreiben
 import bpy, os
 import sys
-#from bpy.utils import register_module, unregister_module
+# from bpy.utils import register_module, unregister_module
 from bpy.props import FloatProperty, IntProperty
 from mathutils import Vector  
 from mathutils import *
@@ -597,43 +605,64 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
 
 
 # ________________________________________________________________________________________________________________________
-
-class ObjectSettings(bpy.types.PropertyGroup): # self, context, 
+class ObjectSettings(bpy.types.PropertyGroup):
+#class ObjectSettings(PropertyGroup): # self, context, 
     
     # Access it e.g. like
     # bpy.context.object.tractrix.trailer
     # >>> bpy.data.objects[0].tractrix.trailer
     
+    #traktor: StringProperty(name="Traktor", default="")
+    
     traktor = bpy.props.StringProperty(name="Traktor", default="")
     trailer = bpy.props.StringProperty(name="Trailer", default="")
     traktorpath = bpy.props.StringProperty(name="Traktor Path", default="")
-    #traktorpath_count = bpy.props.IntProperty(name="Test Prop", default=0)
     trailerpath = bpy.props.StringProperty(name="Trailer Path", default="")
-    #trailerpath_count = bpy.props.IntProperty()
+    
+
+
 
 bpy.utils.register_class(ObjectSettings)
 
 bpy.types.Object.tractrix = \
     bpy.props.PointerProperty(type=ObjectSettings) 
-    
 
-
+  
+  
 classes = [Tractrix_PT_Panel, Traktrix_OT_Main, parenttraktor_OT_Main, parenttrailer_OT_Main, clearparent_OT_Main]
+
+  
 
 def register():
     
+    bpy.types.Object.tractrix = bpy.props.PointerProperty(type=ObjectSettings) 
+
+    #bpy.types.Scene.tractrix = PointerProperty(type=ObjectSettings)
+ 
+    
     #bpy.types.Scene.prop = PointerProperty(type=bpy.types.Object) # 2020-09-14
-    bpy.types.Scene.prop = PointerProperty(type=bpy.types.Object) # 2020-09-14
+    #bpy.types.Scene.prop = PointerProperty(type=bpy.types.Object) # 2020-09-14
     
     
     for cls in classes:
         bpy.utils.register_class(cls) 
     register_module(__name__)
     
+   
+    
+    # Handlers
+    bpy.app.handlers.load_post.append(foobar)
+    
 def unregister():
+    
+    #bpy.app.handlers.save_post.append(foobar)
+    
     for cls in classes:
         bpy.unutils.register_class(cls)
     unregister_module(__name__)
+
+    # Handlers
+    bpy.app.handlers.load_post.remove(foobar)
 
 #--- ### Main code    
 if __name__ == '__main__':
