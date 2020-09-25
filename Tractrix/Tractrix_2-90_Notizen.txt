@@ -70,5 +70,36 @@ ________________
     bpy.context.active_object --> Achtung: read only
     oder
     bpy.context.object --> Achtung: read only
+________________
 
+class ObjectSettings(bpy.types.PropertyGroup):
     
+    # Access it e.g. like
+    # bpy.context.object.tractrix.trailer
+    # >>> bpy.data.objects[0].tractrix.trailer
+    
+    #traktor: StringProperty(name="Traktor", default="")
+    
+    traktor = bpy.props.StringProperty(name="Traktor", default="a")
+    trailer = bpy.props.StringProperty(name="Trailer", default="b")
+    traktorpath = bpy.props.StringProperty(name="Traktor Path", default="c")
+    trailerpath = bpy.props.StringProperty(name="Trailer Path", default="d")
+    
+
+
+
+bpy.utils.register_class(ObjectSettings)
+bpy.types.Object.tractrix = bpy.props.PointerProperty(type=ObjectSettings) 
+________________
+bpy.context.scene.tractrix.
+________________
+
+action_name = bpy.data.objects[objEmpty_A6.name].animation_data.action.name
+
+
+
+________________
+
+________________
+
+   

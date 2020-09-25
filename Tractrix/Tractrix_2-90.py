@@ -181,13 +181,15 @@ class Tractrix_PT_Panel(bpy.types.Panel):
         col = split.column()
         col.label(text="Schleppkurven:")
         
+        col.operator("object.clearparent", text="1. clear parents")  
+        
         col.prop_search(scene.tractrix, "traktor", scene, "objects", icon = 'OBJECT_DATA', text = "Traktor")
         col.prop_search(scene.tractrix, "traktorpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Traktor path")
         col.prop_search(scene.tractrix, "trailer", scene, "objects", icon = 'OBJECT_DATA', text = "Trailer")
         col.prop_search(scene.tractrix, "trailerpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Trailer path")
         
         # Push Buttons:
-        col.operator("object.clearparent", text="1. clear parents")  
+        
         col.operator("object.parenttraktor", text="2. parent TRAKTOR")
         col.operator("object.parenttrailer", text="3. parent TRAILER")
         col.operator("object.traktrix", text="4a Traktrix")        
@@ -365,6 +367,7 @@ class parenttraktor_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         curTraktor = bpy.data.curves[objTraktorPath.data.name]
         
         ClearParenting(objTraktorPath, objTraktor )
+       
         
         bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
         datTraktorCurve = [curTraktor.splines[0].points[0].co.x, curTraktor.splines[0].points[0].co.y, curTraktor.splines[0].points[0].co.z]
@@ -417,6 +420,15 @@ class clearparent_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
         objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
         #curTrailer = bpy.data.curves[objTrailerPath.data.name]  
+        
+        # clear keyfframe from Trakor and Trailer
+        objTrailerPath.select_set(True)
+        bpy.ops.anim.keyframe_clear_v3d()
+        objTrailerPath.select_set(False)
+
+        objTrailer.select_set(True)
+        bpy.ops.anim.keyframe_clear_v3d()
+        objTrailer.select_set(False)
         
         ClearParenting(objTrailerPath,objTrailer )
         ClearParenting(objTrailerPath,objTraktor )
@@ -568,18 +580,18 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
     MrotX = mathutils.Matrix.Rotation(BASEPos_Angle[0], 3, 'X') # C = -179 Global
     MrotY = mathutils.Matrix.Rotation(BASEPos_Angle[1], 3, 'Y') # B = -20
     MrotZ = mathutils.Matrix.Rotation(BASEPos_Angle[2], 3, 'Z') # A = -35
-    Mrot = MrotZ * MrotY * MrotX
+    Mrot = MrotZ @ MrotY @ MrotX
     #writelog('Mrot'+ str(Mrot))
     
-    Mworld = Mtrans * Mrot.to_4x4()
+    Mworld = Mtrans @ Mrot.to_4x4()
     
     Mrot_relX = mathutils.Matrix.Rotation(Obj_Angle[0], 3, 'X') # Local (bez. auf Base)
     Mrot_relY = mathutils.Matrix.Rotation(Obj_Angle[1], 3, 'Y') # 0,20,35 = X = -C, Y = -B, Z = -A
     Mrot_relZ = mathutils.Matrix.Rotation(Obj_Angle[2], 3, 'Z')
-    Mrot_rel = Mrot_relZ * Mrot_relY * Mrot_relX # KUKA Erg.
+    Mrot_rel = Mrot_relZ @ Mrot_relY @ Mrot_relX # KUKA Erg.
     #writelog('Mrot_rel'+ str(Mrot_rel))
 
-    Mrot_abs = Mrot_rel.transposed() * Mrot.transposed()       
+    Mrot_abs = Mrot_rel.transposed() @ Mrot.transposed()       
     Mrot_abs = Mrot_abs.transposed()
     rotEuler =Mrot_abs.to_euler('XYZ')
     
@@ -607,10 +619,10 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
 
 # ________________________________________________________________________________________________________________________
 class ObjectSettings(bpy.types.PropertyGroup):
-    traktor     = bpy.props.StringProperty(name="Traktor"     , default="Traktor"    )
-    trailer     = bpy.props.StringProperty(name="Trailer"     , default="Trailer"    )
-    traktorpath = bpy.props.StringProperty(name="Traktor Path", default="TraktorPath")
-    trailerpath = bpy.props.StringProperty(name="Trailer Path", default="TrailerPath")
+    traktor     = bpy.props.StringProperty(name="choose object"     , default="Traktor"    )
+    trailer     = bpy.props.StringProperty(name="choose object"     , default="Trailer"    )
+    traktorpath = bpy.props.StringProperty(name="choose nurbspath"  , default="TraktorPath")
+    trailerpath = bpy.props.StringProperty(name="choose nurbspath"  , default="TrailerPath")
 
 bpy.utils.register_class(ObjectSettings)
 bpy.types.Scene.tractrix = bpy.props.PointerProperty(type=ObjectSettings) 
