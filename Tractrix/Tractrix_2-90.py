@@ -366,15 +366,15 @@ class parenttraktor_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
         curTraktor = bpy.data.curves[objTraktorPath.data.name]
         
-        ClearParenting(objTraktorPath, objTraktor )
+        #290 ClearParenting(objTraktorPath, objTraktor )
        
         
         bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
         datTraktorCurve = [curTraktor.splines[0].points[0].co.x, curTraktor.splines[0].points[0].co.y, curTraktor.splines[0].points[0].co.z]
         objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), objTraktorPath)
          
-        Parenting(objTraktorPath, objTraktor)    
-        #Parenting(objTrailerPath, objTrailer.name) 
+        #290 Parenting(objTraktorPath, objTraktor)    
+        
        
         return {'FINISHED'} 
     writelog('- - parenttraktor_OT_Main done- - - - - - -')   
@@ -391,7 +391,7 @@ class parenttrailer_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
         curTrailer = bpy.data.curves[objTrailerPath.data.name]    
         
-        ClearParenting(objTrailerPath,objTrailer)
+        #290 ClearParenting(objTrailerPath,objTrailer)
         
         bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
         datTrailerCurve = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
@@ -399,7 +399,7 @@ class parenttrailer_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         objTrailer.location,objTrailer.rotation_euler = get_absolute(Vector(datTrailerCurve), (0,0,0), objTrailerPath)
            
         #Parenting(objTraktorPath, objTraktor.name)     
-        Parenting(objTrailerPath, objTrailer) 
+        #290 Parenting(objTrailerPath, objTrailer) 
        
         return {'FINISHED'} 
     writelog('- - parenttrailer_OT_Main done- - - - - - -') 
@@ -413,29 +413,25 @@ class clearparent_OT_Main (bpy.types.Operator): # OT fuer Operator Type
 
     def execute(self, context):
 
-        objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
+        #290 objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
         objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
-        #curTraktor = bpy.data.curves[objTraktorPath.data.name]
         
-        objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
+        #290 objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
         objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
-        #curTrailer = bpy.data.curves[objTrailerPath.data.name]  
         
         # clear keyfframe from Trakor and Trailer
-        objTrailerPath.select_set(True)
-        bpy.ops.anim.keyframe_clear_v3d()
-        objTrailerPath.select_set(False)
-
+        bpy.ops.object.select_all(action='DESELECT')
+        objTraktor.select_set(True)
         objTrailer.select_set(True)
         bpy.ops.anim.keyframe_clear_v3d()
-        objTrailer.select_set(False)
+        bpy.ops.object.select_all(action='DESELECT')
         
-        ClearParenting(objTrailerPath,objTrailer )
-        ClearParenting(objTrailerPath,objTraktor )
-        ClearParenting(objTraktorPath,objTraktor )
-        ClearParenting(objTraktorPath,objTrailer )
-        ClearParenting(objTrailerPath,objTraktorPath )
-        ClearParenting(objTraktorPath,objTrailerPath )
+        #290 ClearParenting(objTrailerPath,objTrailer )
+        #290 ClearParenting(objTrailerPath,objTraktor )
+        #290 ClearParenting(objTraktorPath,objTraktor )
+        #290 ClearParenting(objTraktorPath,objTrailer )
+        #290 ClearParenting(objTrailerPath,objTraktorPath )
+        #290 ClearParenting(objTraktorPath,objTrailerPath )
         
        
         return {'FINISHED'} 
@@ -532,7 +528,7 @@ def Parenting(Mother, Child):
     #2.90 bpy.context.scene.objects.active = Mother
     bpy.context.view_layer.objects.active = Mother
     # Parenting wieder herstellen    
-    bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
+    bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=False)
     #bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
     bpy.ops.object.select_all(action='DESELECT')
     
