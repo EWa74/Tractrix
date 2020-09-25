@@ -4,15 +4,13 @@
 # coding Angabe in Zeilen 1 und 2 fuer Eclipse Luna/ Pydev 3.9 notwendig
 # cp1252
 
-
-#  ***** BEGIN GPL LICENSE BLOCK *****ewa 
-#  https://github.com/EWa74/KUKA_Simulator.git
+#  ***** BEGIN GPL LICENSE BLOCK ***** 
+#  https://github.com/EWa74/Tractrix.git
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation, either version 3 of the License, or
 #  (at your option) any later version.
 #    
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,26 +20,33 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 #  ***** END GPL LICENSE BLOCK *****
-# Version: 100R - Laeuft auf 2.90
-# Next steps:    
-# - Pruefung ob das Ergebnis des Trailers noch sinnvoll ist (Astand zum Traktor, delta Weg (-> proportional zu delta T)
+# Version: 101R - Laeuft auf 2.90
 
-# - Code Cleaning 
+
+# Beschreibung   
+# Die Nurbspath Koordinaten des Trailers werden basierend auf den   
+# Traktor-Nurbs errechnen
+# Die Objekte werden unter beruecksichtigung der Kurven im World-Space 
+# auf den ersten Spline-Koordinaten der Kurven gesetzt
+# die Schleppkurve ist vom Typ Traktrix. D.h. der Abstand bleibt konstant.
  
-# - Beachte: wenn die Punkte die die Kurve beschreiben zu weit auseinander liegen, 
+# Beachte: 
+#   Wenn die Punkte die die Kurve beschreiben zu weit auseinander liegen, 
 #   erhaelt man ein unsinniges Ergebnis. Loesung:
 #   fuer beide Kurven: -> EditMode [TAB] -> [A] alle auswaehlen 
-#   [w] f�r specials menue druecken -> Subdivide 
+#   [w] fuer specials menue druecken -> Subdivide 
 #   (Achtung: die Kurvenpunkte fuer Trailer muss >= der des Traktors sein)
+
+# ToDo:
+# - Pruefung ob das Ergebnis des Trailers noch sinnvoll ist (Astand zum Traktor, delta Weg (-> proportional zu delta T)
+# - Akutell arbeitet das Programm nur mit NURBSPATH. D.h. die Rotation des Splines wird nicht bruecksichtigt.
+#   Traktor/ Trailer kann man über follow path constraint mit rotation animieren.
 # - Laenge der Slave-Kurve automatisch anpassen
-# - Parenting (nochmals druecken, falls Verhalten falsch) Loesung:??? 
-# - Menuefuehrung (Kurve auswaehlen, Objetk auswaehlen)
 # - Import/ Export
 # - Erbegnis "baken"
 # - Abstand Abpruefen bei Berechnung und auf Fehler hinweisen
-# - Traktorkurve, Traktor/ Trailerobjekte per Menue auswaehlen
 # - Kurven funktonieren z.Zt. NUR wenn der Origin auf [0,0,0] ist!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+# - laesst sich noch nicht als AddOn starten, wegen initialisierungsproblem von filepath (ggf. writelog raus)
 
 '''
 
@@ -67,23 +72,20 @@ bl_info = {
 
 #import pydevd 
 #pydevd.settrace()  #<-- debugger stops at the next statement 
-
 #import pydevd;pydevd.settrace() # notwendig weil breakpoints uebersprungen werden. warum auch immer
-
      
 #--- ### Imports
-
-
 import bpy
 
 # https://blender.stackexchange.com/questions/8702/attributeerror-restrictdata-object-has-no-attribute-filepath
 #from bpy.app.handlers import persistent
-from bpy.app.handlers import persistent
 
+'''
+from bpy.app.handlers import persistent
 @persistent
 def foobar(scene):
     bpy.data.filepath
-
+'''
 
 # ExportHelper is a helper class, defines filename and
 # invoke() function which calls the file selector.
@@ -104,117 +106,70 @@ from bpy.types import Operator
 from symbol import except_clause
 from copy import deepcopy # fuer OptimizeRotation
 
-from bpy.props import PointerProperty # 2020-09-14
-
-# Global Variables:
-'''
-objTrailerPath = bpy.data.objects['TrailerPath'] >> bpy.context.object.tractrix.trailerpath
-objTraktorPath = bpy.data.objects['TraktorPath'] >> bpy.context.object.tractrix.traktorpath
-objTrailer = bpy.data.objects['Trailer'] >> bpy.context.object.tractrix.trailer
-objTraktor = bpy.data.objects['Traktor'] >> bpy.context.object.tractrix.traktor
-curTraktor = bpy.data.curves[objTraktorPath.data.name] >> bpy.context.object.tractrix.traktorpath
-curTrailer = bpy.data.curves[objTrailerPath.data.name] >> bpy.context.object.tractrix.trailerpath
-bpy.data.objects[bpy.context.object.tractrix.traktorpath].data.splines
-
-'''
-
-#TIMEPTS = bpy.props.FloatProperty()
-
-# bpy.context.object.tractrix.trailer
-# >>> bpy.data.objects[0].tractrix.trailer
+from bpy.props import PointerProperty # fuer eigene custom property 
 
 
-# create variable containing width
-#bpy.types.Scene.pyramide_width = FloatProperty( name = "pyramide's width", default = 2.0, subtype = 'DISTANCE', unit = 'LENGTH', description = "Enter the pyramide's width!" )
-#bpy.types.Scene.traktrix_curvetype = '1' 
 
 def writelog(text=''):
+    print('auskommentiert....')
+    '''
     FilenameLog = bpy.data.filepath
     FilenameLog = FilenameLog.replace(".blend", '.log')
     fout = open(FilenameLog, 'a')
     localtime = time.asctime( time.localtime(time.time()) )
     fout.write(localtime + " : " + str(text) + '\n')
     fout.close();
+    '''
 
 class Tractrix_PT_Panel(bpy.types.Panel):
     writelog('_____________________________________________________________________________')
     writelog()
     writelog('Tractrix_PT_Panel....')
     writelog()
-    """Creates a Panel in the Tool-panel under the <creates> tab of the 3D-View"""
-    bl_label = "Tractrix Panel" # heading of panel
-    #bl_idname = "SCENE_PT_layout"
-    bl_idname = "OBJECT_PT_layout"
     
-    # bpy.ops.OBJECT_PT_layout.module....
+    """Creates a Panel in the Tool-panel under the <creates> tab of the 3D-View"""
     bl_idname = "VIEW3D_PT_layout"
-    bl_label = "Tractrix"
+    bl_label = "Tractrix" # heading of panel
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_context = "objectmode"
     bl_category = "Create"
     bl_options = {'DEFAULT_CLOSED'}
 
-
-    # check poll() to avoid exception.
-    '''
-    if bpy.ops.object.mode_set.poll():
-        bpy.ops.object.mode_set(mode='EDIT')
-    '''
-    
-    #@classmethod
-    #def poll(cls, context):
-    #    return (bpy.context.active_object.type == 'CURVE') # Test, ob auch wirklich ein 'CURVE' Objekt aktiv ist.
-
-    
     def draw(self, context):
         
         ob = context.object
         layout = self.layout
         scene = context.scene
-        row = layout.row(align=True)
         
-        # Create two columns, by using a split layout.
         split = layout.split()
-
-        # First column
         col = split.column()
         col.label(text="Schleppkurven:")
         
-        col.operator("object.clearparent", text="1. clear parents")  
+        col.operator("object.clearanimation", text="1. clear Animations")  
         
         col.prop_search(scene.tractrix, "traktor", scene, "objects", icon = 'OBJECT_DATA', text = "Traktor")
         col.prop_search(scene.tractrix, "traktorpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Traktor path")
         col.prop_search(scene.tractrix, "trailer", scene, "objects", icon = 'OBJECT_DATA', text = "Trailer")
         col.prop_search(scene.tractrix, "trailerpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Trailer path")
         
-        # Push Buttons:
-        
-        col.operator("object.parenttraktor", text="2. parent TRAKTOR")
-        col.operator("object.parenttrailer", text="3. parent TRAILER")
+        col.operator("object.setobj2curve", text="2. set TRAKTOR & TRAILER to path")
         col.operator("object.traktrix", text="4a Traktrix")        
-           
-           
+            
     writelog('Tractrix_PT_Panel done')
     writelog('_____________________________________________________________________________')
 
 
 def ReadCurve(objPath):
-    print("objPath.data.name: ", objPath.data.name)
     curObj = bpy.data.curves[objPath.data.name]
     int_Curve = len(bpy.data.curves[objPath.data.name].splines[0].points)
     datPath = createMatrix(int_Curve,3)
     
-    
     for int_PCurve in range(0,int_Curve,1):
         datPath[int_PCurve][0:3] = [curObj.splines[0].points[int_PCurve].co.x, curObj.splines[0].points[int_PCurve].co.y, curObj.splines[0].points[int_PCurve].co.z]
-        #print("Traktor"  + str(int_PCurve) + ": " + str(datPath[int_PCurve]))
-    
-    print("ReadCurve Traktor" )
-    
+ 
     return int_Curve, datPath
-
-    
+  
     
 def WriteCurveTrailer(int_Curve, Trailer):
     
@@ -225,8 +180,7 @@ def WriteCurveTrailer(int_Curve, Trailer):
     
     for int_PCurve in range(0,int_Curve-1,1):
         [curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
-        #print("Trailer"  + str(int_PCurve) + ": " + str(Trailer[int_PCurve]))
-    print("Trailer" )
+
 
 def time_to_frame(time_value):
     fps = bpy.context.scene.render.fps
@@ -234,7 +188,6 @@ def time_to_frame(time_value):
     return int(round(frame_number, 0)) 
 
 def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
-    
     
     # objEmpty_A6 -> objTraktor
     # TargetObjList -> datTraktorCurve
@@ -251,10 +204,8 @@ def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
     raw_time=[]
     frame_number=[]
     
-    #290 bpy.context.scene.objects.active = obj
     bpy.context.view_layer.objects.active = obj
     
-    #290 obj.select = True
     obj.select_set(True)
     bpy.ops.anim.keyframe_clear_v3d() #Remove all keyframe animation for selected objects
 
@@ -288,41 +239,13 @@ def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
         #ob.keyframe_insert(data_path="rotation_euler", index=-1)
     bpy.context.area.type = original_type 
     #writelog(n)
-
-
-def SetObjToCurve(TrailerObj, datTrailerCurve, TraktorObj, datTraktorCurve):
-    # Set Objects to curve
+ 
         
-    # parenting loesen, Obj positionieren, follow path wieder herstellen:
-    
-    ClearParenting(objTrailer,objTrailerPath )
-    ClearParenting(objTrailer,objTraktorPath )
-    ClearParenting(objTrailer,objTraktor )
-    
-    ClearParenting(objTraktor,objTrailerPath )
-    ClearParenting(objTraktor,objTraktorPath )
-    ClearParenting(objTraktor,objTrailer )
-    
-    
-    bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
-    
-    objTrailer.location, objTrailer.rotation_euler = get_absolute(Vector(datTrailerCurve[0][0]), (0,0,0), objTrailerPath)
-    objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve[0]), (0,0,0), objTraktorPath)
-     
-    '''   
-    Parenting(objTraktorPath, objTraktor)
-    Parenting(objTraktorPath, objTraktor)
-    Parenting(objTrailerPath, objTrailer)
-    Parenting(objTrailerPath, objTrailer)
-    '''
-    
-        
-class Traktrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
-   
+class Traktrix_OT_Main (bpy.types.Operator):    
     bl_idname = "object.traktrix"
     bl_label = "Tractrix_OT_Main (TB)" #Toolbar - Label
-    bl_description = "Calculate Tractrix for Trailer Object from Tractor Object." # Kommentar im Specials Kontextmenue
-    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
+    bl_description = "Calculate Tractrix for Trailer Object from Tractor Object." 
+    bl_options = {'REGISTER', 'UNDO'} 
 
     def execute(self, context):  
         
@@ -341,7 +264,6 @@ class Traktrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         
         WriteCurveTrailer(int_Curve, datTrailerCurve)
         
-        #SetObjToCurve(objTrailer, datTrailerCurve, objTraktor, datTraktorCurve)
         TIMEPTS = []
         for int_PCurve in range(0,int_Curve-1,1):
             TIMEPTS = TIMEPTS + [int_PCurve/12]
@@ -350,73 +272,46 @@ class Traktrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         SetKeyFrames(objTraktor, curTraktor, objTraktorPath, int_Curve, TIMEPTS)
         SetKeyFrames(objTrailer, curTrailer, objTrailerPath, int_Curve, TIMEPTS)
     
-        
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
 
-class parenttraktor_OT_Main (bpy.types.Operator): # OT fuer Operator Type
-    bl_idname = "object.parenttraktor"
-    bl_label = "parent traktor" #Toolbar - Label
-    bl_description = "parent traktor to curve" # Kommentar im Specials Kontextmenue
-    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
-
-    def execute(self, context):
  
+class setobj2curve_OT_Main (bpy.types.Operator):
+    bl_idname = "object.setobj2curve"
+    bl_label = "set objects to path" 
+    bl_description = "set traktor and trailer objects to cures" 
+    bl_options = {'REGISTER', 'UNDO'} 
+    
+    def execute(self, context):
+        bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
+        
         objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
         objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
         curTraktor = bpy.data.curves[objTraktorPath.data.name]
         
-        #290 ClearParenting(objTraktorPath, objTraktor )
-       
-        
-        bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
         datTraktorCurve = [curTraktor.splines[0].points[0].co.x, curTraktor.splines[0].points[0].co.y, curTraktor.splines[0].points[0].co.z]
         objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), objTraktorPath)
-         
-        #290 Parenting(objTraktorPath, objTraktor)    
         
-       
-        return {'FINISHED'} 
-    writelog('- - parenttraktor_OT_Main done- - - - - - -')   
-
-class parenttrailer_OT_Main (bpy.types.Operator): # OT fuer Operator Type
-    bl_idname = "object.parenttrailer"
-    bl_label = "parent trailer" #Toolbar - Label
-    bl_description = "parent trailer to curve" # Kommentar im Specials Kontextmenue
-    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
-
-    def execute(self, context):
         
         objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
         objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
         curTrailer = bpy.data.curves[objTrailerPath.data.name]    
         
-        #290 ClearParenting(objTrailerPath,objTrailer)
-        
-        bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
         datTrailerCurve = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-        
         objTrailer.location,objTrailer.rotation_euler = get_absolute(Vector(datTrailerCurve), (0,0,0), objTrailerPath)
-           
-        #Parenting(objTraktorPath, objTraktor.name)     
-        #290 Parenting(objTrailerPath, objTrailer) 
-       
-        return {'FINISHED'} 
-    writelog('- - parenttrailer_OT_Main done- - - - - - -') 
-    
-    
-class clearparent_OT_Main (bpy.types.Operator): # OT fuer Operator Type
-    bl_idname = "object.clearparent"
-    bl_label = "parent trailer" #Toolbar - Label
-    bl_description = "clear parent from curve" # Kommentar im Specials Kontextmenue
-    bl_options = {'REGISTER', 'UNDO'} #Set this options, if you want to update  parameters of this operator interactively  (in the Tools pane) 
 
+        return {'FINISHED'} 
+    writelog('- - setobj2curve_OT_Main done- - - - - - -') 
+    
+class clearanimation_OT_Main (bpy.types.Operator): 
+    bl_idname = "object.clearanimation"
+    bl_label = "clear animations" 
+    bl_description = "clear animations of traktor and trailer" 
+    bl_options = {'REGISTER', 'UNDO'} 
+    
     def execute(self, context):
 
-        #290 objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
         objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
-        
-        #290 objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
         objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
         
         # clear keyfframe from Trakor and Trailer
@@ -425,15 +320,7 @@ class clearparent_OT_Main (bpy.types.Operator): # OT fuer Operator Type
         objTrailer.select_set(True)
         bpy.ops.anim.keyframe_clear_v3d()
         bpy.ops.object.select_all(action='DESELECT')
-        
-        #290 ClearParenting(objTrailerPath,objTrailer )
-        #290 ClearParenting(objTrailerPath,objTraktor )
-        #290 ClearParenting(objTraktorPath,objTraktor )
-        #290 ClearParenting(objTraktorPath,objTrailer )
-        #290 ClearParenting(objTrailerPath,objTraktorPath )
-        #290 ClearParenting(objTraktorPath,objTrailerPath )
-        
-       
+          
         return {'FINISHED'} 
     writelog('- - parenttrailer_OT_Main done- - - - - - -') 
 
@@ -520,31 +407,6 @@ class createMatrix(object):
     writelog('createMatrix done')
     writelog('_____________________________________________________________________________')  
 
-def Parenting(Mother, Child):
-    
-    bpy.ops.object.select_all(action='DESELECT')
-    Child.select_set(True)
-    Mother.select_set(True)
-    #2.90 bpy.context.scene.objects.active = Mother
-    bpy.context.view_layer.objects.active = Mother
-    # Parenting wieder herstellen    
-    bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=False)
-    #bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
-    bpy.ops.object.select_all(action='DESELECT')
-    
-def ClearParenting(Mother, Child):
-    
-    # - Deselect alle Objekte und in Objekte in richtiger Reihenfolge auswaehlen
-    bpy.ops.object.select_all(action='DESELECT')
-    Child.select_set(True)
-    Mother.select_set(True)
-    # - Parenting loesen    
-    bpy.ops.object.parent_clear(type='CLEAR') # CLEAR_KEEP_TRANSFORM
-    # - deselect all objects
-    bpy.ops.object.select_all(action='DESELECT')
-    # - Kurve selektieren
-    #Mother.select = True
-    
 
 def get_absolute(Obj_Koord, Obj_Angle, objBase):
     BASEPos_Koord = objBase.location
@@ -602,16 +464,6 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
     return Vtrans_abs, rotEuler
 
    
-      
-
-#class CURVE_OT_RefreshButtonButton(bpy.types.Operator):
- 
-
-
-
-    
-
-
 
 # ________________________________________________________________________________________________________________________
 class ObjectSettings(bpy.types.PropertyGroup):
@@ -623,8 +475,8 @@ class ObjectSettings(bpy.types.PropertyGroup):
 bpy.utils.register_class(ObjectSettings)
 bpy.types.Scene.tractrix = bpy.props.PointerProperty(type=ObjectSettings) 
   
-classes = [Tractrix_PT_Panel, Traktrix_OT_Main, parenttraktor_OT_Main, 
-           parenttrailer_OT_Main, clearparent_OT_Main]
+classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, 
+           clearanimation_OT_Main]
 
 def register():
     for cls in classes:
@@ -633,7 +485,7 @@ def register():
     
     
     # Handlers
-    bpy.app.handlers.load_post.append(foobar)
+    #bpy.app.handlers.load_post.append(foobar)
     
 def unregister():       
     for cls in classes:
@@ -641,25 +493,10 @@ def unregister():
     unregister_module(__name__)
 
     # Handlers
-    bpy.app.handlers.load_post.remove(foobar)
+    #bpy.app.handlers.load_post.remove(foobar)
 
 #--- ### Main code    
 if __name__ == '__main__':
     register()
 
-#todo: code cleaning aasdf  
-#Loesungsweg A):
-# B1 Die Nurbspath Koordinaten nutzen und eine Trailer-Nurbs auf Basis der 
-# Traktor-Nurbs errechnen
-# Beachte: ggf. sp�ter Koordinaten von local auf world transformieren       
-#Loesungsweg B):
-# B1.1 Position von Traktor in Abh.keit vom aktuellen frame bestimmen (-> local2world transformation -> Kuka -> get_absolute())
-# und die Traxtrix-Funktion fuettern. 
-# f�r (jeden?) Frame des Traktors ein Keyframe f�r den Trailers setzen
-
-#Traktor = bpy.data.objects['Obj1']      
-#action_name = bpy.data.objects[Traktor.name].animation_data.action.name
  
-#action=bpy.data.actions[action_name]
-#locID, rotID = FindFCurveID(Traktor, action)
-#action.fcurves[locID[0]].keyframe_points[0].co   
