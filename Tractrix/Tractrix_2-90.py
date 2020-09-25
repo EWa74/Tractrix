@@ -125,8 +125,8 @@ bpy.data.objects[bpy.context.object.tractrix.traktorpath].data.splines
 
 
 # create variable containing width
-bpy.types.Scene.pyramide_width = FloatProperty( name = "pyramide's width", default = 2.0, subtype = 'DISTANCE', unit = 'LENGTH', description = "Enter the pyramide's width!" )
-bpy.types.Scene.traktrix_curvetype = '1' 
+#bpy.types.Scene.pyramide_width = FloatProperty( name = "pyramide's width", default = 2.0, subtype = 'DISTANCE', unit = 'LENGTH', description = "Enter the pyramide's width!" )
+#bpy.types.Scene.traktrix_curvetype = '1' 
 
 def writelog(text=''):
     FilenameLog = bpy.data.filepath
@@ -181,16 +181,17 @@ class Tractrix_PT_Panel(bpy.types.Panel):
         col = split.column()
         col.label(text="Schleppkurven:")
         
-        col.prop_search(ob.tractrix, "traktor", scene, "objects", icon = 'OBJECT_DATA', text = "Traktor")
-        col.prop_search(ob.tractrix, "traktorpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Traktor path")
-        col.prop_search(ob.tractrix, "trailer", scene, "objects", icon = 'OBJECT_DATA', text = "Trailer")
-        col.prop_search(ob.tractrix, "trailerpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Trailer path")
+        col.prop_search(scene.tractrix, "traktor", scene, "objects", icon = 'OBJECT_DATA', text = "Traktor")
+        col.prop_search(scene.tractrix, "traktorpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Traktor path")
+        col.prop_search(scene.tractrix, "trailer", scene, "objects", icon = 'OBJECT_DATA', text = "Trailer")
+        col.prop_search(scene.tractrix, "trailerpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Trailer path")
         
-        # Import Button:
-        col.operator("object.traktrix", text="Traktrix")
-        col.operator("object.parenttraktor", text="parent TRAKTOR...")
-        col.operator("object.parenttrailer", text="parent TRAILER...")
-        col.operator("object.clearparent", text="clear parents...")          
+        # Push Buttons:
+        col.operator("object.clearparent", text="1. clear parents")  
+        col.operator("object.parenttraktor", text="2. parent TRAKTOR")
+        col.operator("object.parenttrailer", text="3. parent TRAILER")
+        col.operator("object.traktrix", text="4a Traktrix")        
+           
            
     writelog('Tractrix_PT_Panel done')
     writelog('_____________________________________________________________________________')
@@ -216,8 +217,8 @@ def ReadCurve(objPath):
 def WriteCurveTrailer(int_Curve, Trailer):
     
     #bpy.data.objects[Trailer].data.splines 
-    objTrailerPath = bpy.data.objects[bpy.context.object.tractrix.trailerpath]
-    objTrailer = bpy.data.objects[bpy.context.object.tractrix.trailer] 
+    objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
+    objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
     curTrailer = bpy.data.curves[objTrailerPath.data.name]    
     
     for int_PCurve in range(0,int_Curve-1,1):
@@ -323,10 +324,10 @@ class Traktrix_OT_Main (bpy.types.Operator): # OT fuer Operator Type
 
     def execute(self, context):  
         
-        objTraktorPath = bpy.data.objects[bpy.context.object.tractrix.traktorpath] 
-        objTraktor = bpy.data.objects[bpy.context.object.tractrix.traktor] 
-        objTrailerPath = bpy.data.objects[bpy.context.object.tractrix.trailerpath]
-        objTrailer = bpy.data.objects[bpy.context.object.tractrix.trailer]
+        objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
+        objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
+        objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
+        objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
         curTraktor = bpy.data.curves[objTraktorPath.data.name]
         curTrailer = bpy.data.curves[objTrailerPath.data.name]     
             
@@ -359,8 +360,8 @@ class parenttraktor_OT_Main (bpy.types.Operator): # OT fuer Operator Type
 
     def execute(self, context):
  
-        objTraktorPath = bpy.data.objects[bpy.context.object.tractrix.traktorpath] 
-        objTraktor = bpy.data.objects[bpy.context.object.tractrix.traktor] 
+        objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
+        objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
         curTraktor = bpy.data.curves[objTraktorPath.data.name]
         
         ClearParenting(objTraktorPath, objTraktor )
@@ -383,8 +384,8 @@ class parenttrailer_OT_Main (bpy.types.Operator): # OT fuer Operator Type
 
     def execute(self, context):
         
-        objTrailerPath = bpy.data.objects[bpy.context.object.tractrix.trailerpath]
-        objTrailer = bpy.data.objects[bpy.context.object.tractrix.trailer] 
+        objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
+        objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
         curTrailer = bpy.data.curves[objTrailerPath.data.name]    
         
         ClearParenting(objTrailerPath,objTrailer)
@@ -409,12 +410,12 @@ class clearparent_OT_Main (bpy.types.Operator): # OT fuer Operator Type
 
     def execute(self, context):
 
-        objTraktorPath = bpy.data.objects[bpy.context.object.tractrix.traktorpath] 
-        objTraktor = bpy.data.objects[bpy.context.object.tractrix.traktor] 
+        objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
+        objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
         #curTraktor = bpy.data.curves[objTraktorPath.data.name]
         
-        objTrailerPath = bpy.data.objects[bpy.context.object.tractrix.trailerpath]
-        objTrailer = bpy.data.objects[bpy.context.object.tractrix.trailer] 
+        objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
+        objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
         #curTrailer = bpy.data.curves[objTrailerPath.data.name]  
         
         ClearParenting(objTrailerPath,objTrailer )
@@ -606,57 +607,27 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
 
 # ________________________________________________________________________________________________________________________
 class ObjectSettings(bpy.types.PropertyGroup):
-#class ObjectSettings(PropertyGroup): # self, context, 
-    
-    # Access it e.g. like
-    # bpy.context.object.tractrix.trailer
-    # >>> bpy.data.objects[0].tractrix.trailer
-    
-    #traktor: StringProperty(name="Traktor", default="")
-    
-    traktor = bpy.props.StringProperty(name="Traktor", default="")
-    trailer = bpy.props.StringProperty(name="Trailer", default="")
-    traktorpath = bpy.props.StringProperty(name="Traktor Path", default="")
-    trailerpath = bpy.props.StringProperty(name="Trailer Path", default="")
-    
-
-
+    traktor     = bpy.props.StringProperty(name="Traktor"     , default="Traktor"    )
+    trailer     = bpy.props.StringProperty(name="Trailer"     , default="Trailer"    )
+    traktorpath = bpy.props.StringProperty(name="Traktor Path", default="TraktorPath")
+    trailerpath = bpy.props.StringProperty(name="Trailer Path", default="TrailerPath")
 
 bpy.utils.register_class(ObjectSettings)
-
-bpy.types.Object.tractrix = \
-    bpy.props.PointerProperty(type=ObjectSettings) 
-
+bpy.types.Scene.tractrix = bpy.props.PointerProperty(type=ObjectSettings) 
   
-  
-classes = [Tractrix_PT_Panel, Traktrix_OT_Main, parenttraktor_OT_Main, parenttrailer_OT_Main, clearparent_OT_Main]
-
-  
+classes = [Tractrix_PT_Panel, Traktrix_OT_Main, parenttraktor_OT_Main, 
+           parenttrailer_OT_Main, clearparent_OT_Main]
 
 def register():
-    
-    bpy.types.Object.tractrix = bpy.props.PointerProperty(type=ObjectSettings) 
-
-    #bpy.types.Scene.tractrix = PointerProperty(type=ObjectSettings)
- 
-    
-    #bpy.types.Scene.prop = PointerProperty(type=bpy.types.Object) # 2020-09-14
-    #bpy.types.Scene.prop = PointerProperty(type=bpy.types.Object) # 2020-09-14
-    
-    
     for cls in classes:
         bpy.utils.register_class(cls) 
     register_module(__name__)
     
-   
     
     # Handlers
     bpy.app.handlers.load_post.append(foobar)
     
-def unregister():
-    
-    #bpy.app.handlers.save_post.append(foobar)
-    
+def unregister():       
     for cls in classes:
         bpy.unutils.register_class(cls)
     unregister_module(__name__)
