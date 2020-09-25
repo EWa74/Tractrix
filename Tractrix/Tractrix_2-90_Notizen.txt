@@ -99,7 +99,63 @@ action_name = bpy.data.objects[objEmpty_A6.name].animation_data.action.name
 
 
 ________________
-
+        objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
+        objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
+        curTraktor = bpy.data.curves[objTraktorPath.data.name]
+        
+        objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
+        objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
+        curTrailer = bpy.data.curves[objTrailerPath.data.name]
 ________________
 
+def Parenting(Mother, Child):
+    
+    bpy.ops.object.select_all(action='DESELECT')
+    Child.select_set(True)
+    Mother.select_set(True)
+    bpy.context.view_layer.objects.active = Mother
+    # Parenting wieder herstellen    
+    bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=False)
+    #bpy.ops.object.parent_set(type='FOLLOW', xmirror=False, keep_transform=True)
+    bpy.ops.object.select_all(action='DESELECT')
+    
+def ClearParenting(Mother, Child):
+    
+    # - Deselect alle Objekte und in Objekte in richtiger Reihenfolge auswaehlen
+    bpy.ops.object.select_all(action='DESELECT')
+    Child.select_set(True)
+    Mother.select_set(True)
+    # - Parenting loesen    
+    bpy.ops.object.parent_clear(type='CLEAR') # CLEAR_KEEP_TRANSFORM
+    # - deselect all objects
+    bpy.ops.object.select_all(action='DESELECT')
+    # - Kurve selektieren
+    #Mother.select = True
+  
+  ________________
+   #action=bpy.data.actions[action_name]
+#locID, rotID = FindFCurveID(Traktor, action)
+#action.fcurves[locID[0]].keyframe_points[0].co 
+ ________________
+# create variable containing width
+#bpy.types.Scene.pyramide_width = FloatProperty( name = "pyramide's width", default = 2.0, subtype = 'DISTANCE', unit = 'LENGTH', description = "Enter the pyramide's width!" )
+#bpy.types.Scene.traktrix_curvetype = '1' 
+________________
+    # check poll() to avoid exception.
+    '''
+    if bpy.ops.object.mode_set.poll():
+        bpy.ops.object.mode_set(mode='EDIT')
+    '''
+    
+    #@classmethod
+    #def poll(cls, context):
+    #    return (bpy.context.active_object.type == 'CURVE') # Test, ob auch wirklich ein 'CURVE' Objekt aktiv ist.
+    
+  ________________
+  ________________
+  ________________
+  ________________
+  ________________
+  ________________
+    
    

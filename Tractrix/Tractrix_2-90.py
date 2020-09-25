@@ -111,7 +111,7 @@ from bpy.props import PointerProperty # fuer eigene custom property
 
 
 def writelog(text=''):
-    print('auskommentiert....')
+    #print('auskommentiert....')
     '''
     FilenameLog = bpy.data.filepath
     FilenameLog = FilenameLog.replace(".blend", '.log')
@@ -153,8 +153,8 @@ class Tractrix_PT_Panel(bpy.types.Panel):
         col.prop_search(scene.tractrix, "trailer", scene, "objects", icon = 'OBJECT_DATA', text = "Trailer")
         col.prop_search(scene.tractrix, "trailerpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Trailer path")
         
-        col.operator("object.setobj2curve", text="2. set TRAKTOR & TRAILER to path")
-        col.operator("object.traktrix", text="4a Traktrix")        
+        col.operator("object.setobj2curve", text="2. set 2 path")
+        col.operator("object.traktrix", text="3a Traktrix")        
             
     writelog('Tractrix_PT_Panel done')
     writelog('_____________________________________________________________________________')
@@ -165,7 +165,8 @@ def ReadCurve(objPath):
     int_Curve = len(bpy.data.curves[objPath.data.name].splines[0].points)
     datPath = createMatrix(int_Curve,3)
     
-    for int_PCurve in range(0,int_Curve,1):
+    for int_PCurve in range(0,int_Curve,1):       
+        objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), objTraktorPath)
         datPath[int_PCurve][0:3] = [curObj.splines[0].points[int_PCurve].co.x, curObj.splines[0].points[int_PCurve].co.y, curObj.splines[0].points[int_PCurve].co.z]
  
     return int_Curve, datPath
@@ -259,7 +260,7 @@ class Traktrix_OT_Main (bpy.types.Operator):
         int_Curve, datTraktorCurve = ReadCurve(objTraktorPath)  
         
         datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-        
+        # ToDo: datTraktorCurve muss noch mit getabsoulute umgerechnet werden...
         datTrailerCurve= Traktrix3D(datTraktorCurve, datTrailerStart)
         
         WriteCurveTrailer(int_Curve, datTrailerCurve)
