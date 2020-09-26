@@ -186,8 +186,10 @@ def ReadCurve(objPath):
     datPath = createMatrix(int_Curve,3)
     
     for int_PCurve in range(0,int_Curve,1):       
-        #objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), objTraktorPath)
-        datPath[int_PCurve][0:3] = [curObj.splines[0].points[int_PCurve].co.x, curObj.splines[0].points[int_PCurve].co.y, curObj.splines[0].points[int_PCurve].co.z]
+        
+        datPath[int_PCurve][0:3] = get_absolute(curObj.splines[0].points[int_PCurve].co, (0,0,0), Vector((0,0,0)), (0,0,0))
+  
+        #datPath[int_PCurve][0:3] = [curObj.splines[0].points[int_PCurve].co.x, curObj.splines[0].points[int_PCurve].co.y, curObj.splines[0].points[int_PCurve].co.z]
  
     return int_Curve, datPath
   
@@ -311,7 +313,7 @@ class setobj2curve_OT_Main (bpy.types.Operator):
         curTraktor = bpy.data.curves[objTraktorPath.data.name]
         
         datTraktorCurve = [curTraktor.splines[0].points[0].co.x, curTraktor.splines[0].points[0].co.y, curTraktor.splines[0].points[0].co.z]
-        objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), objTraktorPath)
+        objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), objTraktorPath.location, objTraktorPath.rotation_euler)
         
         
         objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
@@ -319,7 +321,7 @@ class setobj2curve_OT_Main (bpy.types.Operator):
         curTrailer = bpy.data.curves[objTrailerPath.data.name]    
         
         datTrailerCurve = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-        objTrailer.location,objTrailer.rotation_euler = get_absolute(Vector(datTrailerCurve), (0,0,0), objTrailerPath)
+        objTrailer.location,objTrailer.rotation_euler = get_absolute(Vector(datTrailerCurve), (0,0,0), objTrailerPath.location,objTrailerPath.rotation_euler)
 
         return {'FINISHED'} 
     writelog('- - setobj2curve_OT_Main done- - - - - - -') 
@@ -385,8 +387,10 @@ def Traktrix3D(datTraktor, datTrailerStart):
     
     for int_PCurve in range(0,int_Count-1,1):
         
-        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
-        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0], datTraktor[int_PCurve+1][1], datTraktor[int_PCurve+1][2]]
+        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0][0], datTraktor[int_PCurve][0][1], datTraktor[int_PCurve][0][2]]
+        #original: Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
+        
+        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0][0], datTraktor[int_PCurve+1][0][1], datTraktor[int_PCurve+1][0][2]]
         
         nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
             
@@ -400,7 +404,7 @@ def Traktrix3D(datTraktor, datTrailerStart):
         
         #Gravity =  0* Sz[T1][0] - 0.1 * math.pow((T2-T1),2) 
         #Abstand = math.pow(math.pow((datTraktor[0][0]-Sx[T1][0]),2)+math.pow((datTraktor[0][1]-Sy[T1][0]),2)+math.pow((datTraktor[0][2]-Sz[T1][0]),2), 0.5)
-        AbstandT1 = math.pow(math.pow((datTraktor[int_PCurve][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][2]-Sz[T1][0]),2), 0.5)
+        AbstandT1 = math.pow(math.pow((datTraktor[int_PCurve][0][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][0][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][0][2]-Sz[T1][0]),2), 0.5)
         
         Sx[T2][0] = Sx[T1][0] + Term * n[1]
         Sy[T2][0] = Sy[T1][0] + Term * n[2]
@@ -429,9 +433,12 @@ class createMatrix(object):
     writelog('_____________________________________________________________________________')  
 
 
-def get_absolute(Obj_Koord, Obj_Angle, objBase):
+def get_absolute(Obj_Koord, Obj_Angle, BASEPos_Koord, BASEPos_Angle): #objBase
+    '''
     BASEPos_Koord = objBase.location
     BASEPos_Angle = objBase.rotation_euler
+    '''
+    
     # Obj_Koord und Obj_Angle sind lokale Angaben bezogen auf Base
     # Aufruf bei Import
     # Obj_Koord, Obj_Angle [rad]: relativ
@@ -449,7 +456,20 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
     # 01012014 objBase = bpy.data.objects['Sphere_BASEPos']
     #bpy.data.objects[Obj.name].rotation_mode =RotationModeTransform
     
-    matrix_world =bpy.data.objects[objBase.name].matrix_world
+    #matrix_world =bpy.data.objects[objBase.name].matrix_world
+    
+    #mat_trans = mathutils.Matrix.Translation(BASEPos_Koord)
+    #mat_rot = mathutils.Matrix.Rotation(radians(0), 4, 'X')
+    #matrix_world = mat_trans @ mat_rot
+    
+    '''
+    matrix_world[0] = Vector((1.0, 0.0, 0.0, BASEPos_Koord.x))
+    matrix_world[1] = Vector((0.0, 1.0, 0.0, BASEPos_Koord.y))
+    matrix_world[2] = Vector((0.0, 0.0, 1.0, BASEPos_Koord.z))
+    matrix_world[3] = Vector((0.0, 0.0, 0.0, 1.0))
+    '''
+    
+    #matrix_world =bpy.data.objects[objBase.name].matrix_world
     #point_local  = Obj_Koord 
     
     Mtrans     = mathutils.Matrix.Translation(Vector(BASEPos_Koord))
