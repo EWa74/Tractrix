@@ -29,6 +29,13 @@
 # Die Objekte werden unter beruecksichtigung der Kurven im World-Space 
 # auf den ersten Spline-Koordinaten der Kurven gesetzt
 # die Schleppkurve ist vom Typ Traktrix. D.h. der Abstand bleibt konstant.
+
+# Traktor: Objekt das der Leitkurve folgt.
+# Traktorpath: Leikurve
+# Trailer: .
+# Trailerpath: 3d-Radiodrome? (d.h. Verfolgekurve mit konst. Geschw.; aber nicht gleich zum Leitpunkt; gleicher Abstand)
+
+
  
 # Beachte: 
 #   Wenn die Punkte die die Kurve beschreiben zu weit auseinander liegen, 
@@ -95,19 +102,31 @@ import time # um Zeitstempel im Logfile zu schreiben
 import bpy, os
 import sys
 # from bpy.utils import register_module, unregister_module
-from bpy.props import FloatProperty, IntProperty
 from mathutils import Vector  
 from mathutils import *
 import mathutils
 import math
 import re  # zum sortieren de Objektliste
-from bpy.props import StringProperty, BoolProperty, EnumProperty
-from bpy.types import Operator
 from symbol import except_clause
 from copy import deepcopy # fuer OptimizeRotation
 
-from bpy.props import PointerProperty # fuer eigene custom property 
 
+from bpy.types import (
+        Operator,
+        Panel,
+        PropertyGroup,
+        )
+
+from bpy.props import (
+        BoolProperty,
+        IntProperty,
+        FloatProperty,
+        EnumProperty,
+        CollectionProperty,
+        StringProperty,
+        PointerProperty
+        #FloatVectorProperty,
+        )
 
 
 def writelog(text=''):
@@ -146,15 +165,16 @@ class Tractrix_PT_Panel(bpy.types.Panel):
         col = split.column()
         col.label(text="Schleppkurven:")
         
-        col.operator("object.clearanimation", text="1. clear Animations")  
+        col.operator("tractrix.clearanimation", text="1. clear Animations")  
         
         col.prop_search(scene.tractrix, "traktor", scene, "objects", icon = 'OBJECT_DATA', text = "Traktor")
         col.prop_search(scene.tractrix, "traktorpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Traktor path")
         col.prop_search(scene.tractrix, "trailer", scene, "objects", icon = 'OBJECT_DATA', text = "Trailer")
         col.prop_search(scene.tractrix, "trailerpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Trailer path")
         
-        col.operator("object.setobj2curve", text="2. set 2 path")
-        col.operator("object.traktrix", text="3a Traktrix")        
+        col.operator("tractrix.setobj2curve", text="2. set 2 path")
+        col.prop(scene.tractrix, "SolverMode", icon = 'CON_ROTLIKE', text = "Sover")
+        col.operator("tractrix.calculate", text="calculate path")        
             
     writelog('Tractrix_PT_Panel done')
     writelog('_____________________________________________________________________________')
@@ -166,7 +186,7 @@ def ReadCurve(objPath):
     datPath = createMatrix(int_Curve,3)
     
     for int_PCurve in range(0,int_Curve,1):       
-        objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), objTraktorPath)
+        #objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), objTraktorPath)
         datPath[int_PCurve][0:3] = [curObj.splines[0].points[int_PCurve].co.x, curObj.splines[0].points[int_PCurve].co.y, curObj.splines[0].points[int_PCurve].co.z]
  
     return int_Curve, datPath
@@ -243,7 +263,7 @@ def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
  
         
 class Traktrix_OT_Main (bpy.types.Operator):    
-    bl_idname = "object.traktrix"
+    bl_idname = "tractrix.calculate"
     bl_label = "Tractrix_OT_Main (TB)" #Toolbar - Label
     bl_description = "Calculate Tractrix for Trailer Object from Tractor Object." 
     bl_options = {'REGISTER', 'UNDO'} 
@@ -278,7 +298,7 @@ class Traktrix_OT_Main (bpy.types.Operator):
 
  
 class setobj2curve_OT_Main (bpy.types.Operator):
-    bl_idname = "object.setobj2curve"
+    bl_idname = "tractrix.setobj2curve"
     bl_label = "set objects to path" 
     bl_description = "set traktor and trailer objects to cures" 
     bl_options = {'REGISTER', 'UNDO'} 
@@ -305,7 +325,7 @@ class setobj2curve_OT_Main (bpy.types.Operator):
     writelog('- - setobj2curve_OT_Main done- - - - - - -') 
     
 class clearanimation_OT_Main (bpy.types.Operator): 
-    bl_idname = "object.clearanimation"
+    bl_idname = "tractrix.clearanimation"
     bl_label = "clear animations" 
     bl_description = "clear animations of traktor and trailer" 
     bl_options = {'REGISTER', 'UNDO'} 
@@ -467,14 +487,40 @@ def get_absolute(Obj_Koord, Obj_Angle, objBase):
    
 
 # ________________________________________________________________________________________________________________________
-class ObjectSettings(bpy.types.PropertyGroup):
-    traktor     = bpy.props.StringProperty(name="choose object"     , default="Traktor"    )
-    trailer     = bpy.props.StringProperty(name="choose object"     , default="Trailer"    )
-    traktorpath = bpy.props.StringProperty(name="choose nurbspath"  , default="TraktorPath")
-    trailerpath = bpy.props.StringProperty(name="choose nurbspath"  , default="TrailerPath")
+class objectSettings(PropertyGroup):
 
-bpy.utils.register_class(ObjectSettings)
-bpy.types.Scene.tractrix = bpy.props.PointerProperty(type=ObjectSettings) 
+    traktor: StringProperty(
+        name="choose object",
+        default="Traktor"        
+        )
+    trailer: StringProperty(
+        name="choose object",
+        default="Trailer"        
+        )    
+    traktorpath: StringProperty(
+        name="choose nurbspath",
+        default="TraktorPath"        
+        )
+    trailerpath: StringProperty(
+        name="choose nurbspath",
+        default="TrailerPath"        
+        )
+        
+    intSolverItems = (
+            ('distance'  , 'Distance'    , 'Calculate path with constant distance to traktor (Tractrix)'),
+            ('velocity'  , 'Velocity'    , 'Calculate path with constant velocity (Hundekurve)'         ),
+            ('squint'    , 'Squint angle', 'Squint angle curve'                                         )
+            )
+    SolverMode: EnumProperty(
+            items      = intSolverItems,
+            name       = "Solver Mode",
+            description="Determines how to calculate the trailer path",
+            default    ='distance'
+            )
+
+
+bpy.utils.register_class(objectSettings)
+bpy.types.Scene.tractrix = bpy.props.PointerProperty(type=objectSettings) 
   
 classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, 
            clearanimation_OT_Main]

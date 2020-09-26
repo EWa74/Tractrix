@@ -152,6 +152,15 @@ ________________
     #    return (bpy.context.active_object.type == 'CURVE') # Test, ob auch wirklich ein 'CURVE' Objekt aktiv ist.
     
   ________________
+  
+      '''
+    traktor     = bpy.props.StringProperty(name="choose object"     , default="Traktor"    )
+    trailer     = bpy.props.StringProperty(name="choose object"     , default="Trailer"    )
+    traktorpath = bpy.props.StringProperty(name="choose nurbspath"  , default="TraktorPath")
+    trailerpath = bpy.props.StringProperty(name="choose nurbspath"  , default="TrailerPath")
+    #solver      = bpy.props.StringProperty(name="choose curve type"  , default= ["D const", "V const"])
+    '''
+    
   ________________
   ________________
   ________________
