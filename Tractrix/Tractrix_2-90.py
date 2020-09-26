@@ -187,8 +187,9 @@ def ReadCurve(objPath):
     
     for int_PCurve in range(0,int_Curve,1):       
         
+        # mit 'get_absolute' werden die GLOBALEN Punkte verwendet:
         datPath[int_PCurve][0:3] = get_absolute(curObj.splines[0].points[int_PCurve].co, (0,0,0), Vector((0,0,0)), (0,0,0))
-  
+        # in der alten Version wurden nur die LOKALEN Punkte (d.h. bezogen auf den Origin) verwendet:
         #datPath[int_PCurve][0:3] = [curObj.splines[0].points[int_PCurve].co.x, curObj.splines[0].points[int_PCurve].co.y, curObj.splines[0].points[int_PCurve].co.z]
  
     return int_Curve, datPath
@@ -201,7 +202,7 @@ def WriteCurveTrailer(int_Curve, Trailer):
     objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
     curTrailer = bpy.data.curves[objTrailerPath.data.name]    
     
-    for int_PCurve in range(0,int_Curve-1,1):
+    for int_PCurve in range(0,int_Curve,1):
         [curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
 
 
@@ -237,17 +238,14 @@ def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
     
     
     #QuaternionList = OptimizeRotationQuaternion(TargetObjList, TIMEPTSCount)
-    for n in range(0,int_Curve-1,1):
+    for n in range(0,int_Curve,1):
         # Trailer[int_PCurve][0]
         #writelog(n)
-        #290 bpy.context.scene.frame_set(time_to_frame(TIMEPTS[n]))  
         bpy.data.scenes['Scene'].frame_set(time_to_frame(TIMEPTS[n])) 
+
+        ob.location, ob.rotation_euler = get_absolute(Vector((cur.splines[0].points[n].co.x,cur.splines[0].points[n].co.y,cur.splines[0].points[n].co.z)), (0,0,0),objPath.location, objPath.rotation_euler)
         
-        # 04.09.2014 todo.....
-        #c = Vector([cur.splines[0].points[n].co.x, cur.splines[0].points[n].co.y, cur.splines[0].points[n].co.z])
-        #a, b = get_absolute(c, (0,0,0), objPath)
-        
-        ob.location = [cur.splines[0].points[n].co.x, cur.splines[0].points[n].co.y, cur.splines[0].points[n].co.z]
+        #ob.location = [cur.splines[0].points[n].co.x, cur.splines[0].points[n].co.y, cur.splines[0].points[n].co.z]
         
         #ob.location = bpy.data.objects[TargetObjList[n]].location
                 
@@ -288,10 +286,9 @@ class Traktrix_OT_Main (bpy.types.Operator):
         WriteCurveTrailer(int_Curve, datTrailerCurve)
         
         TIMEPTS = []
-        for int_PCurve in range(0,int_Curve-1,1):
+        for int_PCurve in range(0,int_Curve,1):
             TIMEPTS = TIMEPTS + [int_PCurve/12]
         
-        # 04.09.2014 todo.....
         SetKeyFrames(objTraktor, curTraktor, objTraktorPath, int_Curve, TIMEPTS)
         SetKeyFrames(objTrailer, curTrailer, objTrailerPath, int_Curve, TIMEPTS)
     
@@ -385,7 +382,7 @@ def Traktrix3D(datTraktor, datTrailerStart):
     datTrailer = createMatrix(int_Count,1)
     datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
     
-    for int_PCurve in range(0,int_Count-1,1):
+    for int_PCurve in range(0,int_Count-1,1): 
         
         Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0][0], datTraktor[int_PCurve][0][1], datTraktor[int_PCurve][0][2]]
         #original: Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
@@ -415,7 +412,8 @@ def Traktrix3D(datTraktor, datTrailerStart):
         Sx[T1][0] = deepcopy(Sx[T2][0])
         Sy[T1][0] = deepcopy(Sy[T2][0])
         Sz[T1][0] = deepcopy(Sz[T2][0])
-    
+        
+            
     return datTrailer 
  
 
