@@ -26,7 +26,7 @@
 # Beschreibung   
 # Die Nurbspath Koordinaten des Trailers werden basierend auf den   
 # Traktor-Nurbs errechnen
-# Die Objekte werden unter beruecksichtigung der Kurven im World-Space 
+# Die Objekte werden unter Beruecksichtigung der Kurven im World-Space 
 # auf den ersten Spline-Koordinaten der Kurven gesetzt
 # die Schleppkurve ist vom Typ Traktrix. D.h. der Abstand bleibt konstant.
 
@@ -101,7 +101,6 @@ from bpy_extras.io_utils import ImportHelper
 import time # um Zeitstempel im Logfile zu schreiben
 import bpy, os
 import sys
-# from bpy.utils import register_module, unregister_module
 from mathutils import Vector  
 from mathutils import *
 import mathutils
@@ -188,7 +187,7 @@ def ReadCurve(objPath):
     for int_PCurve in range(0,int_Curve,1):       
         
         # mit 'get_absolute' werden die GLOBALEN Punkte verwendet:
-        datPath[int_PCurve][0:3] = get_absolute(curObj.splines[0].points[int_PCurve].co, (0,0,0), Vector((0,0,0)), (0,0,0))
+        datPath[int_PCurve][0:3] = get_absolute(curObj.splines[0].points[int_PCurve].co, (0,0,0), objPath.location, objPath.rotation_euler)
         # in der alten Version wurden nur die LOKALEN Punkte (d.h. bezogen auf den Origin) verwendet:
         #datPath[int_PCurve][0:3] = [curObj.splines[0].points[int_PCurve].co.x, curObj.splines[0].points[int_PCurve].co.y, curObj.splines[0].points[int_PCurve].co.z]
  
@@ -205,6 +204,11 @@ def WriteCurveTrailer(int_Curve, Trailer):
     for int_PCurve in range(0,int_Curve,1):
         [curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
 
+        [curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z] = get_relative(Trailer[int_PCurve][0], (0,0,0), objTrailerPath.location, objTrailerPath.rotation_euler)
+
+get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
+ob.location, ob.rotation_euler = get_absolute(Vector((cur.splines[0].points[n].co.x,cur.splines[0].points[n].co.y,cur.splines[0].points[n].co.z)), (0,0,0),objPath.location, objPath.rotation_euler)
+        
 
 def time_to_frame(time_value):
     fps = bpy.context.scene.render.fps
@@ -279,7 +283,10 @@ class Traktrix_OT_Main (bpy.types.Operator):
             
         int_Curve, datTraktorCurve = ReadCurve(objTraktorPath)  
         
-        datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
+        #datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
+        datTrailerStart, datTrailerStartRot = get_absolute(Vector((curTrailer.splines[0].points[0].co.x,curTrailer.splines[0].points[0].co.y,curTrailer.splines[0].points[0].co.z)), (0,0,0),objTrailerPath.location, objTrailerPath.rotation_euler)
+        
+        
         # ToDo: datTraktorCurve muss noch mit getabsoulute umgerechnet werden...
         datTrailerCurve= Traktrix3D(datTraktorCurve, datTrailerStart)
         
@@ -291,6 +298,8 @@ class Traktrix_OT_Main (bpy.types.Operator):
         
         SetKeyFrames(objTraktor, curTraktor, objTraktorPath, int_Curve, TIMEPTS)
         SetKeyFrames(objTrailer, curTrailer, objTrailerPath, int_Curve, TIMEPTS)
+        bpy.data.scenes['Scene'].frame_set(1)
+        
     
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
@@ -431,6 +440,75 @@ class createMatrix(object):
     writelog('_____________________________________________________________________________')  
 
 
+def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle):
+    # dataPATHPTS_Loc/Rot [rad]: absolute
+    # BASEPos_Koord/Angle [rad]: absolute
+    # Aufruf von: Diese Funktion wird nur bei Refresh und Import aufgerufen.
+    # Wiedergabe von LOC/Rot bezogen auf Base
+    
+    # World2Local - OK (absolute -> relative)
+    
+    # Gegeben: Mtrans, Mrot = Base / Vtrans_abs, Mrot_abs
+    # Ges:  Mrot_rel, Vtrans_rel
+    #
+    # Mworld  / Mworld_rel / Mworld_abs mit world = trans * rot
+    # Mtrans  / Mtrans_rel / Mtrans_abs
+    # Mrot    / Mrot_rel   / Mrot_abs
+    #
+    # dataPATHPTS_Loc = Global --> PATHPTS_Koord bezogen auf Base 
+    # dataPATHPTS_Rot = Global --> PATHPTS_Angle bezogen auf Base
+    
+    #writelog('_____________________________________________________________________________')
+    #writelog('Funktion: get_relativeX - lokale Koordinaten bezogen auf Base!')
+            
+    Mtrans    = mathutils.Matrix.Translation(Vector(BASEPos_Koord))
+    Vtrans_abs = dataPATHPTS_Loc                              #global 
+    #writelog('Vtrans_abs'+ str(Vtrans_abs))  # neuer Bezugspunkt
+    
+    #--------------------------------------------------------------------------
+    MrotX = mathutils.Matrix.Rotation(BASEPos_Angle[0], 3, 'X') # Global
+    MrotY = mathutils.Matrix.Rotation(BASEPos_Angle[1], 3, 'Y')
+    MrotZ = mathutils.Matrix.Rotation(BASEPos_Angle[2], 3, 'Z')
+    Mrot = MrotZ @ MrotY @ MrotX
+    #writelog('Mrot :'+ str(Mrot))
+    
+    Mworld_rel = Mtrans * Mrot.to_4x4()
+    
+    Mrot_absX = mathutils.Matrix.Rotation(dataPATHPTS_Rot[0], 3, 'X') # Global
+    Mrot_absY = mathutils.Matrix.Rotation(dataPATHPTS_Rot[1], 3, 'Y')
+    Mrot_absZ = mathutils.Matrix.Rotation(dataPATHPTS_Rot[2], 3, 'Z')  
+    Mrot_abs = Mrot_absZ @ Mrot_absY @ Mrot_absX
+    #writelog('Mrot_abs :'+ str(Mrot_abs))
+    #--------------------------------------------------------------------------
+     
+    #PATHPTS_Koord = matrix_world.inverted() *point_local    # transpose fuehrt zu einem andren Ergebnis?!
+    Vtrans_rel   = Mworld_rel.inverted() @Vtrans_abs  
+    PATHPTS_Koord = Vtrans_rel
+    
+    #writelog('PATHPTS_Koord : '+ str(PATHPTS_Koord))           # neuer Bezugspunkt
+    
+    Mrot_rel = Mrot.inverted()  @ Mrot_abs 
+    #writelog('Mrot_rel'+ str(Mrot_rel))
+    
+    newR = Mrot_rel.to_euler('XYZ')
+    
+    #writelog('newR'+ str(newR))    
+    #writelog('newR[0] :'+ str(newR[0]*360/(2*math.pi)))
+    #writelog('newR[1] :'+ str(newR[1]*360/(2*math.pi)))
+    #writelog('newR[2] :'+ str(newR[2]*360/(2*math.pi)))
+        
+    PATHPTS_Angle = (Vorz1* newR[0], Vorz2*newR[1], Vorz3*newR[2]) # [rad]     
+    
+    #writelog('PATHPTS_Koord : ' + str(PATHPTS_Koord))
+    #writelog('PATHPTS_Angle: '+'C X {0:.3f}'.format(PATHPTS_Angle[0])+' B Y {0:.3f}'.format(PATHPTS_Angle[1])+' A Z {0:.3f}'.format(PATHPTS_Angle[2]))
+    
+    #writelog('get_relative done')
+    #writelog('_____________________________________________________________________________')
+    return PATHPTS_Koord, PATHPTS_Angle 
+
+
+
+
 def get_absolute(Obj_Koord, Obj_Angle, BASEPos_Koord, BASEPos_Angle): #objBase
     '''
     BASEPos_Koord = objBase.location
@@ -546,16 +624,13 @@ classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main,
 def register():
     for cls in classes:
         bpy.utils.register_class(cls) 
-    register_module(__name__)
-    
-    
+  
     # Handlers
     #bpy.app.handlers.load_post.append(foobar)
     
 def unregister():       
     for cls in classes:
-        bpy.unutils.register_class(cls)
-    unregister_module(__name__)
+        bpy.utils.unregister_class(cls)
 
     # Handlers
     #bpy.app.handlers.load_post.remove(foobar)
