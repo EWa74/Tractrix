@@ -202,12 +202,12 @@ def WriteCurveTrailer(int_Curve, Trailer):
     curTrailer = bpy.data.curves[objTrailerPath.data.name]    
     
     for int_PCurve in range(0,int_Curve,1):
-        [curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
+        #[curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
 
-        [curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z] = get_relative(Trailer[int_PCurve][0], (0,0,0), objTrailerPath.location, objTrailerPath.rotation_euler)
-
-get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
-ob.location, ob.rotation_euler = get_absolute(Vector((cur.splines[0].points[n].co.x,cur.splines[0].points[n].co.y,cur.splines[0].points[n].co.z)), (0,0,0),objPath.location, objPath.rotation_euler)
+        ([curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z]), rot_spline_element = get_relative(Trailer[int_PCurve][0], (0,0,0), objTrailerPath.location, objTrailerPath.rotation_euler)
+        # ToDo: rot_spline_element (findet bei bei Nurbspath keine Anwendung)
+#get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
+#ob.location, ob.rotation_euler = get_absolute(Vector((cur.splines[0].points[n].co.x,cur.splines[0].points[n].co.y,cur.splines[0].points[n].co.z)), (0,0,0),objPath.location, objPath.rotation_euler)
         
 
 def time_to_frame(time_value):
@@ -482,7 +482,8 @@ def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
     #--------------------------------------------------------------------------
      
     #PATHPTS_Koord = matrix_world.inverted() *point_local    # transpose fuehrt zu einem andren Ergebnis?!
-    Vtrans_rel   = Mworld_rel.inverted() @Vtrans_abs  
+    #Vtrans_rel   = Mworld_rel.inverted() *Vtrans_abs
+    Vtrans_rel   = Mworld_rel.inverted() @Vector((Vtrans_abs))  
     PATHPTS_Koord = Vtrans_rel
     
     #writelog('PATHPTS_Koord : '+ str(PATHPTS_Koord))           # neuer Bezugspunkt
@@ -496,7 +497,11 @@ def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
     #writelog('newR[0] :'+ str(newR[0]*360/(2*math.pi)))
     #writelog('newR[1] :'+ str(newR[1]*360/(2*math.pi)))
     #writelog('newR[2] :'+ str(newR[2]*360/(2*math.pi)))
-        
+    
+            
+    Vorz1 = +1#-1 # +C = X
+    Vorz2 = +1#-1 # -B = Y
+    Vorz3 = +1#-1 # -A = Z    
     PATHPTS_Angle = (Vorz1* newR[0], Vorz2*newR[1], Vorz3*newR[2]) # [rad]     
     
     #writelog('PATHPTS_Koord : ' + str(PATHPTS_Koord))
