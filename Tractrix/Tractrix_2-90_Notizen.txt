@@ -162,6 +162,28 @@ ________________
     '''
     
   ________________
+ #([curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z]), rot_spline_element = get_relative(Trailer[int_PCurve][0], (0,0,0), objTrailerPath.location, objTrailerPath.rotation_euler)
+        '''
+        ([curTrailer.splines[0].points[int_PCurve].co.x, 
+          curTrailer.splines[0].points[int_PCurve].co.y, 
+          curTrailer.splines[0].points[int_PCurve].co.z]), \
+          rot_spline_element = get_relative(
+              Trailer[int_PCurve][0], 
+              (0,0,0), 
+              objTrailerPath.location, 
+              objTrailerPath.rotation_euler)
+        
+        
+        
+        ([curTrailer.splines[0].points[int_PCurve].co.x, 
+          curTrailer.splines[0].points[int_PCurve].co.y, 
+          curTrailer.splines[0].points[int_PCurve].co.z]), \
+          rot_spline_element = get_relative(
+              objTrailerPath.location, 
+              objTrailerPath.rotation_euler, \
+              Trailer[int_PCurve][0], \
+              (0,0,0))
+        '''
   ________________
   ________________
   ________________

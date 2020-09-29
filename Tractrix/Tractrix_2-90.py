@@ -200,15 +200,19 @@ def WriteCurveTrailer(int_Curve, Trailer):
     objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
     objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
     curTrailer = bpy.data.curves[objTrailerPath.data.name]    
-    
+    #int_Curve=len(curTrailer.splines[0].points)
     for int_PCurve in range(0,int_Curve,1):
         #[curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
-
-        ([curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z]), rot_spline_element = get_relative(Trailer[int_PCurve][0], (0,0,0), objTrailerPath.location, objTrailerPath.rotation_euler)
-        # ToDo: rot_spline_element (findet bei bei Nurbspath keine Anwendung)
-#get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
-#ob.location, ob.rotation_euler = get_absolute(Vector((cur.splines[0].points[n].co.x,cur.splines[0].points[n].co.y,cur.splines[0].points[n].co.z)), (0,0,0),objPath.location, objPath.rotation_euler)
+        ([curTrailer.splines[0].points[int_PCurve].co.x, 
+          curTrailer.splines[0].points[int_PCurve].co.y, 
+          curTrailer.splines[0].points[int_PCurve].co.z]), \
+          rot_spline_element = get_relative(
+              Trailer[int_PCurve][0], 
+              (0,0,0), 
+              objTrailerPath.location, 
+              objTrailerPath.rotation_euler)
         
+        # ToDo: rot_spline_element (findet bei bei Nurbspath keine Anwendung)      
 
 def time_to_frame(time_value):
     fps = bpy.context.scene.render.fps
@@ -461,7 +465,7 @@ def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
     #writelog('_____________________________________________________________________________')
     #writelog('Funktion: get_relativeX - lokale Koordinaten bezogen auf Base!')
             
-    Mtrans    = mathutils.Matrix.Translation(Vector(BASEPos_Koord))
+    Mtrans     = mathutils.Matrix.Translation(BASEPos_Koord) 
     Vtrans_abs = dataPATHPTS_Loc                              #global 
     #writelog('Vtrans_abs'+ str(Vtrans_abs))  # neuer Bezugspunkt
     
@@ -472,7 +476,7 @@ def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
     Mrot = MrotZ @ MrotY @ MrotX
     #writelog('Mrot :'+ str(Mrot))
     
-    Mworld_rel = Mtrans * Mrot.to_4x4()
+    Mworld_rel = Mtrans @ Mrot.to_4x4()
     
     Mrot_absX = mathutils.Matrix.Rotation(dataPATHPTS_Rot[0], 3, 'X') # Global
     Mrot_absY = mathutils.Matrix.Rotation(dataPATHPTS_Rot[1], 3, 'Y')
