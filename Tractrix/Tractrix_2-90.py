@@ -45,6 +45,7 @@
 #   (Achtung: die Kurvenpunkte fuer Trailer muss >= der des Traktors sein)
 
 # ToDo:
+# - code cleaning !!!/ Variablen besser benennen (welche beziehen sich auf global bzw. lokal?)
 # - Pruefung ob das Ergebnis des Trailers noch sinnvoll ist (Astand zum Traktor, delta Weg (-> proportional zu delta T)
 # - Akutell arbeitet das Programm nur mit NURBSPATH. D.h. die Rotation des Splines wird nicht bruecksichtigt.
 #   Traktor/ Trailer kann man über follow path constraint mit rotation animieren.
@@ -52,9 +53,9 @@
 # - Import/ Export
 # - Erbegnis "baken"
 # - Abstand Abpruefen bei Berechnung und auf Fehler hinweisen
-# - Kurven funktonieren z.Zt. NUR wenn der Origin auf [0,0,0] ist!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# - laesst sich noch nicht als AddOn starten, wegen initialisierungsproblem von filepath (ggf. writelog raus)
-
+# - laesst sich mit 'writelog' noch nicht als AddOn starten, wegen initialisierungsproblem von filepath (ggf. writelog raus)
+# - zurueckgelegte Strecke von Traktor und Trailer anzeigen
+# - Fehler (Abtand soll/ist) anzeigen
 '''
 
 ${workspace_loc:KUKA_OT_Export/src/curve_export.py}
@@ -117,11 +118,11 @@ from bpy.types import (
         )
 
 from bpy.props import (
-        BoolProperty,
-        IntProperty,
-        FloatProperty,
+        #BoolProperty,
+        #IntProperty,
+        #FloatProperty,
         EnumProperty,
-        CollectionProperty,
+        #CollectionProperty,
         StringProperty,
         PointerProperty
         #FloatVectorProperty,
@@ -139,7 +140,7 @@ def writelog(text=''):
     fout.close();
     '''
 
-class Tractrix_PT_Panel(bpy.types.Panel):
+class Tractrix_PT_Panel(Panel):
     writelog('_____________________________________________________________________________')
     writelog()
     writelog('Tractrix_PT_Panel....')
@@ -270,7 +271,7 @@ def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
     #writelog(n)
  
         
-class Traktrix_OT_Main (bpy.types.Operator):    
+class Traktrix_OT_Main (Operator):    
     bl_idname = "tractrix.calculate"
     bl_label = "Tractrix_OT_Main (TB)" #Toolbar - Label
     bl_description = "Calculate Tractrix for Trailer Object from Tractor Object." 
@@ -309,7 +310,7 @@ class Traktrix_OT_Main (bpy.types.Operator):
     writelog('- - Tractrix_OT_Main done- - - - - - -')
 
  
-class setobj2curve_OT_Main (bpy.types.Operator):
+class setobj2curve_OT_Main (Operator):
     bl_idname = "tractrix.setobj2curve"
     bl_label = "set objects to path" 
     bl_description = "set traktor and trailer objects to cures" 
@@ -336,7 +337,7 @@ class setobj2curve_OT_Main (bpy.types.Operator):
         return {'FINISHED'} 
     writelog('- - setobj2curve_OT_Main done- - - - - - -') 
     
-class clearanimation_OT_Main (bpy.types.Operator): 
+class clearanimation_OT_Main (Operator): 
     bl_idname = "tractrix.clearanimation"
     bl_label = "clear animations" 
     bl_description = "clear animations of traktor and trailer" 
@@ -625,7 +626,7 @@ class objectSettings(PropertyGroup):
 
 
 bpy.utils.register_class(objectSettings)
-bpy.types.Scene.tractrix = bpy.props.PointerProperty(type=objectSettings) 
+bpy.types.Scene.tractrix = PointerProperty(type=objectSettings) 
   
 classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, 
            clearanimation_OT_Main]
