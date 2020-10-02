@@ -139,7 +139,51 @@ def writelog(text=''):
     fout.write(localtime + " : " + str(text) + '\n')
     fout.close();
     '''
+def distance():
+    
+    
+    objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
+    objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
+    objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
+    objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
+    curTraktor = bpy.data.curves[objTraktorPath.data.name]
+    curTrailer = bpy.data.curves[objTrailerPath.data.name]     
+    distance   = bpy.context.scene.tractrix.distance
+        
+    print("tractrix.distance")
+    frm_nbr= bpy.context.scene.frame_current
 
+        #datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
+    A = curTrailer.splines[0].points[frm_nbr].co.x-curTraktor.splines[0].points[frm_nbr].co.x
+    B = curTrailer.splines[0].points[frm_nbr].co.y-curTraktor.splines[0].points[frm_nbr].co.y
+    C = curTrailer.splines[0].points[frm_nbr].co.z-curTraktor.splines[0].points[frm_nbr].co.z
+        
+    distance = math.sqrt(A*A+B*B+C*C)
+        
+    return distance 
+        
+class Distance_OT_Main (Operator):     # ONGOING ::::::::::::::::::::::::::::::::::::::::::::::
+    
+    # wie leg ich eine solche Funktion richtig an? Klasse, funktion, objekt...
+    # Naming convention richtig beachtet?
+    # regestrieren...
+    
+    
+    bl_idname = "tractrix.distance"
+    bl_label = "distance Traktor-Trailer" #Toolbar - Label
+    bl_description = "Calculate DISTANCE for Trailer Object from Tractor Object." 
+    bl_options = {'REGISTER', 'UNDO'} 
+
+    def execute(self, context):  
+
+        
+        bpy.context.scene.tractrix.distance = distance()
+    
+        return {'FINISHED'} 
+        writelog('- - distance_OT_Main done- - - - - - -')
+    
+ 
+ 
 class Tractrix_PT_Panel(Panel):
     writelog('_____________________________________________________________________________')
     writelog()
@@ -178,7 +222,21 @@ class Tractrix_PT_Panel(Panel):
         col.operator("tractrix.calculate", text="calculate path")        
 
         col.label(text="Result at frame:")
-        col.prop(scene.tractrix, "distance",         text = "distance: ")
+        #distance()
+        #print("Erg.:  %3.5f" %scene.tractrix.distance)
+        #col.label(text="distance: %3.5f" %scene.tractrix.distance)
+        
+        col.prop(scene.tractrix, "distance", emboss=False, text="distance")
+        #scene.tractrix.distance()
+        #col.enabled = False
+        #col.label(text="distance: %3.5f" %scene.tractrix.distance)
+        
+        
+        
+        #col.label(text="distance: %3.5f" %scene.tractrix.distance)
+        
+        #col.operator("tractrix.distance", text="distance: %3.5f" %scene.tractrix.distance)   
+        
         col.prop(scene.tractrix, "velocity_trailer", text = "velocity trailer: ")
         col.prop(scene.tractrix, "velocity_traktor", text = "velocity traktor: ")
         col.prop(scene.tractrix, "squint_angle", text = "squint angle [Grad°]: ")
@@ -318,53 +376,7 @@ class Traktrix_OT_Main (Operator):
     writelog('- - Tractrix_OT_Main done- - - - - - -')
 
  
- 
-class Distance_OT_Main (Operator):     # ONGOING ::::::::::::::::::::::::::::::::::::::::::::::
-    
-    # wie leg ich eine solche Funktion richtig an? Klasse, funktion, objekt...
-    # Naming convention richtig beachtet?
-    # regestrieren...
-    
-    
-    bl_idname = "tractrix.distance"
-    bl_label = "distance_OT_Main (TB)" #Toolbar - Label
-    bl_description = "Calculate DISTANCE for Trailer Object from Tractor Object." 
-    bl_options = {'REGISTER', 'UNDO'} 
 
-    def execute(self, context):  
-        
-        objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
-        objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
-        objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
-        objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
-        curTraktor = bpy.data.curves[objTraktorPath.data.name]
-        curTrailer = bpy.data.curves[objTrailerPath.data.name]     
-            
-        int_Curve, datTraktorCurve = ReadCurve(objTraktorPath)  
-        
-        #datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-        datTrailerStart, datTrailerStartRot = get_absolute(Vector((curTrailer.splines[0].points[0].co.x,curTrailer.splines[0].points[0].co.y,curTrailer.splines[0].points[0].co.z)), (0,0,0),objTrailerPath.location, objTrailerPath.rotation_euler)
-        
-        
-        # ToDo: datTraktorCurve muss noch mit getabsoulute umgerechnet werden...
-        datTrailerCurve= Traktrix3D(datTraktorCurve, datTrailerStart)
-        
-        WriteCurveTrailer(int_Curve, datTrailerCurve)
-        
-        TIMEPTS = []
-        for int_PCurve in range(0,int_Curve,1):
-            TIMEPTS = TIMEPTS + [int_PCurve/12]
-        
-        SetKeyFrames(objTraktor, curTraktor, objTraktorPath, int_Curve, TIMEPTS)
-        SetKeyFrames(objTrailer, curTrailer, objTrailerPath, int_Curve, TIMEPTS)
-        bpy.data.scenes['Scene'].frame_set(1)
-        
-    
-        return {'FINISHED'} 
-    writelog('- - distance_OT_Main done- - - - - - -')
-    
- 
- 
 class setobj2curve_OT_Main (Operator):
     bl_idname = "tractrix.setobj2curve"
     bl_label = "set objects to path" 
@@ -701,7 +713,7 @@ bpy.utils.register_class(objectSettings)
 bpy.types.Scene.tractrix = PointerProperty(type=objectSettings) 
   
 classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, 
-           clearanimation_OT_Main]
+           clearanimation_OT_Main, Distance_OT_Main]
 
 def register():
     for cls in classes:
