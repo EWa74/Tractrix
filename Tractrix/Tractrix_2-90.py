@@ -139,50 +139,71 @@ def writelog(text=''):
     fout.write(localtime + " : " + str(text) + '\n')
     fout.close();
     '''
-def distance():
-    
-    
-    objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
-    objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
-    objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
-    objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
-    curTraktor = bpy.data.curves[objTraktorPath.data.name]
-    curTrailer = bpy.data.curves[objTrailerPath.data.name]     
-    distance   = bpy.context.scene.tractrix.distance
-        
-    print("tractrix.distance")
-    frm_nbr= bpy.context.scene.frame_current
 
-        #datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-    A = curTrailer.splines[0].points[frm_nbr].co.x-curTraktor.splines[0].points[frm_nbr].co.x
-    B = curTrailer.splines[0].points[frm_nbr].co.y-curTraktor.splines[0].points[frm_nbr].co.y
-    C = curTrailer.splines[0].points[frm_nbr].co.z-curTraktor.splines[0].points[frm_nbr].co.z
         
-    distance = math.sqrt(A*A+B*B+C*C)
-        
-    return distance 
-        
-class Distance_OT_Main (Operator):     # ONGOING ::::::::::::::::::::::::::::::::::::::::::::::
+class ModalOperator(Operator):     # ONGOING ::::::::::::::::::::::::::::::::::::::::::::::
     
     # wie leg ich eine solche Funktion richtig an? Klasse, funktion, objekt...
     # Naming convention richtig beachtet?
     # regestrieren...
     
-    
     bl_idname = "tractrix.distance"
     bl_label = "distance Traktor-Trailer" #Toolbar - Label
-    bl_description = "Calculate DISTANCE for Trailer Object from Tractor Object." 
-    bl_options = {'REGISTER', 'UNDO'} 
 
-    def execute(self, context):  
 
-        
-        bpy.context.scene.tractrix.distance = distance()
+    def __init__(self):
+        print("Start")
+
+    def __del__(self):
+        print("End")
     
-        return {'FINISHED'} 
+    '''
+    distance: FloatProperty(
+        name="distance Traktor-Trailer",
+        default= 0.0        
+        ) 
+    '''
+            
+    def execute(self, context):
+        print("execute....")
+        objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
+        objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
+        objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
+        objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
+        curTraktor = bpy.data.curves[objTraktorPath.data.name]
+        curTrailer = bpy.data.curves[objTrailerPath.data.name]     
+        #distance   = bpy.context.scene.tractrix.distance
+        
+        print("tractrix.distance")
+        frm_nbr= bpy.context.scene.frame_current
+
+        #datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
+        A = curTrailer.splines[0].points[frm_nbr].co.x-curTraktor.splines[0].points[frm_nbr].co.x
+        B = curTrailer.splines[0].points[frm_nbr].co.y-curTraktor.splines[0].points[frm_nbr].co.y
+        C = curTrailer.splines[0].points[frm_nbr].co.z-curTraktor.splines[0].points[frm_nbr].co.z
+        
+        self.distance = math.sqrt(A*A+B*B+C*C)
+        #bpy.context.scene.tractrix.distance = self.distance
+        
+        return {'FINISHED'}  
+
+    def modal(self, context, event): 
+        print("modal....") 
+        print("\n Start invoke ")
+        if event.type == 'LEFTMOUSE':  # Apply
+            self.execute(context)            
+        return {'RUNNING_MODAL'} #self.execute(context)
+    
+    def invoke(self, context, event): 
+        print("invoke....")
+        self.distance   = bpy.context.scene.tractrix.distance
+        context.window_manager.modal_handler_add(self)
+        self.execute(context) 
+        return {'RUNNING_MODAL'}
+    
+        
         writelog('- - distance_OT_Main done- - - - - - -')
     
- 
  
 class Tractrix_PT_Panel(Panel):
     writelog('_____________________________________________________________________________')
@@ -198,6 +219,8 @@ class Tractrix_PT_Panel(Panel):
     bl_context = "objectmode"
     bl_category = "Create"
     bl_options = {'DEFAULT_CLOSED'}
+
+    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 
     def draw(self, context):
         
@@ -224,9 +247,15 @@ class Tractrix_PT_Panel(Panel):
         col.label(text="Result at frame:")
         #distance()
         #print("Erg.:  %3.5f" %scene.tractrix.distance)
-        #col.label(text="distance: %3.5f" %scene.tractrix.distance)
+        col.label(text="distance: %3.5f" %scene.tractrix.distance)
         
-        col.prop(scene.tractrix, "distance", emboss=False, text="distance")
+        #col.prop(scene.tractrix, "distance", emboss=False, text="distance").distance
+        
+        #col.operator("scene.tractrix", icon='ZOOM_IN', text="").distance
+        
+        #flow = layout.grid_flow(row_major=False, columns=0, even_columns=True, even_rows=False, align=False)
+        #flow.prop(scene.tractrix, "distance")
+        
         #scene.tractrix.distance()
         #col.enabled = False
         #col.label(text="distance: %3.5f" %scene.tractrix.distance)
@@ -374,9 +403,7 @@ class Traktrix_OT_Main (Operator):
     
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
-
  
-
 class setobj2curve_OT_Main (Operator):
     bl_idname = "tractrix.setobj2curve"
     bl_label = "set objects to path" 
@@ -424,7 +451,6 @@ class clearanimation_OT_Main (Operator):
           
         return {'FINISHED'} 
     writelog('- - parenttrailer_OT_Main done- - - - - - -') 
-
    
 def Traktrix3D(datTraktor, datTrailerStart):
     
@@ -497,8 +523,6 @@ def Traktrix3D(datTraktor, datTrailerStart):
             
     return datTrailer 
  
-
-
 class createMatrix(object):
     #writelog('_____________________________________________________________________________')
     #writelog('createMatrix')
@@ -510,7 +534,6 @@ class createMatrix(object):
         return self.m[index]
     writelog('createMatrix done')
     writelog('_____________________________________________________________________________')  
-
 
 def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle):
     # dataPATHPTS_Loc/Rot [rad]: absolute
@@ -582,9 +605,6 @@ def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
     #writelog('get_relative done')
     #writelog('_____________________________________________________________________________')
     return PATHPTS_Koord, PATHPTS_Angle 
-
-
-
 
 def get_absolute(Obj_Koord, Obj_Angle, BASEPos_Koord, BASEPos_Angle): #objBase
     '''
@@ -680,21 +700,22 @@ class objectSettings(PropertyGroup):
         )
         
     intSolverItems = (
-            ('distance'  , 'Distance'    , 'Calculate path with constant distance to traktor (Tractrix)'),
-            ('velocity'  , 'Velocity'    , 'Calculate path with constant velocity (Hundekurve)'         ),
-            ('squint'    , 'Squint angle', 'Squint angle curve'                                         )
-            )
+        ('distance'  , 'Distance'    , 'Calculate path with constant distance to traktor (Tractrix)'),
+        ('velocity'  , 'Velocity'    , 'Calculate path with constant velocity (Hundekurve)'         ),
+        ('squint'    , 'Squint angle', 'Squint angle curve'                                         )
+        )
     SolverMode: EnumProperty(
-            items      = intSolverItems,
-            name       = "Solver Mode",
-            description="Determines how to calculate the trailer path",
-            default    ='distance'
-            )
-
+        items      = intSolverItems,
+        name       = "Solver Mode",
+        description="Determines how to calculate the trailer path",
+        default    ='distance'
+        )
+    
     distance: FloatProperty(
         name="distance Traktor-Trailer",
         default= 0.0        
         )   
+    
     
     velocity_traktor: FloatProperty(
         name="velocity Traktor",
@@ -708,16 +729,28 @@ class objectSettings(PropertyGroup):
         name="squint angle Traktor-Trailer",
         default= 0.0        
         ) 
+
+# Only needed if you want to add into a dynamic menu
+# https://docs.blender.org/api/current/bpy.types.Operator.html
+def menu_func(self, context):
+    self.layout.operator_context = 'INVOKE_DEFAULT'
+    self.layout.operator(ModalOperator.tractrix.distance, text="Text Export Operator")
+
     
 bpy.utils.register_class(objectSettings)
 bpy.types.Scene.tractrix = PointerProperty(type=objectSettings) 
   
 classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, 
-           clearanimation_OT_Main, Distance_OT_Main]
+           clearanimation_OT_Main, ModalOperator]
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls) 
+    
+    #bpy.types.Scene.tractrix.distance('INVOKE_DEFAULT')
+    bpy.types.TOPBAR_MT_file_export.append(menu_func)
+
+  
   
     # Handlers
     #bpy.app.handlers.load_post.append(foobar)
