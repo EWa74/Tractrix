@@ -139,72 +139,7 @@ def writelog(text=''):
     fout.write(localtime + " : " + str(text) + '\n')
     fout.close();
     '''
-
-        
-class ModalOperator(Operator):     # ONGOING ::::::::::::::::::::::::::::::::::::::::::::::
-    
-    # wie leg ich eine solche Funktion richtig an? Klasse, funktion, objekt...
-    # Naming convention richtig beachtet?
-    # regestrieren...
-    
-    bl_idname = "tractrix.distance"
-    bl_label = "distance Traktor-Trailer" #Toolbar - Label
-
-
-    def __init__(self):
-        print("Start")
-
-    def __del__(self):
-        print("End")
-    
-    '''
-    distance: FloatProperty(
-        name="distance Traktor-Trailer",
-        default= 0.0        
-        ) 
-    '''
-            
-    def execute(self, context):
-        print("execute....")
-        objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
-        objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
-        objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
-        objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
-        curTraktor = bpy.data.curves[objTraktorPath.data.name]
-        curTrailer = bpy.data.curves[objTrailerPath.data.name]     
-        #distance   = bpy.context.scene.tractrix.distance
-        
-        print("tractrix.distance")
-        frm_nbr= bpy.context.scene.frame_current
-
-        #datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-        A = curTrailer.splines[0].points[frm_nbr].co.x-curTraktor.splines[0].points[frm_nbr].co.x
-        B = curTrailer.splines[0].points[frm_nbr].co.y-curTraktor.splines[0].points[frm_nbr].co.y
-        C = curTrailer.splines[0].points[frm_nbr].co.z-curTraktor.splines[0].points[frm_nbr].co.z
-        
-        self.distance = math.sqrt(A*A+B*B+C*C)
-        #bpy.context.scene.tractrix.distance = self.distance
-        
-        return {'FINISHED'}  
-
-    def modal(self, context, event): 
-        print("modal....") 
-        print("\n Start invoke ")
-        if event.type == 'LEFTMOUSE':  # Apply
-            self.execute(context)            
-        return {'RUNNING_MODAL'} #self.execute(context)
-    
-    def invoke(self, context, event): 
-        print("invoke....")
-        self.distance   = bpy.context.scene.tractrix.distance
-        context.window_manager.modal_handler_add(self)
-        self.execute(context) 
-        return {'RUNNING_MODAL'}
-    
-        
-        writelog('- - distance_OT_Main done- - - - - - -')
-    
- 
+  
 class Tractrix_PT_Panel(Panel):
     writelog('_____________________________________________________________________________')
     writelog()
@@ -221,6 +156,41 @@ class Tractrix_PT_Panel(Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
+
+    def __init__(self):
+        #objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
+        objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
+        #objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
+        objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
+        #curTraktor = bpy.data.curves[objTraktorPath.data.name]
+        #curTrailer = bpy.data.curves[objTrailerPath.data.name]     
+        
+        
+        # ToDo: Werden die Kurvenpunkte verwendet muessen die Keyframes benutzt werden... 
+        #datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
+        '''
+        frm_nbr= bpy.context.scene.frame_current
+        A = curTrailer.splines[0].points[frm_nbr].co.x-curTraktor.splines[0].points[frm_nbr].co.x
+        B = curTrailer.splines[0].points[frm_nbr].co.y-curTraktor.splines[0].points[frm_nbr].co.y
+        C = curTrailer.splines[0].points[frm_nbr].co.z-curTraktor.splines[0].points[frm_nbr].co.z
+        '''
+        
+        # tractrix.distance - Berechnung anhand der Traktor/ Trailer Objekte:
+        A = objTraktor.location.x - objTrailer.location.x
+        B = objTraktor.location.y - objTrailer.location.y
+        C = objTraktor.location.z - objTrailer.location.z
+        
+        bpy.context.scene.tractrix.distance = math.sqrt(A*A+B*B+C*C)
+
+
+        #ToDo: tractrix.way_traktor - Berechnung 
+        #ToDo: tractrix.way_trailer - Berechnung 
+
+        #ToDo: velocity_traktor - Berechnung         
+        #ToDo: velocity_trailer - Berechnung 
+        #ToDo: tractrix.squint_angle - Berechnung 
+        
+        
 
     def draw(self, context):
         
@@ -247,28 +217,14 @@ class Tractrix_PT_Panel(Panel):
         col.label(text="Result at frame:")
         #distance()
         #print("Erg.:  %3.5f" %scene.tractrix.distance)
-        col.label(text="distance: %3.5f" %scene.tractrix.distance)
+        col.label(icon='DRIVER_DISTANCE', text="distance: %3.5f" %scene.tractrix.distance)
+        col.label(icon='TRACKING', text="way traktor: %3.5f"     %scene.tractrix.way_traktor)
+        col.label(icon='TRACKING', text="way trailer: %3.5f"     %scene.tractrix.way_trailer)
+        # todo: Weg zum frame i ....
         
-        #col.prop(scene.tractrix, "distance", emboss=False, text="distance").distance
-        
-        #col.operator("scene.tractrix", icon='ZOOM_IN', text="").distance
-        
-        #flow = layout.grid_flow(row_major=False, columns=0, even_columns=True, even_rows=False, align=False)
-        #flow.prop(scene.tractrix, "distance")
-        
-        #scene.tractrix.distance()
-        #col.enabled = False
-        #col.label(text="distance: %3.5f" %scene.tractrix.distance)
-        
-        
-        
-        #col.label(text="distance: %3.5f" %scene.tractrix.distance)
-        
-        #col.operator("tractrix.distance", text="distance: %3.5f" %scene.tractrix.distance)   
-        
-        col.prop(scene.tractrix, "velocity_trailer", text = "velocity trailer: ")
-        col.prop(scene.tractrix, "velocity_traktor", text = "velocity traktor: ")
-        col.prop(scene.tractrix, "squint_angle", text = "squint angle [Grad°]: ")
+        col.label(icon='CON_OBJECTSOLVER', text="v traktor: %3.5f" %scene.tractrix.velocity_traktor)        
+        col.label(icon='TRACKER',          text="v trailer: %3.5f" %scene.tractrix.velocity_trailer)
+        col.label(icon='DRIVER_ROTATIONAL_DIFFERENCE', text="squint angle: %3.5f" %scene.tractrix.squint_angle)
 
             
     writelog('Tractrix_PT_Panel done')
@@ -715,8 +671,14 @@ class objectSettings(PropertyGroup):
         name="distance Traktor-Trailer",
         default= 0.0        
         )   
-    
-    
+    way_traktor: FloatProperty(
+        name="velocity Traktor",
+        default= 0.0        
+        )  
+    way_trailer: FloatProperty(
+        name="velocity Trailer",
+        default= 0.0        
+        )     
     velocity_traktor: FloatProperty(
         name="velocity Traktor",
         default= 0.0        
@@ -741,7 +703,7 @@ bpy.utils.register_class(objectSettings)
 bpy.types.Scene.tractrix = PointerProperty(type=objectSettings) 
   
 classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, 
-           clearanimation_OT_Main, ModalOperator]
+           clearanimation_OT_Main]
 
 def register():
     for cls in classes:

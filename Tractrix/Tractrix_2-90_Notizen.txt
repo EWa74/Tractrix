@@ -185,6 +185,25 @@ ________________
               (0,0,0))
         '''
   ________________
+  
+                  
+        #col.prop(scene.tractrix, "distance", emboss=False, text="distance").distance
+        
+        #col.operator("scene.tractrix", icon='ZOOM_IN', text="").distance
+        
+        #flow = layout.grid_flow(row_major=False, columns=0, even_columns=True, even_rows=False, align=False)
+        #flow.prop(scene.tractrix, "distance")
+        
+        #scene.tractrix.distance()
+        #col.enabled = False
+        #col.label(text="distance: %3.5f" %scene.tractrix.distance)
+        
+        
+        
+        #col.label(text="distance: %3.5f" %scene.tractrix.distance)
+        
+        #col.operator("tractrix.distance", text="distance: %3.5f" %scene.tractrix.distance) 
+        
   ________________
   ________________
   ________________
