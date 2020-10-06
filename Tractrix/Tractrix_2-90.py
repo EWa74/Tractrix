@@ -207,6 +207,7 @@ class Tractrix_PT_Panel(Panel):
         
         #ToDo: tractrix.way_traktor - Berechnung 
         # ToDo: deepcopy von frame_current und vgl. ob +/- damit der Weg ggf. wieder verkuerzt wird:
+        # Achtung: zaehlt aktuell auch den Wert von current frame mit jedem Panelaufruf!!!
         bpy.context.scene.tractrix.way_traktor = bpy.context.scene.tractrix.way_traktor + delta
 
         # velocity_trailer - Berechnung 
