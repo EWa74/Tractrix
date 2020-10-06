@@ -205,7 +205,64 @@ ________________
         #col.operator("tractrix.distance", text="distance: %3.5f" %scene.tractrix.distance) 
         
   ________________
+  
+  #https://blender.stackexchange.com/questions/40771/access-to-object-location-from-previous-frame-in-cycles
+  
+          # ToDo: Werden die Kurvenpunkte verwendet muessen die Keyframes benutzt werden... 
+        #datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
+        '''
+        frm_nbr= bpy.context.scene.frame_current
+        A = curTrailer.splines[0].points[frm_nbr].co.x-curTraktor.splines[0].points[frm_nbr].co.x
+        B = curTrailer.splines[0].points[frm_nbr].co.y-curTraktor.splines[0].points[frm_nbr].co.y
+        C = curTrailer.splines[0].points[frm_nbr].co.z-curTraktor.splines[0].points[frm_nbr].co.z
+        '''
   ________________
+  #scene.tractrix.velocity_traktor
+        '''
+        A = ob.location.x - location_old.x
+        B = ob.location.y - location_old.y
+        C = ob.location.z - location_old.z
+        
+        delta_loc = math.sqrt(A*A+B*B+C*C)
+        
+        T = time_to_frame(TIMEPTS[n])
+        delta_T = T - T_old
+        
+        scene.tractrix.velocity_traktor[n] = delta_loc/delta_T
+        
+        
+        location_old = deepcopy(ob.location)
+        T_old = deepcopy(time_to_frame(TIMEPTS[n]))
+        
+        '''
+  ________________
+  
+  # https://blender.stackexchange.com/questions/14809/location-of-an-object-at-a-specific-frame
+        # https://blender.stackexchange.com/questions/40771/access-to-object-location-from-previous-frame-in-cycles
+        #bpy.app.handlers.frame_change_post
+        #on frame change for playback and rendering (after)
+
+        #bpy.app.handlers.frame_change_pre
+        #on frame change for playback and rendering (before)
+
+
+        
+https://blender.stackexchange.com/questions/168122/handler-frame-change-pre-doesnt-work-in-render
+
+import bpy
+from math import *
+
+def frame_handler(scene,depsgraph):
+    print(depsgraph)
+    obj = scene.objects['Cube']
+    obj = obj.evaluated_get(depsgraph)
+    z = obj.location[2]
+        #scene.objects['Text'].data.body = str(floor(z / 4.0) - 2)
+    scene.objects['Text'].data.body = str(z)
+
+bpy.app.handlers.frame_change_post.clear()
+bpy.app.handlers.frame_change_post.append(frame_handler)
+
   ________________
     
    

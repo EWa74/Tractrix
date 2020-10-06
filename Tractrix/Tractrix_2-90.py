@@ -93,6 +93,16 @@ from bpy.app.handlers import persistent
 @persistent
 def foobar(scene):
     bpy.data.filepath
+    
+from bpy.app.handlers import persistent
+
+
+@persistent
+def load_handler(dummy):
+    print("Load Handler:", bpy.data.filepath)
+
+bpy.app.handlers.load_post.append(load_handler)
+    
 '''
 
 # ExportHelper is a helper class, defines filename and
@@ -139,6 +149,11 @@ def writelog(text=''):
     fout.write(localtime + " : " + str(text) + '\n')
     fout.close();
     '''
+
+def frame_to_time(frame_number):
+    fps = bpy.context.scene.render.fps
+    raw_time = (frame_number - 1) / fps
+    return round(raw_time, 3)    
   
 class Tractrix_PT_Panel(Panel):
     writelog('_____________________________________________________________________________')
@@ -158,6 +173,7 @@ class Tractrix_PT_Panel(Panel):
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 
     def __init__(self):
+        
         #objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
         objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
         #objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
@@ -166,28 +182,52 @@ class Tractrix_PT_Panel(Panel):
         #curTrailer = bpy.data.curves[objTrailerPath.data.name]     
         
         
-        # ToDo: Werden die Kurvenpunkte verwendet muessen die Keyframes benutzt werden... 
-        #datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-        '''
-        frm_nbr= bpy.context.scene.frame_current
-        A = curTrailer.splines[0].points[frm_nbr].co.x-curTraktor.splines[0].points[frm_nbr].co.x
-        B = curTrailer.splines[0].points[frm_nbr].co.y-curTraktor.splines[0].points[frm_nbr].co.y
-        C = curTrailer.splines[0].points[frm_nbr].co.z-curTraktor.splines[0].points[frm_nbr].co.z
-        '''
-        
         # tractrix.distance - Berechnung anhand der Traktor/ Trailer Objekte:
         A = objTraktor.location.x - objTrailer.location.x
         B = objTraktor.location.y - objTrailer.location.y
         C = objTraktor.location.z - objTrailer.location.z
         
-        bpy.context.scene.tractrix.distance = math.sqrt(A*A+B*B+C*C)
+        bpy.context.scene.tractrix.distance = delta = math.sqrt(A*A+B*B+C*C)
+        
+        
+        # velocity_traktor - Berechnung:
+        frame =  bpy.context.scene.frame_current
+        
+        p = objTraktor
+        current_xyz = p.location
+        fcurve = p.animation_data.action.fcurves
 
+        x = fcurve[0].evaluate(frame-1)
+        y = fcurve[1].evaluate(frame-1)
+        z = fcurve[2].evaluate(frame-1)
 
+        delta = (current_xyz - Vector((x, y, z))).length
+    
+        bpy.context.scene.tractrix.velocity_traktor = delta / (frame_to_time(frame)-frame_to_time(frame-1))
+        
         #ToDo: tractrix.way_traktor - Berechnung 
-        #ToDo: tractrix.way_trailer - Berechnung 
+        # ToDo: deepcopy von frame_current und vgl. ob +/- damit der Weg ggf. wieder verkuerzt wird:
+        bpy.context.scene.tractrix.way_traktor = bpy.context.scene.tractrix.way_traktor + delta
 
-        #ToDo: velocity_traktor - Berechnung         
-        #ToDo: velocity_trailer - Berechnung 
+        # velocity_trailer - Berechnung 
+        p = objTrailer
+        current_xyz = p.location
+        fcurve = p.animation_data.action.fcurves
+
+        x = fcurve[0].evaluate(frame-1)
+        y = fcurve[1].evaluate(frame-1)
+        z = fcurve[2].evaluate(frame-1)
+
+        delta = (current_xyz - Vector((x, y, z))).length
+    
+        bpy.context.scene.tractrix.velocity_trailer = delta / (frame_to_time(frame)-frame_to_time(frame-1))
+        
+        #ToDo: tractrix.way_trailer - Berechnung 
+        # ToDo: deepcopy von frame_current und vgl. ob +/- damit der Weg ggf. wieder verkuerzt wird:
+        bpy.context.scene.tractrix.way_trailer = bpy.context.scene.tractrix.way_trailer + delta
+        
+        
+               
         #ToDo: tractrix.squint_angle - Berechnung 
         
         
@@ -281,7 +321,7 @@ def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
     bpy.context.area.type = "VIEW_3D"
     bpy.ops.object.select_all(action='DESELECT')
           
-    #scene = bpy.context.scene
+    scene = bpy.context.scene
     #fps = scene.render.fps
     #fps_base = scene.render.fps_base
      
@@ -296,9 +336,13 @@ def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
     ob = bpy.context.active_object
     ob.rotation_mode = 'QUATERNION' #'XYZ'
     
+    # Initialisierung um v zu berechnen:
+    location_old = deepcopy(ob.location)
+    T_old = deepcopy(time_to_frame(TIMEPTS[0]))
     
     #QuaternionList = OptimizeRotationQuaternion(TargetObjList, TIMEPTSCount)
     for n in range(0,int_Curve,1):
+        
         # Trailer[int_PCurve][0]
         #writelog(n)
         bpy.data.scenes['Scene'].frame_set(time_to_frame(TIMEPTS[n])) 
@@ -318,6 +362,10 @@ def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
         # todo: ob.keyframe_insert(data_path="rotation_quaternion", index=-1)
         
         #ob.keyframe_insert(data_path="rotation_euler", index=-1)
+        
+        #objTraktor_keyframes, objTraktor_keyframesCount =RfS_TIMEPTS(objTraktor)
+        
+       
     bpy.context.area.type = original_type 
     #writelog(n)
  
@@ -356,7 +404,7 @@ class Traktrix_OT_Main (Operator):
         SetKeyFrames(objTrailer, curTrailer, objTrailerPath, int_Curve, TIMEPTS)
         bpy.data.scenes['Scene'].frame_set(1)
         
-    
+        
         return {'FINISHED'} 
     writelog('- - Tractrix_OT_Main done- - - - - - -')
  
@@ -692,12 +740,6 @@ class objectSettings(PropertyGroup):
         default= 0.0        
         ) 
 
-# Only needed if you want to add into a dynamic menu
-# https://docs.blender.org/api/current/bpy.types.Operator.html
-def menu_func(self, context):
-    self.layout.operator_context = 'INVOKE_DEFAULT'
-    self.layout.operator(ModalOperator.tractrix.distance, text="Text Export Operator")
-
     
 bpy.utils.register_class(objectSettings)
 bpy.types.Scene.tractrix = PointerProperty(type=objectSettings) 
@@ -709,11 +751,6 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls) 
     
-    #bpy.types.Scene.tractrix.distance('INVOKE_DEFAULT')
-    bpy.types.TOPBAR_MT_file_export.append(menu_func)
-
-  
-  
     # Handlers
     #bpy.app.handlers.load_post.append(foobar)
     
