@@ -204,7 +204,6 @@ def obj_way(obj, frm_stop, frm_start):
                 
     # a) Zeit vorwaerts:    
     if (frm_stop-frm_start >0):
-        print("frame_now-frame_before >0")
         
         for n in range(frm_start, frm_stop+1):
             x = fcurve[0].evaluate(n)
@@ -214,11 +213,9 @@ def obj_way(obj, frm_stop, frm_start):
             way  = way + (way_vec - Vector((x, y, z))).length
             
             way_vec = Vector((x, y, z))
-
         
     # a) Zeit rueckwaerts:  
     if (frm_stop-frm_start <0):
-        print("frame_now-frame_before <0")
           
         for n in range(frm_start, frm_stop-1,-1):
             x = fcurve[0].evaluate(n)
@@ -228,8 +225,6 @@ def obj_way(obj, frm_stop, frm_start):
             way  = way - (way_vec - Vector((x, y, z))).length
             
             way_vec = Vector((x, y, z)) 
- 
-    print("way: ", way)
     
     return way 
 
@@ -269,7 +264,6 @@ class Tractrix_PT_Panel(Panel):
             
             #tractrix.way_traktor - Berechnung 
             if frame_before != frame_now:
-                print("hallo")
                 bpy.context.scene.tractrix.way_traktor = bpy.context.scene.tractrix.way_traktor + obj_way(objTraktor, frame_now, frame_before)
     
             # velocity_trailer - Berechnung 
@@ -778,7 +772,6 @@ class objectSettings(PropertyGroup):
         description="Determines how to calculate the trailer path",
         default    ='distance'
         )
-    
     distance: FloatProperty(
         name="distance Traktor-Trailer",
         default= 0.0        
@@ -803,10 +796,12 @@ class objectSettings(PropertyGroup):
         name="squint angle Traktor-Trailer",
         default= 0.0        
         ) 
+    
     frame_before: IntProperty(
         name="frame before now",
-        default= bpy.context.scene.frame_current        
+        default= 1 #bpy.context.scene.frame_current        
         )
+    
     
 bpy.utils.register_class(objectSettings)
 bpy.types.Scene.tractrix = PointerProperty(type=objectSettings) 
