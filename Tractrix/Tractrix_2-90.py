@@ -154,7 +154,75 @@ def frame_to_time(frame_number):
     fps = bpy.context.scene.render.fps
     raw_time = (frame_number - 1) / fps
     return round(raw_time, 3)    
-  
+
+
+
+def obj_distance(obj1, obj2):
+    # Abstand zweier Objekte zum aktuellem Zeitpunkt
+    
+    A = obj1.location.x - obj2.location.x
+    B = obj1.location.y - obj2.location.y
+    C = obj1.location.z - obj2.location.z
+        
+    distance = math.sqrt(A*A+B*B+C*C)
+    
+    return distance
+
+
+
+def obj_velocity(obj):
+    # Akutelle Geschwindigkeit bezogen auf vorherriges frame.
+
+    frame =  bpy.context.scene.frame_current
+        
+    current_xyz = obj.location
+    fcurve = obj.animation_data.action.fcurves
+
+    x = fcurve[0].evaluate(frame-1)
+    y = fcurve[1].evaluate(frame-1)
+    z = fcurve[2].evaluate(frame-1)
+
+    delta_way  = (current_xyz - Vector((x, y, z))).length
+    delta_time = frame_to_time(frame)-frame_to_time(frame-1)
+    
+    velocity = delta_way /delta_time
+    
+    return velocity    
+
+def obj_way(objTrailer, frame_now, frame_before):
+    
+    # ToDo: deepcopy von frame_current und vgl. ob +/- damit der Weg ggf. wieder verkuerzt wird:
+    # Achtung: zaehlt aktuell auch den Wert von current frame mit jedem Panelaufruf!!!
+    
+    if (frame_now-frame_before >0):
+        print("frame_now-frame_before <0")
+    
+    if (frame_now-frame_before <0):
+        print("frame_now-frame_before <0")
+    
+    way = 1
+    print("way")
+    return way 
+
+
+class Tractrix_OT_InitVaraibles(bpy.types.Operator):
+    bl_idname = "tractrix.init_variables"
+    bl_label = "initialize variables" #Toolbar - Label
+    bl_description = "set tractrix variables" # Kommentar im Specials Kontextmenue
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def init_variables():
+        global frame_before
+        try:
+            frame_before = frame_before
+        except:
+            frame_before = deepcopy(bpy.context.scene.frame_current) #  Initialisierung
+            pass
+        
+        return frame_before
+
+
+
 class Tractrix_PT_Panel(Panel):
     writelog('_____________________________________________________________________________')
     writelog()
@@ -171,66 +239,40 @@ class Tractrix_PT_Panel(Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
-
+    
     def __init__(self):
+        #frame_before = init_frame_before()
         
-        #objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
+        
+        frame_now = bpy.context.scene.frame_current
+        
+        
         objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
-        #objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
         objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
-        #curTraktor = bpy.data.curves[objTraktorPath.data.name]
-        #curTrailer = bpy.data.curves[objTrailerPath.data.name]     
-        
         
         # tractrix.distance - Berechnung anhand der Traktor/ Trailer Objekte:
-        A = objTraktor.location.x - objTrailer.location.x
-        B = objTraktor.location.y - objTrailer.location.y
-        C = objTraktor.location.z - objTrailer.location.z
-        
-        bpy.context.scene.tractrix.distance = delta = math.sqrt(A*A+B*B+C*C)
-        
+        bpy.context.scene.tractrix.distance = obj_distance(objTraktor, objTrailer)
         
         # velocity_traktor - Berechnung:
-        frame =  bpy.context.scene.frame_current
-        
-        p = objTraktor
-        current_xyz = p.location
-        fcurve = p.animation_data.action.fcurves
-
-        x = fcurve[0].evaluate(frame-1)
-        y = fcurve[1].evaluate(frame-1)
-        z = fcurve[2].evaluate(frame-1)
-
-        delta = (current_xyz - Vector((x, y, z))).length
-    
-        bpy.context.scene.tractrix.velocity_traktor = delta / (frame_to_time(frame)-frame_to_time(frame-1))
+        bpy.context.scene.tractrix.velocity_traktor = obj_velocity(objTraktor)
         
         #ToDo: tractrix.way_traktor - Berechnung 
-        # ToDo: deepcopy von frame_current und vgl. ob +/- damit der Weg ggf. wieder verkuerzt wird:
-        # Achtung: zaehlt aktuell auch den Wert von current frame mit jedem Panelaufruf!!!
-        bpy.context.scene.tractrix.way_traktor = bpy.context.scene.tractrix.way_traktor + delta
+        if frame_before != frame_now:
+            bpy.context.scene.tractrix.way_traktor = obj_way(objTraktor, frame_now, frame_before)
 
         # velocity_trailer - Berechnung 
-        p = objTrailer
-        current_xyz = p.location
-        fcurve = p.animation_data.action.fcurves
-
-        x = fcurve[0].evaluate(frame-1)
-        y = fcurve[1].evaluate(frame-1)
-        z = fcurve[2].evaluate(frame-1)
-
-        delta = (current_xyz - Vector((x, y, z))).length
-    
-        bpy.context.scene.tractrix.velocity_trailer = delta / (frame_to_time(frame)-frame_to_time(frame-1))
+        bpy.context.scene.tractrix.velocity_trailer = obj_velocity(objTrailer)
         
         #ToDo: tractrix.way_trailer - Berechnung 
-        # ToDo: deepcopy von frame_current und vgl. ob +/- damit der Weg ggf. wieder verkuerzt wird:
-        bpy.context.scene.tractrix.way_trailer = bpy.context.scene.tractrix.way_trailer + delta
-        
+        if frame_before != frame_now:
+            bpy.context.scene.tractrix.way_trailer = obj_way(objTrailer, frame_now, frame_before)
         
                
         #ToDo: tractrix.squint_angle - Berechnung 
         
+        
+        frame_before = deepcopy(frame_now)
+        return
         
 
     def draw(self, context):
@@ -242,6 +284,12 @@ class Tractrix_PT_Panel(Panel):
         split = layout.split()
         col = split.column()
         col.label(text="Schleppkurven:")
+        
+        
+        
+        col.operator("tractrix.init_variables", text="init variables")
+        
+        
         
         col.operator("tractrix.clearanimation", text="1. clear Animations")  
         
