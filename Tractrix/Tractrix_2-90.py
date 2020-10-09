@@ -83,6 +83,9 @@ bl_info = {
 #import pydevd;pydevd.settrace() # notwendig weil breakpoints uebersprungen werden. warum auch immer
      
 #--- ### Imports
+
+tractrixInitExecuted ='FALSE'
+
 import bpy
 
 # https://blender.stackexchange.com/questions/8702/attributeerror-restrictdata-object-has-no-attribute-filepath
@@ -135,9 +138,8 @@ from bpy.props import (
         #CollectionProperty,
         StringProperty,
         PointerProperty
-        #FloatVectorProperty,
+, IntProperty        #FloatVectorProperty,
         )
-
 
 def writelog(text=''):
     #print('auskommentiert....')
@@ -189,37 +191,47 @@ def obj_velocity(obj):
     
     return velocity    
 
-def obj_way(objTrailer, frame_now, frame_before):
+def obj_way(obj, frm_stop, frm_start):
+    # Addiere den Weg von frm_start bis frm_stop
+    way = 0
+    # Anfangswert:
+    fcurve = obj.animation_data.action.fcurves
+    x = fcurve[0].evaluate(frm_start)
+    y = fcurve[1].evaluate(frm_start)
+    z = fcurve[2].evaluate(frm_start)
     
-    # ToDo: deepcopy von frame_current und vgl. ob +/- damit der Weg ggf. wieder verkuerzt wird:
-    # Achtung: zaehlt aktuell auch den Wert von current frame mit jedem Panelaufruf!!!
-    
-    if (frame_now-frame_before >0):
-        print("frame_now-frame_before <0")
-    
-    if (frame_now-frame_before <0):
-        print("frame_now-frame_before <0")
-    
-    way = 1
-    print("way")
-    return way 
-
-
-class Tractrix_OT_InitVaraibles(bpy.types.Operator):
-    bl_idname = "tractrix.init_variables"
-    bl_label = "initialize variables" #Toolbar - Label
-    bl_description = "set tractrix variables" # Kommentar im Specials Kontextmenue
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    def init_variables():
-        global frame_before
-        try:
-            frame_before = frame_before
-        except:
-            frame_before = deepcopy(bpy.context.scene.frame_current) #  Initialisierung
-            pass
+    way_vec = Vector((x, y, z))
+                
+    # a) Zeit vorwaerts:    
+    if (frm_stop-frm_start >0):
+        print("frame_now-frame_before >0")
         
-        return frame_before
+        for n in range(frm_start, frm_stop+1):
+            x = fcurve[0].evaluate(n)
+            y = fcurve[1].evaluate(n)
+            z = fcurve[2].evaluate(n)
+
+            way  = way + (way_vec - Vector((x, y, z))).length
+            
+            way_vec = Vector((x, y, z))
+
+        
+    # a) Zeit rueckwaerts:  
+    if (frm_stop-frm_start <0):
+        print("frame_now-frame_before <0")
+          
+        for n in range(frm_start, frm_stop-1,-1):
+            x = fcurve[0].evaluate(n)
+            y = fcurve[1].evaluate(n)
+            z = fcurve[2].evaluate(n)
+
+            way  = way - (way_vec - Vector((x, y, z))).length
+            
+            way_vec = Vector((x, y, z)) 
+ 
+    print("way: ", way)
+    
+    return way 
 
 
 
@@ -240,38 +252,44 @@ class Tractrix_PT_Panel(Panel):
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
     
+    
     def __init__(self):
-        #frame_before = init_frame_before()
-        
-        
-        frame_now = bpy.context.scene.frame_current
-        
+        frame_before = bpy.context.scene.tractrix.frame_before
+        frame_now    = bpy.context.scene.frame_current
         
         objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
         objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
         
-        # tractrix.distance - Berechnung anhand der Traktor/ Trailer Objekte:
-        bpy.context.scene.tractrix.distance = obj_distance(objTraktor, objTrailer)
+        try:
+            # tractrix.distance - Berechnung anhand der Traktor/ Trailer Objekte:
+            bpy.context.scene.tractrix.distance = obj_distance(objTraktor, objTrailer)
+            
+            # velocity_traktor - Berechnung:
+            bpy.context.scene.tractrix.velocity_traktor = obj_velocity(objTraktor)
+            
+            #tractrix.way_traktor - Berechnung 
+            if frame_before != frame_now:
+                print("hallo")
+                bpy.context.scene.tractrix.way_traktor = bpy.context.scene.tractrix.way_traktor + obj_way(objTraktor, frame_now, frame_before)
+    
+            # velocity_trailer - Berechnung 
+            bpy.context.scene.tractrix.velocity_trailer = obj_velocity(objTrailer)
+            
+            #tractrix.way_trailer - Berechnung 
+            if frame_before != frame_now:
+                bpy.context.scene.tractrix.way_trailer = bpy.context.scene.tractrix.way_trailer + obj_way(objTrailer, frame_now, frame_before)
+            
+                   
+            #ToDo: tractrix.squint_angle - Berechnung 
         
-        # velocity_traktor - Berechnung:
-        bpy.context.scene.tractrix.velocity_traktor = obj_velocity(objTraktor)
-        
-        #ToDo: tractrix.way_traktor - Berechnung 
-        if frame_before != frame_now:
-            bpy.context.scene.tractrix.way_traktor = obj_way(objTraktor, frame_now, frame_before)
+        except:
 
-        # velocity_trailer - Berechnung 
-        bpy.context.scene.tractrix.velocity_trailer = obj_velocity(objTrailer)
-        
-        #ToDo: tractrix.way_trailer - Berechnung 
-        if frame_before != frame_now:
-            bpy.context.scene.tractrix.way_trailer = obj_way(objTrailer, frame_now, frame_before)
-        
-               
-        #ToDo: tractrix.squint_angle - Berechnung 
+            pass
         
         
-        frame_before = deepcopy(frame_now)
+        #if frame_before != frame_now:
+        bpy.context.scene.tractrix.frame_before = deepcopy(frame_now)
+        
         return
         
 
@@ -284,12 +302,6 @@ class Tractrix_PT_Panel(Panel):
         split = layout.split()
         col = split.column()
         col.label(text="Schleppkurven:")
-        
-        
-        
-        col.operator("tractrix.init_variables", text="init variables")
-        
-        
         
         col.operator("tractrix.clearanimation", text="1. clear Animations")  
         
@@ -306,14 +318,14 @@ class Tractrix_PT_Panel(Panel):
         col.label(text="Result at frame:")
         #distance()
         #print("Erg.:  %3.5f" %scene.tractrix.distance)
-        col.label(icon='DRIVER_DISTANCE', text="distance: %3.5f" %scene.tractrix.distance)
-        col.label(icon='TRACKING', text="way traktor: %3.5f"     %scene.tractrix.way_traktor)
-        col.label(icon='TRACKING', text="way trailer: %3.5f"     %scene.tractrix.way_trailer)
+        col.label(icon='DRIVER_DISTANCE',  text="distance:    %3.3f"     %scene.tractrix.distance)
+        col.label(icon='TRACKING',         text="way traktor: %3.3f"     %scene.tractrix.way_traktor)
+        col.label(icon='TRACKING',         text="way trailer: %3.3f"     %scene.tractrix.way_trailer)
         # todo: Weg zum frame i ....
         
-        col.label(icon='CON_OBJECTSOLVER', text="v traktor: %3.5f" %scene.tractrix.velocity_traktor)        
-        col.label(icon='TRACKER',          text="v trailer: %3.5f" %scene.tractrix.velocity_trailer)
-        col.label(icon='DRIVER_ROTATIONAL_DIFFERENCE', text="squint angle: %3.5f" %scene.tractrix.squint_angle)
+        col.label(icon='CON_OBJECTSOLVER', text="v traktor:   %3.3f" %scene.tractrix.velocity_traktor)        
+        col.label(icon='TRACKER',          text="v trailer:   %3.3f" %scene.tractrix.velocity_trailer)
+        col.label(icon='DRIVER_ROTATIONAL_DIFFERENCE', text="squint angle: %3.3f" %scene.tractrix.squint_angle)
 
             
     writelog('Tractrix_PT_Panel done')
@@ -501,6 +513,9 @@ class clearanimation_OT_Main (Operator):
         objTrailer.select_set(True)
         bpy.ops.anim.keyframe_clear_v3d()
         bpy.ops.object.select_all(action='DESELECT')
+        
+        bpy.context.scene.tractrix.way_traktor = 0
+        bpy.context.scene.tractrix.way_trailer = 0
           
         return {'FINISHED'} 
     writelog('- - parenttrailer_OT_Main done- - - - - - -') 
@@ -788,7 +803,10 @@ class objectSettings(PropertyGroup):
         name="squint angle Traktor-Trailer",
         default= 0.0        
         ) 
-
+    frame_before: IntProperty(
+        name="frame before now",
+        default= bpy.context.scene.frame_current        
+        )
     
 bpy.utils.register_class(objectSettings)
 bpy.types.Scene.tractrix = PointerProperty(type=objectSettings) 

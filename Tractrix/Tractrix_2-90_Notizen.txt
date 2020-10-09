@@ -264,5 +264,53 @@ bpy.app.handlers.frame_change_post.clear()
 bpy.app.handlers.frame_change_post.append(frame_handler)
 
   ________________
+ 
+class Tractrix_OT_InitVaraibles(Operator):
+    bl_idname = "tractrix.init_variables"
+    bl_label = "initialize variables" #Toolbar - Label
+    bl_description = "set tractrix variables" # Kommentar im Specials Kontextmenue
+    bl_options = {'REGISTER', 'UNDO'}
     
+    
+    @classmethod
+    def poll(cls, context):
+        return (tractrixInitExecuted =='FALSE') # Test, ob InitBlendFile vorher ausgefuehrt wurde.
+    
+    def execute(self, context):
+    #def __init__(self):
+        global tractrixInitExecuted
+        tractrixInitExecuted = 'TRUE'
+        global frame_before
+        try:
+            frame_before = frame_before
+        except:
+            frame_before = deepcopy(bpy.context.scene.frame_current) #  Initialisierung
+            pass
+        
+        tractrixInitExecuted ='TRUE'
+        
+        return {'FINISHED'}  
+
+ ____________________________________
+ 
+        
+        col.operator("tractrix.init_variables", text="init variables")
+        
+  ____________________________________
+   ____________________________________
+    ____________________________________
+     ____________________________________
+      ____________________________________
+       ____________________________________
+        ____________________________________
+         ____________________________________
+          ____________________________________
+           ____________________________________
+            ____________________________________
+             ____________________________________
+              ____________________________________
+               ____________________________________
+                ____________________________________
+                
+                
    
