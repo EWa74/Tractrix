@@ -84,7 +84,7 @@ bl_info = {
      
 #--- ### Imports
 
-tractrixInitExecuted ='FALSE'
+
 
 import bpy
 
@@ -141,16 +141,12 @@ from bpy.props import (
 , IntProperty        #FloatVectorProperty,
         )
 
-def writelog(text=''):
-    #print('auskommentiert....')
-    '''
-    FilenameLog = bpy.data.filepath
-    FilenameLog = FilenameLog.replace(".blend", '.log')
-    fout = open(FilenameLog, 'a')
-    localtime = time.asctime( time.localtime(time.time()) )
-    fout.write(localtime + " : " + str(text) + '\n')
-    fout.close();
-    '''
+import tractrix_math
+import tractrix_internal
+#tractrix_math.writelog("Hallo")
+
+
+
 
 def frame_to_time(frame_number):
     fps = bpy.context.scene.render.fps
@@ -489,7 +485,8 @@ class setobj2curve_OT_Main (Operator):
 
         return {'FINISHED'} 
     writelog('- - setobj2curve_OT_Main done- - - - - - -') 
-    
+ 
+'''    
 class clearanimation_OT_Main (Operator): 
     bl_idname = "tractrix.clearanimation"
     bl_label = "clear animations" 
@@ -513,7 +510,8 @@ class clearanimation_OT_Main (Operator):
           
         return {'FINISHED'} 
     writelog('- - parenttrailer_OT_Main done- - - - - - -') 
-   
+'''
+ 
 def Traktrix3D(datTraktor, datTrailerStart):
     
     # Variante 1
@@ -584,7 +582,7 @@ def Traktrix3D(datTraktor, datTrailerStart):
         
             
     return datTrailer 
- 
+
 class createMatrix(object):
     #writelog('_____________________________________________________________________________')
     #writelog('createMatrix')
@@ -742,7 +740,7 @@ def get_absolute(Obj_Koord, Obj_Angle, BASEPos_Koord, BASEPos_Angle): #objBase
    
 
 # ________________________________________________________________________________________________________________________
-class objectSettings(PropertyGroup):
+class tractrixSettings(PropertyGroup):
 
     traktor: StringProperty(
         name="choose object",
@@ -803,8 +801,8 @@ class objectSettings(PropertyGroup):
         )
     
     
-bpy.utils.register_class(objectSettings)
-bpy.types.Scene.tractrix = PointerProperty(type=objectSettings) 
+bpy.utils.register_class(tractrixSettings)
+bpy.types.Scene.tractrix = PointerProperty(type=tractrixSettings) 
   
 classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, 
            clearanimation_OT_Main]
