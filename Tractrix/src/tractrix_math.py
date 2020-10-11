@@ -1,10 +1,15 @@
+# -*- coding: utf-8 -*-    
+#!/usr/bin/env python 
+# -*- coding: utf-8 -*-
+# coding Angabe in Zeilen 1 und 2 fuer Eclipse Luna/ Pydev 3.9 notwendig
+# cp1252
 
 import bpy
 
 from bpy_extras.io_utils import ExportHelper
 from bpy_extras.io_utils import ImportHelper
 import time # um Zeitstempel im Logfile zu schreiben
-import bpy, os
+import os
 import sys
 
 from bpy.types import (
@@ -36,16 +41,16 @@ class clearanimation_OT_Main (Operator):
         bpy.context.scene.tractrix.way_trailer = 0
           
         return {'FINISHED'} 
-    writelog('- - parenttrailer_OT_Main done- - - - - - -') 
+    #writelog('- - parenttrailer_OT_Main done- - - - - - -') 
 
 
 def register():
-    for cls in classes:
-        bpy.utils.register_class(operators)
+    for cls in operators:
+        bpy.utils.register_class(cls)
 
 def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(operators)
+    for cls in operators:
+        bpy.utils.unregister_class(cls)
 
 if __name__ == "__main__":
     register()

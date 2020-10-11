@@ -78,13 +78,12 @@ bl_info = {
     "tracker_url": "http://..."
     }
 
+
 #import pydevd 
 #pydevd.settrace()  #<-- debugger stops at the next statement 
 #import pydevd;pydevd.settrace() # notwendig weil breakpoints uebersprungen werden. warum auch immer
      
 #--- ### Imports
-
-
 
 import bpy
 
@@ -113,8 +112,7 @@ bpy.app.handlers.load_post.append(load_handler)
 from bpy_extras.io_utils import ExportHelper
 from bpy_extras.io_utils import ImportHelper
 import time # um Zeitstempel im Logfile zu schreiben
-import bpy, os
-import sys
+import bpy, os, sys
 from mathutils import Vector  
 from mathutils import *
 import mathutils
@@ -141,19 +139,15 @@ from bpy.props import (
 , IntProperty        #FloatVectorProperty,
         )
 
-import tractrix_math
-import tractrix_internal
-#tractrix_math.writelog("Hallo")
-
-
+def writelog(text=''):
+    print(
+        )
 
 
 def frame_to_time(frame_number):
     fps = bpy.context.scene.render.fps
     raw_time = (frame_number - 1) / fps
     return round(raw_time, 3)    
-
-
 
 def obj_distance(obj1, obj2):
     # Abstand zweier Objekte zum aktuellem Zeitpunkt
@@ -165,8 +159,6 @@ def obj_distance(obj1, obj2):
     distance = math.sqrt(A*A+B*B+C*C)
     
     return distance
-
-
 
 def obj_velocity(obj):
     # Akutelle Geschwindigkeit bezogen auf vorherriges frame.
@@ -223,7 +215,6 @@ def obj_way(obj, frm_stop, frm_start):
             way_vec = Vector((x, y, z)) 
     
     return way 
-
 
 
 class Tractrix_PT_Panel(Panel):
@@ -284,7 +275,7 @@ class Tractrix_PT_Panel(Panel):
         
 
     def draw(self, context):
-        
+        writelog('blaaaaaaaaaaaaaaaaaaaa')
         ob = context.object
         layout = self.layout
         scene = context.scene
@@ -293,7 +284,8 @@ class Tractrix_PT_Panel(Panel):
         col = split.column()
         col.label(text="Schleppkurven:")
         
-        col.operator("tractrix.clearanimation", text="1. clear Animations")  
+        col.operator("tractrix.clearanimation", text="1. clear Animations")
+        #col.operator("tractrix_math.tractrix.clearanimation", text="1. clear Animations")  #tractrix_math.
         
         col.prop_search(scene.tractrix, "traktor", scene, "objects", icon = 'OBJECT_DATA', text = "Traktor")
         col.prop_search(scene.tractrix, "traktorpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Traktor path")
@@ -486,7 +478,7 @@ class setobj2curve_OT_Main (Operator):
         return {'FINISHED'} 
     writelog('- - setobj2curve_OT_Main done- - - - - - -') 
  
-'''    
+    
 class clearanimation_OT_Main (Operator): 
     bl_idname = "tractrix.clearanimation"
     bl_label = "clear animations" 
@@ -510,7 +502,7 @@ class clearanimation_OT_Main (Operator):
           
         return {'FINISHED'} 
     writelog('- - parenttrailer_OT_Main done- - - - - - -') 
-'''
+
  
 def Traktrix3D(datTraktor, datTrailerStart):
     
@@ -805,7 +797,8 @@ bpy.utils.register_class(tractrixSettings)
 bpy.types.Scene.tractrix = PointerProperty(type=tractrixSettings) 
   
 classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, 
-           clearanimation_OT_Main]
+           clearanimation_OT_Main] #tractrix_math.operators 
+
 
 def register():
     for cls in classes:

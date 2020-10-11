@@ -297,8 +297,64 @@ class Tractrix_OT_InitVaraibles(Operator):
         col.operator("tractrix.init_variables", text="init variables")
         
   ____________________________________
+  
+myDir = os.path.dirname(os.path.abspath(__file__))
+parentDir = os.path.split(myDir)[0]
+if(sys.path.__contains__(parentDir)):
+    print('parent already in path')
+    pass
+else:
+    print('parent directory added')
+    sys.path.append(parentDir)
+    
+    
    ____________________________________
+   
+  
+
+#import tractrix_math
+#from . import tractrix_math
+#import tractrix_internal.writelog
+
+# --------------SRC FOLDER ----------------
+import src.tractrix_internal     # findet writelog nicht; geht nicht traxtrix_internal
+#from src import tractrix_internal # findet writelog nicht; geht nicht traxtrix_internal
+#from src import writelog # ImportError: cannot import name 'writelog' from 'src' (C:/Users/Eric.Wahl/git/Tractrix/Tractrix\src\__init__.py)
+#from tractrix_internal.py import writelog
+#tractrix_math.writelog("Hallo")
+
+
+# --------------MAIN FOLDER ----------------
+#from . import writelog2
+#from tractrix_internal2.py import *
+#import tractrix_internal2.writelog2 # ModuleNotFoundError: No module named 'tractrix_internal2.writelog2'; 'tractrix_internal2' is not a package
+#import tractrix_internal2
+#from tractrix_internal2.py import writelog2
+
+
+
+
+'''
+def writelog(text=''):
+    print(
+        )
+'''
     ____________________________________
+    
+ '''
+DEBUG = 1 #A debug flag - just for the convinience (Set to 0 in the final version)
+
+###--- for direct debugging of this add-on (update the pydevd path!) ---------------------------
+if DEBUG == 1:
+    import sys
+    #pydev_path = 'C:/Users/me/.p2/pool/plugins/org.python.pydev.core_7.2.1.201904261721/pysrc'
+    pydev_path = 'D:/eclipse-testing-2020-09/eclipse/plugins/org.python.pydev.core_8.0.0.202009061309/pysrc'
+    if sys.path.count(pydev_path) < 1: sys.path.append(pydev_path)
+    import pydevd
+    pydevd.settrace(stdoutToServer=True, stderrToServer=True, suspend=False) #stop at first breakpoint
+###-- end remote debug initialization ----------------------------------------------------------
+'''
+
      ____________________________________
       ____________________________________
        ____________________________________
