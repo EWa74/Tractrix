@@ -65,15 +65,15 @@ bpy.data.curves[bpy.context.active_object.data.name].splines[0].bezier_points[0]
 '''  
 #--- ### Header 
 bl_info = { 
-    "name": "Tractrix_OT_Main",
+    "name": "Tractrix",
     "author": "Eric Wahl",
     "version": (1, 0, 1),
     "blender": (2, 90, 0),
     "api": 36147,
     "location": "View3D >Tools > Create",
-    "category": "Curve",
+    "category": "Add Curve",
     "description": "Calculate the path for Trailer Object following the Tractor Object.",
-    "warning": "",
+    "warning": "... under development.",
     "wiki_url": "http://...",
     "tracker_url": "http://..."
     }
@@ -120,7 +120,7 @@ from bpy.props import (
         )
 
 #--- ### Import self coded functions and classes ----------------------------------------------------------------------------- 
-from internal import* #writelog
+from internal import* 
 from operators import* 
 
 
@@ -290,8 +290,7 @@ class tractrixSettings(PropertyGroup):
 bpy.utils.register_class(tractrixSettings)
 bpy.types.Scene.tractrix = PointerProperty(type=tractrixSettings) 
   
-classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, 
-           clearanimation_OT_Main] #tractrix_math.operators 
+classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main] #tractrix_math.operators 
 
 
 def register():

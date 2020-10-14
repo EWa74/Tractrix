@@ -9,8 +9,10 @@ from bpy_extras.io_utils import ExportHelper
 from bpy_extras.io_utils import ImportHelper
 import time # um Zeitstempel im Logfile zu schreiben
 from mathutils import Vector
+from mathutils import *
+import mathutils
 import math
-   
+from copy import deepcopy # fuer OptimizeRotation   
     
 def writelog(text=''):
         

@@ -14,8 +14,7 @@ from bpy.types import (
 
 import bpy.utils
 
-from internal import writelog
-
+from internal import*
     
 class setobj2curve_OT_Main (Operator):
     bl_idname = "tractrix.setobj2curve"
