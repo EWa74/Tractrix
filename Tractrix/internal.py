@@ -15,14 +15,14 @@ import math
 from copy import deepcopy # fuer OptimizeRotation   
     
 def writelog(text=''):
-        
     FilenameLog = bpy.data.filepath
     FilenameLog = FilenameLog.replace(".blend", '.log')
     fout = open(FilenameLog, 'a')
     localtime = time.asctime( time.localtime(time.time()) )
     fout.write(localtime + " : " + str(text) + '\n')
     fout.close();
-
+    
+    
 def frame_to_time(frame_number):
     fps = bpy.context.scene.render.fps
     raw_time = (frame_number - 1) / fps

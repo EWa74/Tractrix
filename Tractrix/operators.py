@@ -14,7 +14,15 @@ from bpy.types import (
 
 import bpy.utils
 
-from internal import*
+
+#from .internal import * # EINblenden, wenn als AddOn installiert wird!!!!!
+from internal import*  # AUSblenden, wenn als AddOn installiert wird!!!!!
+
+
+
+#from internal import writelog
+#from internal import get_absolute
+
     
 class setobj2curve_OT_Main (Operator):
     bl_idname = "tractrix.setobj2curve"
@@ -108,18 +116,20 @@ class Traktrix_OT_Main (Operator):
     writelog('- - Tractrix_OT_Main done- - - - - - -')
     
     
-    
+'''    
 operators = [setobj2curve_OT_Main, clearanimation_OT_Main, Traktrix_OT_Main] #tractrix_math.operators 
 
 
 def register():
+    bpy.utils.register_module(__name__)
     for cls in operators:
         bpy.utils.register_class(cls) 
 
     
 def unregister():       
+    bpy.utils.unregister_module(__name__)
     for cls in operators:
         bpy.utils.unregister_class(cls)
-
+'''
 
       

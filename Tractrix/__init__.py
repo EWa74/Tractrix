@@ -83,11 +83,20 @@ bl_info = {
 #pydevd.settrace()  #<-- debugger stops at the next statement 
 #import pydevd;pydevd.settrace() # notwendig weil breakpoints uebersprungen werden. warum auch immer
 
+if "bpy" in locals():
+    import importlib
+    importlib.reload(internal)
+    importlib.reload(operators)
+else:
+    from Tractrix import internal
+    from Tractrix import operators
+
 
 
 #--- ### Imports from blender python ------------------------------------------------------------------------------------------
 # ExportHelper is a helper class, defines filename and
 import bpy, os, sys
+import bpy.utils
 from bpy_extras.io_utils import ExportHelper
 from bpy_extras.io_utils import ImportHelper
 import time # um Zeitstempel im Logfile zu schreiben
@@ -120,9 +129,9 @@ from bpy.props import (
         )
 
 #--- ### Import self coded functions and classes ----------------------------------------------------------------------------- 
-from internal import* 
-from operators import* 
-
+#from .internal import *  # einblenden, wenn als AddOn installiert wird!!!!!
+from internal import*  # AUSblenden, wenn als AddOn installiert wird!!!!!
+from operators import* # AUSblenden, wenn als AddOn installiert wird!!!!!
 
 class Tractrix_PT_Panel(Panel):
     writelog('_____________________________________________________________________________')
@@ -290,14 +299,16 @@ class tractrixSettings(PropertyGroup):
 bpy.utils.register_class(tractrixSettings)
 bpy.types.Scene.tractrix = PointerProperty(type=tractrixSettings) 
   
-classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main] #tractrix_math.operators 
+classes = [Tractrix_PT_Panel, operators.Traktrix_OT_Main, operators.setobj2curve_OT_Main, operators.clearanimation_OT_Main] #tractrix_math.operators 
 
 
 def register():
+    #bpy.utils.register_module(__name__)
     for cls in classes:
         bpy.utils.register_class(cls) 
     
 def unregister():       
+    #bpy.utils.unregister_module(__name__)
     for cls in classes:
         bpy.utils.unregister_class(cls)
 
