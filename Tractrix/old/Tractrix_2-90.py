@@ -139,10 +139,36 @@ from bpy.props import (
 , IntProperty        #FloatVectorProperty,
         )
 
+
+'''
+myDir = os.path.dirname(os.path.abspath(__file__))
+parentDir = os.path.split(myDir)[0]
+if(sys.path.__contains__(parentDir)):
+    print('parent already in path')
+    pass
+else:
+    print('parent directory added')
+    sys.path.append(parentDir)
+'''    
+
+#import internal.writelog
+#from src import internal
+from internal import writelog
+from internal import eric
+
+eric()
+
+#import internal
+#from src.internal.py import writelog
+
+
+
+
+'''
 def writelog(text=''):
     print(
         )
-
+'''
 
 def frame_to_time(frame_number):
     fps = bpy.context.scene.render.fps
