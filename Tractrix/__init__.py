@@ -127,7 +127,7 @@ from bpy.props import (
         #CollectionProperty,
         StringProperty,
         PointerProperty
-, IntProperty        #FloatVectorProperty,
+, IntProperty        #FloatVectorProperty, 
         )
 
 
