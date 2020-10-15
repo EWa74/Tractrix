@@ -373,7 +373,7 @@ from bpy_extras.io_utils import ImportHelper
 
 import time # um Zeitstempel im Logfile zu schreiben
 
-'''
+
 myDir = os.path.dirname(os.path.abspath(__file__))
 parentDir = os.path.split(myDir)[0]
 if(sys.path.__contains__(parentDir)):
@@ -382,7 +382,7 @@ if(sys.path.__contains__(parentDir)):
 else:
     print('parent directory added')
     sys.path.append(parentDir)
-'''    
+    
 #import src.tractrix_internal
 
 def eric():
@@ -491,8 +491,46 @@ bpy.app.handlers.load_post.append(load_handler)
 '''
 
         ____________________________________
+        
+DEBUG = 1 #A debug flag - just for the convinience (Set to 0 in the final version)
+
+if "bpy" in locals():
+    if DEBUG == 0:
+        import importlib
+        importlib.reload(internal)
+        importlib.reload(operators)  
+              
+else:
+    import bpy
+    print("hallo")
+    if DEBUG == 0:
+        from . import (
+            internal,
+            operators
+            )
+    else:
+        from internal import*
+        from operators import* 
+
+if "bpy" in locals():
+    if DEBUG == 1:
+        if "bpy" in locals():
+            classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main]
+        else:
+            classes = [Tractrix_PT_Panel, operators.Traktrix_OT_Main, operators.setobj2curve_OT_Main, operators.clearanimation_OT_Main] #tractrix_math.operators 
+    
+    if DEBUG == 0:
+        classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main] #tractrix_math.operators 
+else:
+    classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main] #tractrix_math.operators 
+
+#classes = [Tractrix_PT_Panel, operators.Traktrix_OT_Main, operators.setobj2curve_OT_Main, operators.clearanimation_OT_Main] #tractrix_math.operators 
+        
          ____________________________________
-          ____________________________________
+
+    #bpy.utils.register_module(__name__)
+    #bpy.utils.unregister_module(__name__)
+        ____________________________________
            ____________________________________
             ____________________________________
              ____________________________________
