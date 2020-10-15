@@ -3,6 +3,7 @@
 # -*- coding: utf-8 -*-
 # coding Angabe in Zeilen 1 und 2 fuer Eclipse Luna/ Pydev 3.9 notwendig
 # cp1252
+import pydevd;pydevd.settrace() # notwendig weil breakpoints uebersprungen werden. warum auch immer
 
 import bpy, os, sys
 from bpy_extras.io_utils import ExportHelper

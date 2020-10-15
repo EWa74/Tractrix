@@ -83,19 +83,25 @@ bl_info = {
 #pydevd.settrace()  #<-- debugger stops at the next statement 
 #import pydevd;pydevd.settrace() # notwendig weil breakpoints uebersprungen werden. warum auch immer
 
+
 DEBUG = 1 #A debug flag - just for the convinience (Set to 0 in the final version)
 
 if "bpy" in locals():
     if DEBUG == 0:
         import importlib
         importlib.reload(internal)
-        importlib.reload(operators)
+        importlib.reload(operators)  
+              
 else:
     import bpy
-    from . import (
-        internal,
-        operators,
-    )
+    if DEBUG == 1:
+        from . import (
+            internal,
+            operators
+            )
+    else:
+        from internal import*
+        from operators import* 
 
 
 
@@ -133,6 +139,11 @@ from bpy.props import (
         PointerProperty
 , IntProperty        #FloatVectorProperty,
         )
+
+
+
+
+    
 
 #--- ### Import self coded functions and classes ----------------------------------------------------------------------------- 
 #from .internal import *  # einblenden, wenn als AddOn installiert wird!!!!!
@@ -306,8 +317,14 @@ bpy.utils.register_class(tractrixSettings)
 bpy.types.Scene.tractrix = PointerProperty(type=tractrixSettings) 
 
 if "bpy" in locals():
+    if DEBUG == 1:
+        if "bpy" in locals():
+            classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main]
+        else:
+            classes = [Tractrix_PT_Panel, operators.Traktrix_OT_Main, operators.setobj2curve_OT_Main, operators.clearanimation_OT_Main] #tractrix_math.operators 
+    
     if DEBUG == 0:
-        classes = [Tractrix_PT_Panel, operators.Traktrix_OT_Main, operators.setobj2curve_OT_Main, operators.clearanimation_OT_Main] #tractrix_math.operators 
+        classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main] #tractrix_math.operators 
 else:
     classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main] #tractrix_math.operators 
 
