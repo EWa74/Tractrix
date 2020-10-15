@@ -130,6 +130,8 @@ def unregister():
     bpy.utils.unregister_module(__name__)
     for cls in operators:
         bpy.utils.unregister_class(cls)
-'''
 
-      
+#--- ### Main code    
+if __name__ == '__main__':
+    register()
+'''

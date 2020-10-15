@@ -83,13 +83,19 @@ bl_info = {
 #pydevd.settrace()  #<-- debugger stops at the next statement 
 #import pydevd;pydevd.settrace() # notwendig weil breakpoints uebersprungen werden. warum auch immer
 
+DEBUG = 1 #A debug flag - just for the convinience (Set to 0 in the final version)
+
 if "bpy" in locals():
-    import importlib
-    importlib.reload(internal)
-    importlib.reload(operators)
+    if DEBUG == 0:
+        import importlib
+        importlib.reload(internal)
+        importlib.reload(operators)
 else:
-    from Tractrix import internal
-    from Tractrix import operators
+    import bpy
+    from . import (
+        internal,
+        operators,
+    )
 
 
 
@@ -130,8 +136,8 @@ from bpy.props import (
 
 #--- ### Import self coded functions and classes ----------------------------------------------------------------------------- 
 #from .internal import *  # einblenden, wenn als AddOn installiert wird!!!!!
-from internal import*  # AUSblenden, wenn als AddOn installiert wird!!!!!
-from operators import* # AUSblenden, wenn als AddOn installiert wird!!!!!
+#from internal import*  # AUSblenden, wenn als AddOn installiert wird!!!!!
+#from operators import* # AUSblenden, wenn als AddOn installiert wird!!!!!
 
 class Tractrix_PT_Panel(Panel):
     writelog('_____________________________________________________________________________')
@@ -298,8 +304,14 @@ class tractrixSettings(PropertyGroup):
     
 bpy.utils.register_class(tractrixSettings)
 bpy.types.Scene.tractrix = PointerProperty(type=tractrixSettings) 
-  
-classes = [Tractrix_PT_Panel, operators.Traktrix_OT_Main, operators.setobj2curve_OT_Main, operators.clearanimation_OT_Main] #tractrix_math.operators 
+
+if "bpy" in locals():
+    if DEBUG == 0:
+        classes = [Tractrix_PT_Panel, operators.Traktrix_OT_Main, operators.setobj2curve_OT_Main, operators.clearanimation_OT_Main] #tractrix_math.operators 
+else:
+    classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main] #tractrix_math.operators 
+
+#classes = [Tractrix_PT_Panel, operators.Traktrix_OT_Main, operators.setobj2curve_OT_Main, operators.clearanimation_OT_Main] #tractrix_math.operators 
 
 
 def register():
