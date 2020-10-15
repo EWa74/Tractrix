@@ -78,7 +78,6 @@ bl_info = {
     "tracker_url": "http://..."
     }
 
-
 #import pydevd 
 #pydevd.settrace()  #<-- debugger stops at the next statement 
 #import pydevd;pydevd.settrace() # notwendig weil breakpoints uebersprungen werden. warum auch immer
@@ -86,25 +85,16 @@ bl_info = {
 
 DEBUG = 1 #A debug flag - just for the convinience (Set to 0 in the final version)
 
-if "bpy" in locals():
-    if DEBUG == 0:
-        import importlib
-        importlib.reload(internal)
-        importlib.reload(operators)  
-              
-else:
+#--- ### Import self coded functions and classes ----------------------------------------------------------------------------- 
+
+if DEBUG == 1:                  # PyDev Debug
+    from internal import*
+    from operators import* 
+else:                           # AddOn
     import bpy
-    if DEBUG == 1:
-        from . import (
-            internal,
-            operators
-            )
-    else:
-        from internal import*
-        from operators import* 
-
-
-
+    from .internal import*
+    from .operators import* 
+ 
 #--- ### Imports from blender python ------------------------------------------------------------------------------------------
 # ExportHelper is a helper class, defines filename and
 import bpy, os, sys
@@ -140,15 +130,6 @@ from bpy.props import (
 , IntProperty        #FloatVectorProperty,
         )
 
-
-
-
-    
-
-#--- ### Import self coded functions and classes ----------------------------------------------------------------------------- 
-#from .internal import *  # einblenden, wenn als AddOn installiert wird!!!!!
-#from internal import*  # AUSblenden, wenn als AddOn installiert wird!!!!!
-#from operators import* # AUSblenden, wenn als AddOn installiert wird!!!!!
 
 class Tractrix_PT_Panel(Panel):
     writelog('_____________________________________________________________________________')
@@ -247,10 +228,6 @@ class Tractrix_PT_Panel(Panel):
     writelog('_____________________________________________________________________________')
 
 
-
-
-
-
 # ________________________________________________________________________________________________________________________
 class tractrixSettings(PropertyGroup):
 
@@ -316,28 +293,14 @@ class tractrixSettings(PropertyGroup):
 bpy.utils.register_class(tractrixSettings)
 bpy.types.Scene.tractrix = PointerProperty(type=tractrixSettings) 
 
-if "bpy" in locals():
-    if DEBUG == 1:
-        if "bpy" in locals():
-            classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main]
-        else:
-            classes = [Tractrix_PT_Panel, operators.Traktrix_OT_Main, operators.setobj2curve_OT_Main, operators.clearanimation_OT_Main] #tractrix_math.operators 
-    
-    if DEBUG == 0:
-        classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main] #tractrix_math.operators 
-else:
-    classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main] #tractrix_math.operators 
 
-#classes = [Tractrix_PT_Panel, operators.Traktrix_OT_Main, operators.setobj2curve_OT_Main, operators.clearanimation_OT_Main] #tractrix_math.operators 
-
+classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main]
 
 def register():
-    #bpy.utils.register_module(__name__)
     for cls in classes:
         bpy.utils.register_class(cls) 
     
 def unregister():       
-    #bpy.utils.unregister_module(__name__)
     for cls in classes:
         bpy.utils.unregister_class(cls)
 

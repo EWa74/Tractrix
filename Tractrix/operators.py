@@ -4,6 +4,19 @@
 # coding Angabe in Zeilen 1 und 2 fuer Eclipse Luna/ Pydev 3.9 notwendig
 # cp1252
 
+DEBUG = 1 #A debug flag - just for the convinience (Set to 0 in the final version)
+
+if DEBUG == 1:                  # PyDev Debug 
+    import bpy
+    from internal import*
+else:                           # AddOn
+    from .internal import*
+   
+#from .internal import * # EINblenden, wenn als AddOn installiert wird!!!!!
+from internal import*  # AUSblenden, wenn als AddOn installiert wird!!!!!
+
+
+
 import bpy
 from mathutils import Vector
 from bpy.types import (
@@ -14,14 +27,6 @@ from bpy.types import (
 
 import bpy.utils
 
-
-#from .internal import * # EINblenden, wenn als AddOn installiert wird!!!!!
-from internal import*  # AUSblenden, wenn als AddOn installiert wird!!!!!
-
-
-
-#from internal import writelog
-#from internal import get_absolute
 
     
 class setobj2curve_OT_Main (Operator):
