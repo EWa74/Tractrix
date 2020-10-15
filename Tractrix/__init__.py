@@ -87,10 +87,10 @@ DEBUG = 1 #A debug flag - just for the convinience (Set to 0 in the final versio
 
 #--- ### Import self coded functions and classes ----------------------------------------------------------------------------- 
 
-if DEBUG == 1:                  # PyDev Debug
+if DEBUG == 1:                  # 1 = PyDev Debug
     from internal import*
     from operators import* 
-else:                           # AddOn
+else:                           # 0 = AddOn
     import bpy
     from .internal import*
     from .operators import* 

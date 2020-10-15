@@ -6,16 +6,12 @@
 
 DEBUG = 1 #A debug flag - just for the convinience (Set to 0 in the final version)
 
-if DEBUG == 1:                  # PyDev Debug 
+if DEBUG == 1:                  # 1 = PyDev Debug 
     import bpy
     from internal import*
-else:                           # AddOn
+else:                           # 0 = AddOn
     from .internal import*
    
-#from .internal import * # EINblenden, wenn als AddOn installiert wird!!!!!
-from internal import*  # AUSblenden, wenn als AddOn installiert wird!!!!!
-
-
 
 import bpy
 from mathutils import Vector
