@@ -4,6 +4,7 @@
 # coding Angabe in Zeilen 1 und 2 fuer Eclipse Luna/ Pydev 3.9 notwendig
 # cp1252
 
+DEBUG = 1 #A debug flag - just for the convinience (Set to 0 in the final version)
 
 import bpy, os, sys
 from bpy_extras.io_utils import ExportHelper
@@ -14,15 +15,28 @@ from mathutils import *
 import mathutils
 import math
 from copy import deepcopy # fuer OptimizeRotation   
+import time # um Zeitstempel im Logfile zu schreiben
     
 def writelog(text=''):
-    if "bpy" in locals():
+    if DEBUG == 1:                  # PyDev Debug 
+        localtime = time.asctime( time.localtime(time.time()) )
         FilenameLog = bpy.data.filepath
         FilenameLog = FilenameLog.replace(".blend", '.log')
         fout = open(FilenameLog, 'a')
-        localtime = time.asctime( time.localtime(time.time()) )
         fout.write(localtime + " : " + str(text) + '\n')
+        print("PyDev write into log file: " +localtime + " : " + str(text) + '\n')
         fout.close();
+    else:                           # AddOn
+        try:
+            localtime = time.asctime( time.localtime(time.time()) )
+            FilenameLog = bpy.data.filepath
+            FilenameLog = FilenameLog.replace(".blend", '.log')
+            fout = open(FilenameLog, 'a')
+            fout.write(localtime + " : " + str(text) + '\n')
+            print("AddOn write into log file: " +localtime + " : " + str(text) + '\n')
+            fout.close();
+        except:
+            pass
     
     
 def frame_to_time(frame_number):

@@ -150,12 +150,17 @@ class Tractrix_PT_Panel(Panel):
     
     
     def __init__(self):
-        frame_before = bpy.context.scene.tractrix.frame_before
-        frame_now    = bpy.context.scene.frame_current
         
-        objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
-        objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
-        
+        try: 
+            frame_before = bpy.context.scene.tractrix.frame_before
+            frame_now    = bpy.context.scene.frame_current
+    
+            objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
+            objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
+        except:
+            #bpy.utils.register_class(tractrixSettings)
+            bpy.types.Scene.tractrix = PointerProperty(type=tractrixSettings) 
+            pass         
         try:
             # tractrix.distance - Berechnung anhand der Traktor/ Trailer Objekte:
             bpy.context.scene.tractrix.distance = obj_distance(objTraktor, objTrailer)
@@ -291,7 +296,7 @@ class tractrixSettings(PropertyGroup):
     
     
 bpy.utils.register_class(tractrixSettings)
-bpy.types.Scene.tractrix = PointerProperty(type=tractrixSettings) 
+#bpy.types.Scene.tractrix = PointerProperty(type=tractrixSettings) 
 
 
 classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main]
