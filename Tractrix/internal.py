@@ -24,7 +24,7 @@ def writelog(text=''):
         FilenameLog = FilenameLog.replace(".blend", '.log')
         fout = open(FilenameLog, 'a')
         fout.write(localtime + " : " + str(text) + '\n')
-        print("PyDev write into log file: " +localtime + " : " + str(text) + '\n')
+        print("PyDev write into log file: " +localtime + " : " + str(text) ) #+ '\n'
         fout.close();
     else:                           # AddOn
         try:
@@ -33,16 +33,11 @@ def writelog(text=''):
             FilenameLog = FilenameLog.replace(".blend", '.log')
             fout = open(FilenameLog, 'a')
             fout.write(localtime + " : " + str(text) + '\n')
-            print("AddOn write into log file: " +localtime + " : " + str(text) + '\n')
+            print("AddOn write into log file: " +localtime + " : " + str(text) ) #+ '\n'
             fout.close();
         except:
             pass
     
-    
-def frame_to_time(frame_number):
-    fps = bpy.context.scene.render.fps
-    raw_time = (frame_number - 1) / fps
-    return round(raw_time, 3)
 
 def obj_distance(obj1, obj2):
     # Abstand zweier Objekte zum aktuellem Zeitpunkt
@@ -111,10 +106,10 @@ def obj_way(obj, frm_stop, frm_start):
     
     return way 
 
-def ReadCurve(objPath):
+def read_curve(objPath):
     curObj = bpy.data.curves[objPath.data.name]
     int_Curve = len(bpy.data.curves[objPath.data.name].splines[0].points)
-    datPath = createMatrix(int_Curve,3)
+    datPath = create_matrix(int_Curve,3)
     
     for int_PCurve in range(0,int_Curve,1):       
         
@@ -125,7 +120,8 @@ def ReadCurve(objPath):
  
     return int_Curve, datPath
 
-def WriteCurveTrailer(int_Curve, Trailer):
+def write_curve(int_Curve, Trailer):
+    #write_curve
     
     #bpy.data.objects[Trailer].data.splines 
     objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
@@ -145,12 +141,19 @@ def WriteCurveTrailer(int_Curve, Trailer):
         
         # ToDo: rot_spline_element (findet bei bei Nurbspath keine Anwendung)      
 
+    
+def frame_to_time(frame_number):
+    fps = bpy.context.scene.render.fps
+    raw_time = (frame_number - 1) / fps
+    return round(raw_time, 3)
+
 def time_to_frame(time_value):
     fps = bpy.context.scene.render.fps
     frame_number = (time_value * fps) +1
     return int(round(frame_number, 0)) 
 
-def SetKeyFrames(obj, cur, objPath, int_Curve, TIMEPTS):
+def set_keyframes(obj, cur, objPath, int_Curve, TIMEPTS):
+    # SetKeyframes
     
     # objEmpty_A6 -> objTraktor
     # TargetObjList -> datTraktorCurve
@@ -350,7 +353,7 @@ def get_absolute(Obj_Koord, Obj_Angle, BASEPos_Koord, BASEPos_Angle): #objBase
        
     return Vtrans_abs, rotEuler
 
-def Traktrix3D(datTraktor, datTrailerStart):
+def tractrix_distance(datTraktor, datTrailerStart):
     
     # Variante 1
     
@@ -367,12 +370,12 @@ def Traktrix3D(datTraktor, datTrailerStart):
     # - moeglich nicht alle Keyframes zu setzten? bzw. Verteilung ueber GUI steuern. 
     # --> Residuen zum minimieren des Fehlers...
           
-    Mx = createMatrix(2,1)
-    My = createMatrix(2,1)
-    Mz = createMatrix(2,1)
-    Sx = createMatrix(2,1)
-    Sy = createMatrix(2,1) 
-    Sz = createMatrix(2,1) 
+    Mx = create_matrix(2,1)
+    My = create_matrix(2,1)
+    Mz = create_matrix(2,1)
+    Sx = create_matrix(2,1)
+    Sy = create_matrix(2,1) 
+    Sz = create_matrix(2,1) 
     n  = [0,1,2,3]
     
     T1 = 0
@@ -384,7 +387,7 @@ def Traktrix3D(datTraktor, datTrailerStart):
     Sz[T1][0] = datTrailerStart[2]
     
     int_Count = len(datTraktor[:][:])
-    datTrailer = createMatrix(int_Count,1)
+    datTrailer = create_matrix(int_Count,1)
     datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
     
     for int_PCurve in range(0,int_Count-1,1): 
@@ -421,15 +424,15 @@ def Traktrix3D(datTraktor, datTrailerStart):
             
     return datTrailer 
 
-class createMatrix(object):
+class create_matrix(object):
     writelog('_____________________________________________________________________________')
-    writelog('createMatrix')
+    writelog('create_matrix')
     def __init__(self, rows, columns, default=0):
         self.m = []
         for i in range(rows):
             self.m.append([default for j in range(columns)])
     def __getitem__(self, index):
         return self.m[index]
-    writelog('createMatrix done')
+    writelog('create_matrix done')
     writelog('_____________________________________________________________________________')
     

@@ -131,11 +131,9 @@ from bpy.props import (
         )
 
 
-class Tractrix_PT_Panel(Panel):
+class TRACTRIX_PT_Panel(Panel):
     writelog('_____________________________________________________________________________')
-    writelog()
-    writelog('Tractrix_PT_Panel....')
-    writelog()
+    writelog('TRACTRIX_PT_Panel....')
     
     """Creates a Panel in the Tool-panel under the <creates> tab of the 3D-View"""
     bl_idname = "VIEW3D_PT_layout"
@@ -150,7 +148,7 @@ class Tractrix_PT_Panel(Panel):
     
     
     def __init__(self):
-        
+        writelog('TRACTRIX_PT_Panel - __init__')
         try: 
             frame_before = bpy.context.scene.tractrix.frame_before
             frame_now    = bpy.context.scene.frame_current
@@ -158,8 +156,8 @@ class Tractrix_PT_Panel(Panel):
             objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
             objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
         except:
-            #bpy.utils.register_class(tractrixSettings)
-            bpy.types.Scene.tractrix = PointerProperty(type=tractrixSettings) 
+            #bpy.utils.register_class(tractrixProperty)
+            bpy.types.Scene.tractrix = PointerProperty(type=tractrixProperty) 
             pass         
         try:
             # tractrix.distance - Berechnung anhand der Traktor/ Trailer Objekte:
@@ -194,7 +192,7 @@ class Tractrix_PT_Panel(Panel):
         
 
     def draw(self, context):
-        writelog('Tractrix_PT_Panel - draw \n')
+        writelog('TRACTRIX_PT_Panel - draw')
         ob = context.object
         layout = self.layout
         scene = context.scene
@@ -229,12 +227,13 @@ class Tractrix_PT_Panel(Panel):
         col.label(icon='DRIVER_ROTATIONAL_DIFFERENCE', text="squint angle: %3.3f" %scene.tractrix.squint_angle)
 
             
-    writelog('Tractrix_PT_Panel done')
-    writelog('_____________________________________________________________________________')
+    #writelog('TRACTRIX_PT_Panel done')
+    #writelog('_____________________________________________________________________________')
 
 
 # ________________________________________________________________________________________________________________________
-class tractrixSettings(PropertyGroup):
+
+class tractrixProperty(PropertyGroup):
 
     traktor: StringProperty(
         name="choose object",
@@ -295,20 +294,21 @@ class tractrixSettings(PropertyGroup):
         )
     
     
-bpy.utils.register_class(tractrixSettings)
-#bpy.types.Scene.tractrix = PointerProperty(type=tractrixSettings) 
+bpy.utils.register_class(tractrixProperty)
+#bpy.types.Scene.tractrix = PointerProperty(type=tractrixProperty) 
 
 
-classes = [Tractrix_PT_Panel, Traktrix_OT_Main, setobj2curve_OT_Main, clearanimation_OT_Main]
+classes = [TRACTRIX_PT_Panel, TRACTRIX_OT_calculate, TRACTRIX_OT_setobj2curve, TRACTRIX_OT_clearanimation]
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls) 
-    
+        
 def unregister():       
     for cls in classes:
         bpy.utils.unregister_class(cls)
 
+        
 #--- ### Main code    
 if __name__ == '__main__':
     register()
