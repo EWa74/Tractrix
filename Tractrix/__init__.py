@@ -126,7 +126,7 @@ from bpy.props import (
         #CollectionProperty,
         StringProperty,
         PointerProperty
-, IntProperty        #FloatVectorProperty, 
+, IntProperty, BoolProperty        #FloatVectorProperty, 
         )
 
 
@@ -198,6 +198,8 @@ class TRACTRIX_PT_Panel(Panel):
         col = split.column()
         col.label(text="Schleppkurven:")
         
+        col.prop(scene.tractrix, "writelog", text="write log file")
+        
         col.operator("tractrix.clearanimation", text="1. clear Animations")
         #col.operator("tractrix_math.tractrix.clearanimation", text="1. clear Animations")  #tractrix_math.
         
@@ -231,7 +233,10 @@ class TRACTRIX_PT_Panel(Panel):
 # ________________________________________________________________________________________________________________________
 
 class tractrixProperty(PropertyGroup):
-
+    writelog: BoolProperty(
+        name="enable/ disable write to log file",
+        default= False       
+        ) 
     traktor: StringProperty(
         name="choose object",
         default="Traktor"        
@@ -289,7 +294,7 @@ class tractrixProperty(PropertyGroup):
         name="frame before now",
         default= 1 #bpy.context.scene.frame_current        
         )
-    
+   
     
 bpy.utils.register_class(tractrixProperty)
 #bpy.types.Scene.tractrix = PointerProperty(type=tractrixProperty) 

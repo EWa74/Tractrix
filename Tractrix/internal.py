@@ -21,26 +21,33 @@ def writelog(text=''):
     '''
     Schreibt Text-File "blend file".log
     '''
+    try:
+        bool_writelog = bpy.context.scene.tractrix.writelog
+    except:
+        bool_writelog = False
+        pass
     
-    if DEBUG_FLAG == 1:                  # PyDev Debug 
-        localtime   = time.asctime( time.localtime(time.time()) )
-        FilenameLog = bpy.data.filepath
-        FilenameLog = FilenameLog.replace(".blend", '.log')
-        fout        = open(FilenameLog, 'a')
-        fout.write(localtime + " : " + str(text) + '\n')
-        print("PyDev write into log file: " +localtime + " : " + str(text) ) #+ '\n'
-        fout.close();
-    else:                           # AddOn
-        try:
+    if bool_writelog == True:
+        
+        if DEBUG_FLAG == 1:             # PyDev Debug 
             localtime   = time.asctime( time.localtime(time.time()) )
             FilenameLog = bpy.data.filepath
             FilenameLog = FilenameLog.replace(".blend", '.log')
             fout        = open(FilenameLog, 'a')
             fout.write(localtime + " : " + str(text) + '\n')
-            print("AddOn write into log file: " +localtime + " : " + str(text) ) #+ '\n'
+            print("PyDev write into log file: " +localtime + " : " + str(text) ) #+ '\n'
             fout.close();
-        except:
-            pass
+        else:                           # AddOn
+            try:
+                localtime   = time.asctime( time.localtime(time.time()) )
+                FilenameLog = bpy.data.filepath
+                FilenameLog = FilenameLog.replace(".blend", '.log')
+                fout        = open(FilenameLog, 'a')
+                fout.write(localtime + " : " + str(text) + '\n')
+                print("AddOn write into log file: " +localtime + " : " + str(text) ) #+ '\n'
+                fout.close();
+            except:
+                pass
     
 
 def obj_distance(obj1, obj2):
