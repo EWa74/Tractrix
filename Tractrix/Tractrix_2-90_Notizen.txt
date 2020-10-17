@@ -531,6 +531,13 @@ else:
     #bpy.utils.register_module(__name__)
     #bpy.utils.unregister_module(__name__)
         ____________________________________
+    # Initialisierung um v zu berechnen:
+    location_old = deepcopy(ob.location)
+    T_old = deepcopy(time_to_frame(TIMEPTS[0]))
+              
+    fps = scene.render.fps
+    fps_base = scene.render.fps_base
+    
            ____________________________________
             ____________________________________
              ____________________________________

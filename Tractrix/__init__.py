@@ -82,12 +82,11 @@ bl_info = {
 #pydevd.settrace()  #<-- debugger stops at the next statement 
 #import pydevd;pydevd.settrace() # notwendig weil breakpoints uebersprungen werden. warum auch immer
 
-
-DEBUG = 1 #A debug flag - just for the convinience (Set to 0 in the final version)
+DEBUG_FLAG = 1 #A debug flag - just for the convinience (Set to 0 in the final version)
 
 #--- ### Import self coded functions and classes ----------------------------------------------------------------------------- 
 
-if DEBUG == 1:                  # 1 = PyDev Debug
+if DEBUG_FLAG == 1:                  # 1 = PyDev Debug
     from internal import*
     from operators import* 
 else:                           # 0 = AddOn
@@ -136,19 +135,19 @@ class TRACTRIX_PT_Panel(Panel):
     writelog('TRACTRIX_PT_Panel....')
     
     """Creates a Panel in the Tool-panel under the <creates> tab of the 3D-View"""
-    bl_idname = "VIEW3D_PT_layout"
-    bl_label = "Tractrix" # heading of panel
-    bl_space_type = "VIEW_3D"
+    bl_idname      = "VIEW3D_PT_layout"
+    bl_label       = "Tractrix" # heading of panel
+    bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
-    bl_context = "objectmode"
-    bl_category = "Create"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_context     = "objectmode"
+    bl_category    = "Create"
+    bl_options     = {'DEFAULT_CLOSED'}
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
     
     
     def __init__(self):
-        writelog('TRACTRIX_PT_Panel - __init__')
+        #writelog('TRACTRIX_PT_Panel - __init__')
         try: 
             frame_before = bpy.context.scene.tractrix.frame_before
             frame_now    = bpy.context.scene.frame_current
@@ -176,12 +175,11 @@ class TRACTRIX_PT_Panel(Panel):
             #tractrix.way_trailer - Berechnung 
             if frame_before != frame_now:
                 bpy.context.scene.tractrix.way_trailer = bpy.context.scene.tractrix.way_trailer + obj_way(objTrailer, frame_now, frame_before)
-            
-                   
+                               
             #ToDo: tractrix.squint_angle - Berechnung 
         
         except:
-
+            frame_now    = 1
             pass
         
         
@@ -192,8 +190,7 @@ class TRACTRIX_PT_Panel(Panel):
         
 
     def draw(self, context):
-        writelog('TRACTRIX_PT_Panel - draw')
-        ob = context.object
+        #writelog('TRACTRIX_PT_Panel - draw')
         layout = self.layout
         scene = context.scene
         

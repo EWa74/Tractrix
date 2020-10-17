@@ -4,7 +4,7 @@
 # coding Angabe in Zeilen 1 und 2 fuer Eclipse Luna/ Pydev 3.9 notwendig
 # cp1252
 
-DEBUG = 1 #A debug flag - just for the convinience (Set to 0 in the final version)
+DEBUG_FLAG = 1 #A debug flag - just for the convinience (Set to 0 in the final version)
 
 import bpy, os, sys
 from bpy_extras.io_utils import ExportHelper
@@ -18,20 +18,24 @@ from copy import deepcopy # fuer OptimizeRotation
 import time # um Zeitstempel im Logfile zu schreiben
     
 def writelog(text=''):
-    if DEBUG == 1:                  # PyDev Debug 
-        localtime = time.asctime( time.localtime(time.time()) )
+    '''
+    Schreibt Text-File "blend file".log
+    '''
+    
+    if DEBUG_FLAG == 1:                  # PyDev Debug 
+        localtime   = time.asctime( time.localtime(time.time()) )
         FilenameLog = bpy.data.filepath
         FilenameLog = FilenameLog.replace(".blend", '.log')
-        fout = open(FilenameLog, 'a')
+        fout        = open(FilenameLog, 'a')
         fout.write(localtime + " : " + str(text) + '\n')
         print("PyDev write into log file: " +localtime + " : " + str(text) ) #+ '\n'
         fout.close();
     else:                           # AddOn
         try:
-            localtime = time.asctime( time.localtime(time.time()) )
+            localtime   = time.asctime( time.localtime(time.time()) )
             FilenameLog = bpy.data.filepath
             FilenameLog = FilenameLog.replace(".blend", '.log')
-            fout = open(FilenameLog, 'a')
+            fout        = open(FilenameLog, 'a')
             fout.write(localtime + " : " + str(text) + '\n')
             print("AddOn write into log file: " +localtime + " : " + str(text) ) #+ '\n'
             fout.close();
@@ -40,8 +44,9 @@ def writelog(text=''):
     
 
 def obj_distance(obj1, obj2):
-    # Abstand zweier Objekte zum aktuellem Zeitpunkt
-    
+    '''
+    Abstand zweier Objekte zum aktuellem Zeitpunkt
+    '''
     A = obj1.location.x - obj2.location.x
     B = obj1.location.y - obj2.location.y
     C = obj1.location.z - obj2.location.z
@@ -51,8 +56,9 @@ def obj_distance(obj1, obj2):
     return distance
 
 def obj_velocity(obj):
-    # Akutelle Geschwindigkeit bezogen auf vorherriges frame.
-
+    '''
+    Akutelle Geschwindigkeit bezogen auf vorherriges frame.
+    '''
     frame =  bpy.context.scene.frame_current
         
     current_xyz = obj.location
@@ -70,7 +76,9 @@ def obj_velocity(obj):
     return velocity    
 
 def obj_way(obj, frm_stop, frm_start):
-    # Addiere den Weg von frm_start bis frm_stop
+    '''
+    Addiere den Weg von frm_start bis frm_stop
+    '''
     way = 0
     # Anfangswert:
     fcurve = obj.animation_data.action.fcurves
@@ -106,38 +114,43 @@ def obj_way(obj, frm_stop, frm_start):
     
     return way 
 
-def read_curve(objPath):
-    curObj = bpy.data.curves[objPath.data.name]
-    int_Curve = len(bpy.data.curves[objPath.data.name].splines[0].points)
-    datPath = create_matrix(int_Curve,3)
+def read_global_splines(objPath):
+    '''
+    - read_global_splines
+    - Bestimme die Laenge der Kurve
+    - Berechne die GLOBAL Location der spline points
+    '''
+    curObj    = bpy.data.curves[objPath.data.name]
+    int_curve = len(bpy.data.curves[objPath.data.name].splines[0].points)
+    datPath   = create_matrix(int_curve,3)
     
-    for int_PCurve in range(0,int_Curve,1):       
+    for int_PCurve in range(0,int_curve,1):       
         
         # mit 'get_absolute' werden die GLOBALEN Punkte verwendet:
         datPath[int_PCurve][0:3] = get_absolute(curObj.splines[0].points[int_PCurve].co, (0,0,0), objPath.location, objPath.rotation_euler)
         # in der alten Version wurden nur die LOKALEN Punkte (d.h. bezogen auf den Origin) verwendet:
         #datPath[int_PCurve][0:3] = [curObj.splines[0].points[int_PCurve].co.x, curObj.splines[0].points[int_PCurve].co.y, curObj.splines[0].points[int_PCurve].co.z]
  
-    return int_Curve, datPath
+    return int_curve, datPath
 
-def write_curve(int_Curve, Trailer):
-    #write_curve
-    
-    #bpy.data.objects[Trailer].data.splines 
-    objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
-    objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
-    curTrailer = bpy.data.curves[objTrailerPath.data.name]    
-    #int_Curve=len(curTrailer.splines[0].points)
-    for int_PCurve in range(0,int_Curve,1):
-        #[curTrailer.splines[0].points[int_PCurve].co.x, curTrailer.splines[0].points[int_PCurve].co.y, curTrailer.splines[0].points[int_PCurve].co.z] = Trailer[int_PCurve][0]
-        ([curTrailer.splines[0].points[int_PCurve].co.x, 
-          curTrailer.splines[0].points[int_PCurve].co.y, 
-          curTrailer.splines[0].points[int_PCurve].co.z]), \
+def write_global_splines(int_curve, dat_curve, obj_target):
+    '''
+    - Writes LOCAL splines as GLOBAL values into Object 'obj_target'
+    - int_Curve: Anzahl der Splines
+    - dat_curve: list of LOCAL splines Vectors
+    '''
+
+    cur_target = bpy.data.curves[obj_target.data.name]   
+     
+    for int_PCurve in range(0,int_curve,1):
+        ([cur_target.splines[0].points[int_PCurve].co.x, 
+          cur_target.splines[0].points[int_PCurve].co.y, 
+          cur_target.splines[0].points[int_PCurve].co.z]), \
           rot_spline_element = get_relative(
-              Trailer[int_PCurve][0], 
+              dat_curve[int_PCurve][0], 
               (0,0,0), 
-              objTrailerPath.location, 
-              objTrailerPath.rotation_euler)
+              obj_target.location, 
+              obj_target.rotation_euler)
         
         # ToDo: rot_spline_element (findet bei bei Nurbspath keine Anwendung)      
 
@@ -152,7 +165,7 @@ def time_to_frame(time_value):
     frame_number = (time_value * fps) +1
     return int(round(frame_number, 0)) 
 
-def set_keyframes(obj, cur, objPath, int_Curve, TIMEPTS):
+def set_keyframes(obj, cur, objPath, int_curve, TIMEPTS):
     # SetKeyframes
     
     # objEmpty_A6 -> objTraktor
@@ -162,13 +175,6 @@ def set_keyframes(obj, cur, objPath, int_Curve, TIMEPTS):
     original_type         = bpy.context.area.type
     bpy.context.area.type = "VIEW_3D"
     bpy.ops.object.select_all(action='DESELECT')
-          
-    scene = bpy.context.scene
-    #fps = scene.render.fps
-    #fps_base = scene.render.fps_base
-     
-    raw_time=[]
-    frame_number=[]
     
     bpy.context.view_layer.objects.active = obj
     
@@ -178,12 +184,9 @@ def set_keyframes(obj, cur, objPath, int_Curve, TIMEPTS):
     ob = bpy.context.active_object
     ob.rotation_mode = 'QUATERNION' #'XYZ'
     
-    # Initialisierung um v zu berechnen:
-    location_old = deepcopy(ob.location)
-    T_old = deepcopy(time_to_frame(TIMEPTS[0]))
     
     #QuaternionList = OptimizeRotationQuaternion(TargetObjList, TIMEPTSCount)
-    for n in range(0,int_Curve,1):
+    for n in range(0,int_curve,1):
         
         # Trailer[int_PCurve][0]
         writelog(n)
@@ -210,7 +213,16 @@ def set_keyframes(obj, cur, objPath, int_Curve, TIMEPTS):
        
     bpy.context.area.type = original_type 
     writelog(n)
+
+def clear_keyframes(obj):
     
+    bpy.ops.object.select_all(action='DESELECT')
+    obj.select_set(True)
+    bpy.ops.anim.keyframe_clear_v3d()
+    bpy.ops.object.select_all(action='DESELECT')
+
+
+ 
 def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle):
     # dataPATHPTS_Loc/Rot [rad]: absolute
     # BASEPos_Koord/Angle [rad]: absolute
