@@ -151,9 +151,9 @@ class TRACTRIX_PT_Panel(Panel):
         try: 
             frame_before = bpy.context.scene.tractrix.frame_before
             frame_now    = bpy.context.scene.frame_current
-    
-            objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
-            objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer]
+     
+            objTraktor = bpy.context.scene.tractrix.traktor
+            objTrailer = bpy.context.scene.tractrix.trailer
         except:
             #bpy.utils.register_class(tractrixProperty)
             bpy.types.Scene.tractrix = PointerProperty(type=tractrixProperty) 
@@ -203,9 +203,9 @@ class TRACTRIX_PT_Panel(Panel):
         col.operator("tractrix.clearanimation", text="1. clear Animations")
         #col.operator("tractrix_math.tractrix.clearanimation", text="1. clear Animations")  #tractrix_math.
         
-        col.prop_search(scene.tractrix, "traktor", scene, "objects", icon = 'OBJECT_DATA', text = "Traktor")
+        col.prop_search(scene.tractrix, "traktor",     scene, "objects", icon = 'OBJECT_DATA',    text = "Traktor")
         col.prop_search(scene.tractrix, "traktorpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Traktor path")
-        col.prop_search(scene.tractrix, "trailer", scene, "objects", icon = 'OBJECT_DATA', text = "Trailer")
+        col.prop_search(scene.tractrix, "trailer",     scene, "objects", icon = 'OBJECT_DATA',    text = "Trailer")
         col.prop_search(scene.tractrix, "trailerpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Trailer path")
         
         col.operator("tractrix.setobj2curve", text="2. set 2 path")
@@ -219,7 +219,6 @@ class TRACTRIX_PT_Panel(Panel):
         col.label(icon='DRIVER_DISTANCE',  text="distance:    %3.3f"     %scene.tractrix.distance)
         col.label(icon='TRACKING',         text="way traktor: %3.3f"     %scene.tractrix.way_traktor)
         col.label(icon='TRACKING',         text="way trailer: %3.3f"     %scene.tractrix.way_trailer)
-        # todo: Weg zum frame i ....
         
         col.label(icon='CON_OBJECTSOLVER', text="v traktor:   %3.3f" %scene.tractrix.velocity_traktor)        
         col.label(icon='TRACKER',          text="v trailer:   %3.3f" %scene.tractrix.velocity_trailer)
@@ -236,24 +235,32 @@ class tractrixProperty(PropertyGroup):
     writelog: BoolProperty(
         name="enable/ disable write to log file",
         default= False       
+        )
+    
+    traktor: PointerProperty(
+        type=bpy.types.Object, 
+        name='choose object', 
+        description='Traktor'
         ) 
-    traktor: StringProperty(
-        name="choose object",
-        default="Traktor"        
-        )   
-    trailer: StringProperty(
-        name="choose object",
-        default="Trailer"        
-        )    
-    traktorpath: StringProperty(
-        name="choose nurbspath",
-        default="TraktorPath"        
+ 
+    trailer: PointerProperty(
+        type=bpy.types.Object, 
+        name='choose object', 
+        description='Trailer'
         )
-    trailerpath: StringProperty(
-        name="choose nurbspath",
-        default="TrailerPath"        
+  
+    traktorpath: PointerProperty(
+        type=bpy.types.Object, 
+        name='choose nurbspath', 
+        description='TraktorPath'
         )
-        
+
+    trailerpath: PointerProperty(
+        type=bpy.types.Object, 
+        name='choose nurbspath', 
+        description='TrailerPath'
+        )
+
     intSolverItems = (
         ('distance'  , 'Distance'    , 'Calculate path with constant distance to traktor (Tractrix)'),
         ('velocity'  , 'Velocity'    , 'Calculate path with constant velocity (Hundekurve)'         ),

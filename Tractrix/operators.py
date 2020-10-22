@@ -34,16 +34,15 @@ class TRACTRIX_OT_setobj2curve (Operator):
     def execute(self, context):
         bpy.data.scenes['Scene'].frame_current = bpy.data.scenes['Scene'].frame_start
         
-        objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
-        objTraktor     = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
+        objTraktorPath = bpy.context.scene.tractrix.traktorpath  
+        objTraktor     = bpy.context.scene.tractrix.traktor        
         curTraktor     = bpy.data.curves[objTraktorPath.data.name]
         
         datTraktorCurve = [curTraktor.splines[0].points[0].co.x, curTraktor.splines[0].points[0].co.y, curTraktor.splines[0].points[0].co.z]
         objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), objTraktorPath.location, objTraktorPath.rotation_euler)
         
-        
-        objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
-        objTrailer     = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
+        objTrailerPath = bpy.context.scene.tractrix.trailerpath
+        objTrailer     = bpy.context.scene.tractrix.trailer 
         curTrailer     = bpy.data.curves[objTrailerPath.data.name]    
         
         datTrailerCurve = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
@@ -61,8 +60,8 @@ class TRACTRIX_OT_clearanimation (Operator):
     
     def execute(self, context):
 
-        objTraktor = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
-        objTrailer = bpy.data.objects[bpy.context.scene.tractrix.trailer] 
+        objTraktor     = bpy.context.scene.tractrix.traktor 
+        objTrailer = bpy.context.scene.tractrix.trailer 
         
         clear_keyframes(objTraktor)
         clear_keyframes(objTrailer)
@@ -72,8 +71,6 @@ class TRACTRIX_OT_clearanimation (Operator):
         
         writelog('- - TRACTRIX_OT_clearanimation done- - - - - - -')  
         return {'FINISHED'} 
-     
-        
         
 
 class TRACTRIX_OT_calculate (Operator):    
@@ -84,17 +81,26 @@ class TRACTRIX_OT_calculate (Operator):
 
     def execute(self, context):  
         
-        objTraktorPath = bpy.data.objects[bpy.context.scene.tractrix.traktorpath] 
-        objTraktor     = bpy.data.objects[bpy.context.scene.tractrix.traktor] 
-        objTrailerPath = bpy.data.objects[bpy.context.scene.tractrix.trailerpath]
-        objTrailer     = bpy.data.objects[bpy.context.scene.tractrix.trailer]
+        objTraktorPath = bpy.context.scene.tractrix.traktorpath 
+        objTraktor     = bpy.context.scene.tractrix.traktor 
+        
+        objTrailerPath = bpy.context.scene.tractrix.trailerpath
+        objTrailer     = bpy.context.scene.tractrix.trailer
+        
         curTraktor     = bpy.data.curves[objTraktorPath.data.name]
         curTrailer     = bpy.data.curves[objTrailerPath.data.name]     
             
         int_curve, datTraktorCurve = read_global_splines(objTraktorPath)  
         
-        #datTrailerStart = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-        datTrailerStart, datTrailerStartRot = get_absolute(Vector((curTrailer.splines[0].points[0].co.x,curTrailer.splines[0].points[0].co.y,curTrailer.splines[0].points[0].co.z)), (0,0,0),objTrailerPath.location, objTrailerPath.rotation_euler)
+        datTrailerStart, datTrailerStartRot = get_absolute(
+            Vector((curTrailer.splines[0].points[0].co.x,
+                    curTrailer.splines[0].points[0].co.y,
+                    curTrailer.splines[0].points[0].co.z)
+                    ), 
+                    (0,0,0),
+                    objTrailerPath.location, 
+                    objTrailerPath.rotation_euler
+                    )
         
         datTrailerCurve = tractrix_distance(datTraktorCurve, datTrailerStart)
         
