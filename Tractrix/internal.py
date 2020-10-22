@@ -62,6 +62,35 @@ def obj_distance(obj1, obj2):
     
     return distance
 
+def obj_distance_error(obj1, obj2):
+    '''
+    Abstandsfehler zweier Objekte zum aktuellem Zeitpunkt
+    '''
+    distance_now = obj_distance(obj1, obj2)
+    start_frame = 1
+    
+    fcurve1 = obj1.animation_data.action.fcurves
+    obj1_org_x = fcurve1[0].evaluate(start_frame)
+    obj1_org_y = fcurve1[1].evaluate(start_frame)
+    obj1_org_z = fcurve1[2].evaluate(start_frame)
+    obj1_org = Vector((obj1_org_x, obj1_org_y, obj1_org_z))
+    
+    fcurve2 = obj2.animation_data.action.fcurves
+    obj2_org_x = fcurve2[0].evaluate(start_frame)
+    obj2_org_y = fcurve2[1].evaluate(start_frame)
+    obj2_org_z = fcurve2[2].evaluate(start_frame)   
+    obj2_org = Vector((obj2_org_x, obj2_org_y, obj2_org_z))
+    
+    A = obj1_org_x - obj2_org_x
+    B = obj1_org_y - obj2_org_y
+    C = obj1_org_z - obj2_org_z
+    distance_org = math.sqrt(A*A+B*B+C*C)
+        
+    distance_error_abs = - (distance_org-distance_now) 
+    distance_error_rel = -100* (distance_org-distance_now)/distance_org 
+    
+    return distance_error_abs, distance_error_rel
+
 def obj_velocity(obj):
     '''
     Akutelle Geschwindigkeit bezogen auf vorherriges frame.
@@ -249,18 +278,18 @@ def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
     # dataPATHPTS_Rot = Global --> PATHPTS_Angle bezogen auf Base
     
     writelog('_____________________________________________________________________________')
-    writelog('Funktion: get_relativeX - lokale Koordinaten bezogen auf Base!')
+    writelog('Funktion: get_relative - lokale Koordinaten bezogen auf Base!')
             
     Mtrans     = mathutils.Matrix.Translation(BASEPos_Koord) 
     Vtrans_abs = dataPATHPTS_Loc                              #global 
-    writelog('Vtrans_abs'+ str(Vtrans_abs))  # neuer Bezugspunkt
+    #writelog('Vtrans_abs'+ str(Vtrans_abs))  # neuer Bezugspunkt
     
     #--------------------------------------------------------------------------
     MrotX = mathutils.Matrix.Rotation(BASEPos_Angle[0], 3, 'X') # Global
     MrotY = mathutils.Matrix.Rotation(BASEPos_Angle[1], 3, 'Y')
     MrotZ = mathutils.Matrix.Rotation(BASEPos_Angle[2], 3, 'Z')
     Mrot = MrotZ @ MrotY @ MrotX
-    writelog('Mrot :'+ str(Mrot))
+    #writelog('Mrot :'+ str(Mrot))
     
     Mworld_rel = Mtrans @ Mrot.to_4x4()
     
@@ -268,7 +297,7 @@ def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
     Mrot_absY = mathutils.Matrix.Rotation(dataPATHPTS_Rot[1], 3, 'Y')
     Mrot_absZ = mathutils.Matrix.Rotation(dataPATHPTS_Rot[2], 3, 'Z')  
     Mrot_abs = Mrot_absZ @ Mrot_absY @ Mrot_absX
-    writelog('Mrot_abs :'+ str(Mrot_abs))
+    #writelog('Mrot_abs :'+ str(Mrot_abs))
     #--------------------------------------------------------------------------
      
     #PATHPTS_Koord = matrix_world.inverted() *point_local    # transpose fuehrt zu einem andren Ergebnis?!
@@ -276,17 +305,17 @@ def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
     Vtrans_rel   = Mworld_rel.inverted() @Vector((Vtrans_abs))  
     PATHPTS_Koord = Vtrans_rel
     
-    writelog('PATHPTS_Koord : '+ str(PATHPTS_Koord))           # neuer Bezugspunkt
+    #writelog('PATHPTS_Koord : '+ str(PATHPTS_Koord))           # neuer Bezugspunkt
     
     Mrot_rel = Mrot.inverted()  @ Mrot_abs 
-    writelog('Mrot_rel'+ str(Mrot_rel))
+    #writelog('Mrot_rel'+ str(Mrot_rel))
     
     newR = Mrot_rel.to_euler('XYZ')
     
-    writelog('newR'+ str(newR))    
-    writelog('newR[0] :'+ str(newR[0]*360/(2*math.pi)))
-    writelog('newR[1] :'+ str(newR[1]*360/(2*math.pi)))
-    writelog('newR[2] :'+ str(newR[2]*360/(2*math.pi)))
+    #writelog('newR'+ str(newR))    
+    #writelog('newR[0] :'+ str(newR[0]*360/(2*math.pi)))
+    #writelog('newR[1] :'+ str(newR[1]*360/(2*math.pi)))
+    #writelog('newR[2] :'+ str(newR[2]*360/(2*math.pi)))
     
             
     Vorz1 = +1#-1 # +C = X
@@ -294,8 +323,8 @@ def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
     Vorz3 = +1#-1 # -A = Z    
     PATHPTS_Angle = (Vorz1* newR[0], Vorz2*newR[1], Vorz3*newR[2]) # [rad]     
     
-    writelog('PATHPTS_Koord : ' + str(PATHPTS_Koord))
-    writelog('PATHPTS_Angle: '+'C X {0:.3f}'.format(PATHPTS_Angle[0])+' B Y {0:.3f}'.format(PATHPTS_Angle[1])+' A Z {0:.3f}'.format(PATHPTS_Angle[2]))
+    #writelog('PATHPTS_Koord : ' + str(PATHPTS_Koord))
+    #writelog('PATHPTS_Angle: '+'C X {0:.3f}'.format(PATHPTS_Angle[0])+' B Y {0:.3f}'.format(PATHPTS_Angle[1])+' A Z {0:.3f}'.format(PATHPTS_Angle[2]))
     
     writelog('get_relative done')
     writelog('_____________________________________________________________________________')
@@ -362,13 +391,13 @@ def get_absolute(Obj_Koord, Obj_Angle, BASEPos_Koord, BASEPos_Angle): #objBase
     Mrot_abs = Mrot_abs.transposed()
     rotEuler =Mrot_abs.to_euler('XYZ')
     
-    writelog('rotEuler'+ str(rotEuler))
-    writelog('rotEuler[0] :'+ str(rotEuler[0]*360/(2*math.pi)))
-    writelog('rotEuler[1] :'+ str(rotEuler[1]*360/(2*math.pi)))
-    writelog('rotEuler[2] :'+ str(rotEuler[2]*360/(2*math.pi)))
+    #writelog('rotEuler'+ str(rotEuler))
+    #writelog('rotEuler[0] :'+ str(rotEuler[0]*360/(2*math.pi)))
+    #writelog('rotEuler[1] :'+ str(rotEuler[1]*360/(2*math.pi)))
+    #writelog('rotEuler[2] :'+ str(rotEuler[2]*360/(2*math.pi)))
         
     Vtrans_abs = Mworld @Vtrans_rel
-    writelog('Vtrans_abs :'+ str(Vtrans_abs))
+    #writelog('Vtrans_abs :'+ str(Vtrans_abs))
        
     return Vtrans_abs, rotEuler
 
@@ -388,6 +417,7 @@ def tractrix_distance(datTraktor, datTrailerStart):
     # - Rechenfehler (Abweichung von soll/ ist Distanz) --> ggf. mehr Wegpunkte notwendig;
     # - moeglich nicht alle Keyframes zu setzten? bzw. Verteilung ueber GUI steuern. 
     # --> Residuen zum minimieren des Fehlers...
+    Abstand=[]
           
     Mx = create_matrix(2,1)
     My = create_matrix(2,1)
@@ -427,15 +457,25 @@ def tractrix_distance(datTraktor, datTrailerStart):
                 (Mz[T2][0] -Mz[T1][0]) *n[3])
         
         #Gravity =  0* Sz[T1][0] - 0.1 * math.pow((T2-T1),2) 
-        #Abstand = math.pow(math.pow((datTraktor[0][0]-Sx[T1][0]),2)+math.pow((datTraktor[0][1]-Sy[T1][0]),2)+math.pow((datTraktor[0][2]-Sz[T1][0]),2), 0.5)
-        AbstandT1 = math.pow(math.pow((datTraktor[int_PCurve][0][0]-Sx[T1][0]),2)+math.pow((datTraktor[int_PCurve][0][1]-Sy[T1][0]),2)+math.pow((datTraktor[int_PCurve][0][2]-Sz[T1][0]),2), 0.5)
         
         Sx[T2][0] = Sx[T1][0] + Term * n[1]
         Sy[T2][0] = Sy[T1][0] + Term * n[2]
         Sz[T2][0] = Sz[T1][0] + Term * n[3]  #+ (Gravity)
         
         datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
-                
+        
+        Abstand   = Abstand + [math.pow(
+            math.pow((Mx[T2][0]-Sx[T2][0]),2)
+            +math.pow((My[T2][0]-Sy[T2][0]),2)
+            +math.pow((Mz[T2][0]-Sz[T2][0]),2), 0.5
+            )]
+        
+        distance_error_abs = - (Abstand[0]-Abstand[int_PCurve])
+        writelog(' distance_error_abs: %3.3f' % distance_error_abs)
+        distance_error_rel = -100* (Abstand[0]-Abstand[int_PCurve])/Abstand[0]
+        writelog('distance_error_rel: %3.3f' %distance_error_rel + " %")
+        
+
         Sx[T1][0] = deepcopy(Sx[T2][0])
         Sy[T1][0] = deepcopy(Sy[T2][0])
         Sz[T1][0] = deepcopy(Sz[T2][0])

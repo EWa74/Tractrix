@@ -162,6 +162,9 @@ class TRACTRIX_PT_Panel(Panel):
             # tractrix.distance - Berechnung anhand der Traktor/ Trailer Objekte:
             bpy.context.scene.tractrix.distance = obj_distance(objTraktor, objTrailer)
             
+            # tractrix.distance_error - Berechnung anhand der Traktor/ Trailer Objekte:
+            bpy.context.scene.tractrix.distance_error_abs, bpy.context.scene.tractrix.distance_error_rel = obj_distance_error(objTraktor, objTrailer) # absolute nicht rel.
+            
             # velocity_traktor - Berechnung:
             bpy.context.scene.tractrix.velocity_traktor = obj_velocity(objTraktor)
             
@@ -216,7 +219,10 @@ class TRACTRIX_PT_Panel(Panel):
         col.label(text="Result at frame:")
         #distance()
         #print("Erg.:  %3.5f" %scene.tractrix.distance)
-        col.label(icon='DRIVER_DISTANCE',  text="distance:    %3.3f"     %scene.tractrix.distance)
+        col.label(icon='DRIVER_DISTANCE',  text="distance:    %3.3f"     %scene.tractrix.distance + ' ' +bpy.data.scenes[bpy.context.scene.name].unit_settings.length_unit)
+        col.label(icon='DRIVER_DISTANCE',  text="distance err abs:%3.3f"     %scene.tractrix.distance_error_abs + ' ' +bpy.data.scenes[bpy.context.scene.name].unit_settings.length_unit)
+        col.label(icon='DRIVER_DISTANCE',  text="distance err rel:%3.3f %%"     %scene.tractrix.distance_error_rel)
+        
         col.label(icon='TRACKING',         text="way traktor: %3.3f"     %scene.tractrix.way_traktor)
         col.label(icon='TRACKING',         text="way trailer: %3.3f"     %scene.tractrix.way_trailer)
         
@@ -276,6 +282,14 @@ class tractrixProperty(PropertyGroup):
         name="distance Traktor-Trailer",
         default= 0.0        
         )   
+    distance_error_abs: FloatProperty(
+        name="distance error absolute Traktor-Trailer",
+        default= 0.0        
+        ) 
+    distance_error_rel: FloatProperty(
+        name="distance error relative Traktor-Trailer",
+        default= 0.0        
+        ) 
     way_traktor: FloatProperty(
         name="velocity Traktor",
         default= 0.0        
