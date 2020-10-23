@@ -73,13 +73,13 @@ def obj_distance_error(obj1, obj2):
     obj1_org_x = fcurve1[0].evaluate(start_frame)
     obj1_org_y = fcurve1[1].evaluate(start_frame)
     obj1_org_z = fcurve1[2].evaluate(start_frame)
-    obj1_org = Vector((obj1_org_x, obj1_org_y, obj1_org_z))
+    #obj1_org = Vector((obj1_org_x, obj1_org_y, obj1_org_z))
     
     fcurve2 = obj2.animation_data.action.fcurves
     obj2_org_x = fcurve2[0].evaluate(start_frame)
     obj2_org_y = fcurve2[1].evaluate(start_frame)
     obj2_org_z = fcurve2[2].evaluate(start_frame)   
-    obj2_org = Vector((obj2_org_x, obj2_org_y, obj2_org_z))
+    #obj2_org = Vector((obj2_org_x, obj2_org_y, obj2_org_z))
     
     A = obj1_org_x - obj2_org_x
     B = obj1_org_y - obj2_org_y
@@ -401,7 +401,7 @@ def get_absolute(Obj_Koord, Obj_Angle, BASEPos_Koord, BASEPos_Angle): #objBase
        
     return Vtrans_abs, rotEuler
 
-def tractrix_distance(datTraktor, datTrailerStart):
+def pursuit_curve_solver_distance(datTraktor, datTrailerStart):
     
     # Variante 1
     
@@ -482,6 +482,144 @@ def tractrix_distance(datTraktor, datTrailerStart):
         
             
     return datTrailer 
+
+def pursuit_curve_solver_velocity(datTraktor, datTrailerStart):
+    # ... nur Kopie von _distance!!!!!!!!!!!!!!!!!!!!!!!
+    
+    Abstand=[]
+          
+    Mx = create_matrix(2,1)
+    My = create_matrix(2,1)
+    Mz = create_matrix(2,1)
+    Sx = create_matrix(2,1)
+    Sy = create_matrix(2,1) 
+    Sz = create_matrix(2,1) 
+    n  = [0,1,2,3]
+    
+    T1 = 0
+    T2 = 1
+    Term = float()
+    
+    Sx[T1][0] = datTrailerStart[0]
+    Sy[T1][0] = datTrailerStart[1]
+    Sz[T1][0] = datTrailerStart[2]
+    
+    int_Count = len(datTraktor[:][:])
+    datTrailer = create_matrix(int_Count,1)
+    datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
+    
+    for int_PCurve in range(0,int_Count-1,1): 
+        
+        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0][0], datTraktor[int_PCurve][0][1], datTraktor[int_PCurve][0][2]]
+        #original: Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
+        
+        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0][0], datTraktor[int_PCurve+1][0][1], datTraktor[int_PCurve+1][0][2]]
+        
+        nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
+            
+        n[1] = (Sx[T1][0] - Mx[T1][0])/nn
+        n[2] = (Sy[T1][0] - My[T1][0])/nn
+        n[3] = (Sz[T1][0] - Mz[T1][0])/nn
+        
+        Term = ((Mx[T2][0] -Mx[T1][0]) *n[1]+
+                (My[T2][0] -My[T1][0]) *n[2]+
+                (Mz[T2][0] -Mz[T1][0]) *n[3])
+        
+        #Gravity =  0* Sz[T1][0] - 0.1 * math.pow((T2-T1),2) 
+        
+        Sx[T2][0] = Sx[T1][0] + Term * n[1]
+        Sy[T2][0] = Sy[T1][0] + Term * n[2]
+        Sz[T2][0] = Sz[T1][0] + Term * n[3]  #+ (Gravity)
+        
+        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        
+        Abstand   = Abstand + [math.pow(
+            math.pow((Mx[T2][0]-Sx[T2][0]),2)
+            +math.pow((My[T2][0]-Sy[T2][0]),2)
+            +math.pow((Mz[T2][0]-Sz[T2][0]),2), 0.5
+            )]
+        
+        distance_error_abs = - (Abstand[0]-Abstand[int_PCurve])
+        writelog(' distance_error_abs: %3.3f' % distance_error_abs)
+        distance_error_rel = -100* (Abstand[0]-Abstand[int_PCurve])/Abstand[0]
+        writelog('distance_error_rel: %3.3f' %distance_error_rel + " %")
+        
+
+        Sx[T1][0] = deepcopy(Sx[T2][0])
+        Sy[T1][0] = deepcopy(Sy[T2][0])
+        Sz[T1][0] = deepcopy(Sz[T2][0])
+        
+    return datTrailer
+
+def pursuit_curve_solver_squint(datTraktor, datTrailerStart):
+    # ... nur Kopie von _distance!!!!!!!!!!!!!!!!!!!!!!!
+    
+    Abstand=[]
+          
+    Mx = create_matrix(2,1)
+    My = create_matrix(2,1)
+    Mz = create_matrix(2,1)
+    Sx = create_matrix(2,1)
+    Sy = create_matrix(2,1) 
+    Sz = create_matrix(2,1) 
+    n  = [0,1,2,3]
+    
+    T1 = 0
+    T2 = 1
+    Term = float()
+    
+    Sx[T1][0] = datTrailerStart[0]
+    Sy[T1][0] = datTrailerStart[1]
+    Sz[T1][0] = datTrailerStart[2]
+    
+    int_Count = len(datTraktor[:][:])
+    datTrailer = create_matrix(int_Count,1)
+    datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
+    
+    for int_PCurve in range(0,int_Count-1,1): 
+        
+        Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0][0], datTraktor[int_PCurve][0][1], datTraktor[int_PCurve][0][2]]
+        #original: Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
+        
+        Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0][0], datTraktor[int_PCurve+1][0][1], datTraktor[int_PCurve+1][0][2]]
+        
+        nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
+            
+        n[1] = (Sx[T1][0] - Mx[T1][0])/nn
+        n[2] = (Sy[T1][0] - My[T1][0])/nn
+        n[3] = (Sz[T1][0] - Mz[T1][0])/nn
+        
+        Term = ((Mx[T2][0] -Mx[T1][0]) *n[1]+
+                (My[T2][0] -My[T1][0]) *n[2]+
+                (Mz[T2][0] -Mz[T1][0]) *n[3])
+        
+        #Gravity =  0* Sz[T1][0] - 0.1 * math.pow((T2-T1),2) 
+        
+        Sx[T2][0] = Sx[T1][0] + Term * n[1]
+        Sy[T2][0] = Sy[T1][0] + Term * n[2]
+        Sz[T2][0] = Sz[T1][0] + Term * n[3]  #+ (Gravity)
+        
+        datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
+        
+        Abstand   = Abstand + [math.pow(
+            math.pow((Mx[T2][0]-Sx[T2][0]),2)
+            +math.pow((My[T2][0]-Sy[T2][0]),2)
+            +math.pow((Mz[T2][0]-Sz[T2][0]),2), 0.5
+            )]
+        
+        distance_error_abs = - (Abstand[0]-Abstand[int_PCurve])
+        writelog(' distance_error_abs: %3.3f' % distance_error_abs)
+        distance_error_rel = -100* (Abstand[0]-Abstand[int_PCurve])/Abstand[0]
+        writelog('distance_error_rel: %3.3f' %distance_error_rel + " %")
+        
+
+        Sx[T1][0] = deepcopy(Sx[T2][0])
+        Sy[T1][0] = deepcopy(Sy[T2][0])
+        Sz[T1][0] = deepcopy(Sz[T2][0])
+        
+    return datTrailer
+    
+    
 
 class create_matrix(object):
     writelog('_____________________________________________________________________________')

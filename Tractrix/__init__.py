@@ -212,7 +212,7 @@ class TRACTRIX_PT_Panel(Panel):
         col.prop_search(scene.tractrix, "trailerpath", scene, "objects", icon = 'CURVE_BEZCURVE', text = "Trailer path")
         
         col.operator("tractrix.setobj2curve", text="2. set 2 path")
-        col.prop(scene.tractrix, "SolverMode", icon = 'CON_ROTLIKE', text = "Sover")
+        col.prop(scene.tractrix, "solver_mode", icon = 'CON_ROTLIKE', text = "Sover")
         
         col.operator("tractrix.calculate", text="calculate path")        
 
@@ -272,7 +272,7 @@ class tractrixProperty(PropertyGroup):
         ('velocity'  , 'Velocity'    , 'Calculate path with constant velocity (Hundekurve)'         ),
         ('squint'    , 'Squint angle', 'Squint angle curve'                                         )
         )
-    SolverMode: EnumProperty(
+    solver_mode: EnumProperty(
         items      = intSolverItems,
         name       = "Solver Mode",
         description="Determines how to calculate the trailer path",

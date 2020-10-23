@@ -89,6 +89,8 @@ class TRACTRIX_OT_calculate (Operator):
         
         curTraktor     = bpy.data.curves[objTraktorPath.data.name]
         curTrailer     = bpy.data.curves[objTrailerPath.data.name]     
+        
+        solver_mode    = bpy.context.scene.tractrix.solver_mode
             
         int_curve, datTraktorCurve = read_global_splines(objTraktorPath)  
         
@@ -101,9 +103,15 @@ class TRACTRIX_OT_calculate (Operator):
                     objTrailerPath.location, 
                     objTrailerPath.rotation_euler
                     )
-        
-        datTrailerCurve = tractrix_distance(datTraktorCurve, datTrailerStart)
-        
+        if solver_mode == 'distance':
+            datTrailerCurve = pursuit_curve_solver_distance(datTraktorCurve, datTrailerStart)
+        elif solver_mode == 'velocity':
+            datTrailerCurve = pursuit_curve_solver_velocity(datTraktorCurve, datTrailerStart)
+        elif solver_mode == 'squint':
+            datTrailerCurve = pursuit_curve_solver_squint(datTraktorCurve, datTrailerStart)
+        else:
+            print('solve mode not found ..............................................')
+            
         write_global_splines(int_curve, datTrailerCurve, objTrailerPath)
         
         TIMEPTS = []
