@@ -403,21 +403,17 @@ def get_absolute(Obj_Koord, Obj_Angle, BASEPos_Koord, BASEPos_Angle): #objBase
 
 def pursuit_curve_solver_distance(datTraktor, datTrailerStart):
     
-    # Variante 1
-    
-    # Ableitung aus Java-Script (link einfuegen...)
-    # Status (Variante 1): OK (Zeigt geringeren Rechenfehler als Variante 2.
-    # -> Rechenfehler optimieren indem Berechnungen in der Schleife reduziert werden. -> Variante 1a
+    # eigene Herleitung, siehe [Tractrix-Validation-ewa.docx] 
+    # Status: OK
     
     # Pruefen: 
     # a) die Wegpunkte vom Master/ Traktor muessen absolut aequidistant sein?... 
-    # --> gegeben (vgl. Traktor Wegpunkte)
-    # b) die Geschwindigkeit vom Slave/ Trailer darf nicht gegen Null gehen? (vgl. Formel)
-    # Todo: 
-    # - Rechenfehler (Abweichung von soll/ ist Distanz) --> ggf. mehr Wegpunkte notwendig;
-    # - moeglich nicht alle Keyframes zu setzten? bzw. Verteilung ueber GUI steuern. 
+    # nein, nicht bei distance = konstant; ergibt sich aber bei der "solver_velocity", da dort v = kosntant und frames gleiche
+    # Abstaende haben
+    # ToDo:
     # --> Residuen zum minimieren des Fehlers...
-    Abstand=[]
+    
+    distance=[]
           
     Mx = create_matrix(2,1)
     My = create_matrix(2,1)
@@ -439,15 +435,15 @@ def pursuit_curve_solver_distance(datTraktor, datTrailerStart):
     datTrailer = create_matrix(int_Count,1)
     datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
     
+    nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
+    
     for int_PCurve in range(0,int_Count-1,1): 
         
         Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0][0], datTraktor[int_PCurve][0][1], datTraktor[int_PCurve][0][2]]
         #original: Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
         
         Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0][0], datTraktor[int_PCurve+1][0][1], datTraktor[int_PCurve+1][0][2]]
-        
-        nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
-            
+           
         n[1] = (Sx[T1][0] - Mx[T1][0])/nn
         n[2] = (Sy[T1][0] - My[T1][0])/nn
         n[3] = (Sz[T1][0] - Mz[T1][0])/nn
@@ -464,17 +460,18 @@ def pursuit_curve_solver_distance(datTraktor, datTrailerStart):
         
         datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
         
-        Abstand   = Abstand + [math.pow(
+        # ------------  nur fuer die Ausgabe via writelog:  --------------
+        distance   = distance + [math.pow(
             math.pow((Mx[T2][0]-Sx[T2][0]),2)
             +math.pow((My[T2][0]-Sy[T2][0]),2)
             +math.pow((Mz[T2][0]-Sz[T2][0]),2), 0.5
             )]
         
-        distance_error_abs = - (Abstand[0]-Abstand[int_PCurve])
+        distance_error_abs = - (distance[0]-distance[int_PCurve])
         writelog(' distance_error_abs: %3.3f' % distance_error_abs)
-        distance_error_rel = -100* (Abstand[0]-Abstand[int_PCurve])/Abstand[0]
+        distance_error_rel = -100* (distance[0]-distance[int_PCurve])/distance[0]
         writelog('distance_error_rel: %3.3f' %distance_error_rel + " %")
-        
+        # -----------------------------------------------------------------
 
         Sx[T1][0] = deepcopy(Sx[T2][0])
         Sy[T1][0] = deepcopy(Sy[T2][0])
@@ -486,7 +483,7 @@ def pursuit_curve_solver_distance(datTraktor, datTrailerStart):
 def pursuit_curve_solver_velocity(datTraktor, datTrailerStart):
     # ... nur Kopie von _distance!!!!!!!!!!!!!!!!!!!!!!!
     
-    Abstand=[]
+    distance=[]
           
     Mx = create_matrix(2,1)
     My = create_matrix(2,1)
@@ -508,15 +505,16 @@ def pursuit_curve_solver_velocity(datTraktor, datTrailerStart):
     datTrailer = create_matrix(int_Count,1)
     datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
     
+    nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
+         
+    
     for int_PCurve in range(0,int_Count-1,1): 
         
         Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0][0], datTraktor[int_PCurve][0][1], datTraktor[int_PCurve][0][2]]
         #original: Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
         
         Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0][0], datTraktor[int_PCurve+1][0][1], datTraktor[int_PCurve+1][0][2]]
-        
-        nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
-            
+           
         n[1] = (Sx[T1][0] - Mx[T1][0])/nn
         n[2] = (Sy[T1][0] - My[T1][0])/nn
         n[3] = (Sz[T1][0] - Mz[T1][0])/nn
@@ -533,15 +531,15 @@ def pursuit_curve_solver_velocity(datTraktor, datTrailerStart):
         
         datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
         
-        Abstand   = Abstand + [math.pow(
+        distance   = distance + [math.pow(
             math.pow((Mx[T2][0]-Sx[T2][0]),2)
             +math.pow((My[T2][0]-Sy[T2][0]),2)
             +math.pow((Mz[T2][0]-Sz[T2][0]),2), 0.5
             )]
         
-        distance_error_abs = - (Abstand[0]-Abstand[int_PCurve])
+        distance_error_abs = - (distance[0]-distance[int_PCurve])
         writelog(' distance_error_abs: %3.3f' % distance_error_abs)
-        distance_error_rel = -100* (Abstand[0]-Abstand[int_PCurve])/Abstand[0]
+        distance_error_rel = -100* (distance[0]-distance[int_PCurve])/distance[0]
         writelog('distance_error_rel: %3.3f' %distance_error_rel + " %")
         
 
@@ -576,14 +574,14 @@ def pursuit_curve_solver_squint(datTraktor, datTrailerStart):
     datTrailer = create_matrix(int_Count,1)
     datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
     
+    nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
+        
     for int_PCurve in range(0,int_Count-1,1): 
         
         Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0][0], datTraktor[int_PCurve][0][1], datTraktor[int_PCurve][0][2]]
         #original: Mx[T1][0], My[T1][0], Mz[T1][0] = [datTraktor[int_PCurve][0], datTraktor[int_PCurve][1], datTraktor[int_PCurve][2]]
         
         Mx[T2][0], My[T2][0], Mz[T2][0] = [datTraktor[int_PCurve+1][0][0], datTraktor[int_PCurve+1][0][1], datTraktor[int_PCurve+1][0][2]]
-        
-        nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
             
         n[1] = (Sx[T1][0] - Mx[T1][0])/nn
         n[2] = (Sy[T1][0] - My[T1][0])/nn
