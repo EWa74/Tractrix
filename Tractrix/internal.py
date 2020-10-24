@@ -505,8 +505,10 @@ def pursuit_curve_solver_velocity(datTraktor, datTrailerStart):
     datTrailer = create_matrix(int_Count,1)
     datTrailer[0][0] = [Sx[T1][0], Sy[T1][0], Sz[T1][0]]
     
-    nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
-         
+    #nn= math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
+    # ToDo: pruefen!!!!:  Ableitung von R(t) nach d/dtt -> dt = 1/2 * 1/(sqrt(T2-T1) um von Strecke auf Geschwindigkeit zu differenzieren;
+    # distance und velocity solve mit sinus pruefen
+    nn= 0.5 * math.sqrt(math.pow((Sx[T1][0] - Mx[T1][0]),2) + math.pow((Sy[T1][0] - My[T1][0]),2) + math.pow((Sz[T1][0] - Mz[T1][0]),2))
     
     for int_PCurve in range(0,int_Count-1,1): 
         
@@ -525,23 +527,25 @@ def pursuit_curve_solver_velocity(datTraktor, datTrailerStart):
         
         #Gravity =  0* Sz[T1][0] - 0.1 * math.pow((T2-T1),2) 
         
-        Sx[T2][0] = Sx[T1][0] + Term * n[1]
-        Sy[T2][0] = Sy[T1][0] + Term * n[2]
-        Sz[T2][0] = Sz[T1][0] + Term * n[3]  #+ (Gravity)
+        Sx[T2][0] = Sx[T1][0] + Term * n[1]  
+        Sy[T2][0] = Sy[T1][0] + Term * n[2] 
+        Sz[T2][0] = Sz[T1][0] + Term * n[3]   #+ (Gravity)
         
         datTrailer[int_PCurve+1][0] = Sx[T2][0], Sy[T2][0], Sz[T2][0]
-        
-        distance   = distance + [math.pow(
-            math.pow((Mx[T2][0]-Sx[T2][0]),2)
-            +math.pow((My[T2][0]-Sy[T2][0]),2)
-            +math.pow((Mz[T2][0]-Sz[T2][0]),2), 0.5
-            )]
-        
-        distance_error_abs = - (distance[0]-distance[int_PCurve])
-        writelog(' distance_error_abs: %3.3f' % distance_error_abs)
-        distance_error_rel = -100* (distance[0]-distance[int_PCurve])/distance[0]
-        writelog('distance_error_rel: %3.3f' %distance_error_rel + " %")
-        
+        try:
+            
+            distance   = distance + [math.pow(
+                math.pow((Mx[T2][0]-Sx[T2][0]),2)
+                +math.pow((My[T2][0]-Sy[T2][0]),2)
+                +math.pow((Mz[T2][0]-Sz[T2][0]),2), 0.5
+                )]
+            
+            distance_error_abs = - (distance[0]-distance[int_PCurve])
+            writelog(' distance_error_abs: %3.3f' % distance_error_abs)
+            distance_error_rel = -100* (distance[0]-distance[int_PCurve])/distance[0]
+            writelog('distance_error_rel: %3.3f' %distance_error_rel + " %")
+        except:
+            pass
 
         Sx[T1][0] = deepcopy(Sx[T2][0])
         Sy[T1][0] = deepcopy(Sy[T2][0])
