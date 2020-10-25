@@ -94,7 +94,7 @@ class TRACTRIX_OT_calculate (Operator):
             
         int_curve, datTraktorCurve = read_global_splines(objTraktorPath)  
         
-        datTrailerStart, datTrailerStartRot = get_absolute(
+        datTrailerStart = get_absolute(
             Vector((curTrailer.splines[0].points[0].co.x,
                     curTrailer.splines[0].points[0].co.y,
                     curTrailer.splines[0].points[0].co.z)
