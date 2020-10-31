@@ -179,8 +179,7 @@ def write_global_splines(int_curve, dat_curve, obj_target):
     cur_target = bpy.data.curves[obj_target.data.name]   
      
     for int_PCurve in range(0,int_curve,1):
-        ([cur_target.splines[0].points[int_PCurve].co.xyz), \
-          rot_spline_element = get_relative(
+        cur_target.splines[0].points[int_PCurve].co.xyz, rot_spline_element = get_relative(
               dat_curve[int_PCurve][0], 
               (0,0,0), 
               obj_target.location, 
