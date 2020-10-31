@@ -60,7 +60,6 @@
 
 ${workspace_loc:KUKA_OT_Export/src/curve_export.py}
 
-Bevel add-on
 bpy.data.curves[bpy.context.active_object.data.name].splines[0].bezier_points[0].co=(0,1,1)
 '''  
 #--- ### Header 

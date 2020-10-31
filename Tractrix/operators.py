@@ -38,15 +38,15 @@ class TRACTRIX_OT_setobj2curve (Operator):
         objTraktor     = bpy.context.scene.tractrix.traktor        
         curTraktor     = bpy.data.curves[objTraktorPath.data.name]
         
-        datTraktorCurve = [curTraktor.splines[0].points[0].co.x, curTraktor.splines[0].points[0].co.y, curTraktor.splines[0].points[0].co.z]
-        objTraktor.location, objTraktor.rotation_euler = get_absolute(Vector(datTraktorCurve), (0,0,0), objTraktorPath.location, objTraktorPath.rotation_euler)
+        datTraktorCurve = curTraktor.splines[0].points[0].co.xyz
+        objTraktor.location, objTraktor.rotation_euler = get_absolute(datTraktorCurve, (0,0,0), objTraktorPath.location, objTraktorPath.rotation_euler)
         
         objTrailerPath = bpy.context.scene.tractrix.trailerpath
         objTrailer     = bpy.context.scene.tractrix.trailer 
         curTrailer     = bpy.data.curves[objTrailerPath.data.name]    
         
-        datTrailerCurve = [curTrailer.splines[0].points[0].co.x, curTrailer.splines[0].points[0].co.y, curTrailer.splines[0].points[0].co.z]
-        objTrailer.location,objTrailer.rotation_euler = get_absolute(Vector(datTrailerCurve), (0,0,0), objTrailerPath.location,objTrailerPath.rotation_euler)
+        datTrailerCurve = curTrailer.splines[0].points[0].co.xyz
+        objTrailer.location,objTrailer.rotation_euler = get_absolute(datTrailerCurve, (0,0,0), objTrailerPath.location,objTrailerPath.rotation_euler)
         
         writelog('- - TRACTRIX_OT_setobj2curve done- - - - - - -')
         return {'FINISHED'} 
@@ -95,10 +95,7 @@ class TRACTRIX_OT_calculate (Operator):
         int_curve, datTraktorCurve = read_global_splines(objTraktorPath)  
         
         datTrailerStart = get_absolute(
-            Vector((curTrailer.splines[0].points[0].co.x,
-                    curTrailer.splines[0].points[0].co.y,
-                    curTrailer.splines[0].points[0].co.z)
-                    ), 
+            Vector((curTrailer.splines[0].points[0].co.xyz)), 
                     (0,0,0),
                     objTrailerPath.location, 
                     objTrailerPath.rotation_euler

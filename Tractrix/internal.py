@@ -179,9 +179,7 @@ def write_global_splines(int_curve, dat_curve, obj_target):
     cur_target = bpy.data.curves[obj_target.data.name]   
      
     for int_PCurve in range(0,int_curve,1):
-        ([cur_target.splines[0].points[int_PCurve].co.x, 
-          cur_target.splines[0].points[int_PCurve].co.y, 
-          cur_target.splines[0].points[int_PCurve].co.z]), \
+        ([cur_target.splines[0].points[int_PCurve].co.xyz), \
           rot_spline_element = get_relative(
               dat_curve[int_PCurve][0], 
               (0,0,0), 
@@ -228,7 +226,7 @@ def set_keyframes(obj, cur, objPath, int_curve, TIMEPTS):
         writelog(n)
         bpy.data.scenes['Scene'].frame_set(time_to_frame(TIMEPTS[n])) 
 
-        ob.location, ob.rotation_euler = get_absolute(Vector((cur.splines[0].points[n].co.x,cur.splines[0].points[n].co.y,cur.splines[0].points[n].co.z)), (0,0,0),objPath.location, objPath.rotation_euler)
+        ob.location, ob.rotation_euler = get_absolute(Vector((cur.splines[0].points[n].co.xyz)), (0,0,0),objPath.location, objPath.rotation_euler)
         
         #ob.location = [cur.splines[0].points[n].co.x, cur.splines[0].points[n].co.y, cur.splines[0].points[n].co.z]
         
