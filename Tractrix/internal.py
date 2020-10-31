@@ -163,7 +163,7 @@ def read_global_splines(objPath):
     for int_PCurve in range(0,int_curve,1):       
         
         # mit 'get_absolute' werden die GLOBALEN Punkte verwendet:
-        datPath[int_PCurve][0:3] = get_absolute(curObj.splines[0].points[int_PCurve].co, (0,0,0), objPath.location, objPath.rotation_euler)
+        datPath[int_PCurve][0:3] = get_absolute(curObj.splines[0].points[int_PCurve].co.xyz, (0,0,0), objPath.location, objPath.rotation_euler)
         # in der alten Version wurden nur die LOKALEN Punkte (d.h. bezogen auf den Origin) verwendet:
         #datPath[int_PCurve][0:3] = [curObj.splines[0].points[int_PCurve].co.x, curObj.splines[0].points[int_PCurve].co.y, curObj.splines[0].points[int_PCurve].co.z]
  
