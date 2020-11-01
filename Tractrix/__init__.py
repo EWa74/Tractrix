@@ -173,11 +173,15 @@ class TRACTRIX_PT_Panel(Panel):
     
             # velocity_trailer - Berechnung 
             bpy.context.scene.tractrix.velocity_trailer = obj_velocity(objTrailer)
-            
+             
             #tractrix.way_trailer - Berechnung 
             if frame_before != frame_now:
                 bpy.context.scene.tractrix.way_trailer = bpy.context.scene.tractrix.way_trailer + obj_way(objTrailer, frame_now, frame_before)
                                
+            # velocity_factor traktor/trailer - Berechnung 
+            bpy.context.scene.tractrix.velocity_factor_calc = obj_velocity_fac_calc(objTraktor, objTrailer)
+            
+            
             #ToDo: tractrix.squint_angle - Berechnung 
         
         except:
@@ -212,6 +216,7 @@ class TRACTRIX_PT_Panel(Panel):
         
         col.operator("tractrix.setobj2curve", text="2. set 2 path")
         col.prop(scene.tractrix, "solver_mode", icon = 'CON_ROTLIKE', text = "Sover")
+        col.prop(scene.tractrix, "velocity_factor", text = "velocity factor: ")
         
         col.operator("tractrix.calculate", text="calculate path")        
 
@@ -227,6 +232,7 @@ class TRACTRIX_PT_Panel(Panel):
         
         col.label(icon='CON_OBJECTSOLVER', text="v traktor:   %3.3f" %scene.tractrix.velocity_traktor)        
         col.label(icon='TRACKER',          text="v trailer:   %3.3f" %scene.tractrix.velocity_trailer)
+        col.label(icon='TRACKER',          text="v factor:   %3.3f" %scene.tractrix.velocity_factor_calc)
         col.label(icon='DRIVER_ROTATIONAL_DIFFERENCE', text="squint angle: %3.3f" %scene.tractrix.squint_angle)
 
             
@@ -304,6 +310,14 @@ class tractrixProperty(PropertyGroup):
     velocity_trailer: FloatProperty(
         name="velocity Trailer",
         default= 0.0        
+        )  
+    velocity_factor: FloatProperty(
+        name="velocity factor Tractor/Trailer",
+        default= 1.0        
+        )  
+    velocity_factor_calc: FloatProperty(
+        name="velocity factor Tractor-Trailer calculated",
+        default= 1.0        
         )  
     squint_angle: FloatProperty(
         name="squint angle Traktor-Trailer",
