@@ -475,7 +475,9 @@ def pursuit_curve_solver_distance(datTraktor, datTrailerStart):
     return datTrailer
 
 def pursuit_curve_solver_velocity(datTraktor, datTrailerStart, velocity_fac):
-# TEST: Hundekurve
+    # Hundekurve: v = konstant
+    # Status: OK
+    # ToDo: unterscheide: konstant bei t=0 oder (wie jetzt) delta t
     
     distance=[]
 
@@ -492,23 +494,28 @@ def pursuit_curve_solver_velocity(datTraktor, datTrailerStart, velocity_fac):
     datTrailer          = create_matrix(int_Count,2)
     datTrailer[0][0]    = [Sx_T1, Sy_T1, Sz_T1] # [0][0] location
     datTrailer[:][1]    = datTrailerStart[1]    # [:][1] rotation, fuer alle Elemente da Rotation nicht genutzt
-    
+
+
     for int_PCurve in range(0,int_Count-1,1): 
         
         Mx_T1, My_T1, Mz_T1 = [datTraktor[int_PCurve][0][0],   datTraktor[int_PCurve][0][1],   datTraktor[int_PCurve][0][2]]
         Mx_T2, My_T2, Mz_T2 = [datTraktor[int_PCurve+1][0][0], datTraktor[int_PCurve+1][0][1], datTraktor[int_PCurve+1][0][2]]       
+   
       
+        # aktueller Abstand Master-Slave:
         nn= math.sqrt(math.pow((Sx_T1 - Mx_T1),2) + math.pow((Sy_T1 - My_T1),2) + math.pow((Sz_T1 - Mz_T1),2))
-
-        ux = velocity_fac * 0.035 #1 *(Mx_T1 -Sx_T1)
-        uy = velocity_fac * 0.035 #1 *(Mx_T1 -Sx_T1)
-        uz = velocity_fac * 0.035 #1 *(Mx_T1 -Sx_T1)
         
-        Sx_T2 = Sx_T1 + ux* (Mx_T1 -Sx_T1)/nn
-        Sy_T2 = Sy_T1 + uy* (My_T1 -Sy_T1)/nn
-        Sz_T2 = Sz_T1 + uz* (Mz_T1 -Sz_T1)/nn  
+        nn_v= math.sqrt(math.pow((Mx_T2 - Mx_T1),2) + math.pow((My_T2 - My_T1),2) + math.pow((Mz_T2 - Mz_T1),2))
 
-        
+        ux = velocity_fac *nn_v
+        uy = velocity_fac *nn_v
+        uz = velocity_fac *nn_v
+                
+        Sx_T2 = Sx_T1 + ux* (Mx_T2 -Sx_T1)/nn
+        Sy_T2 = Sy_T1 + uy* (My_T2 -Sy_T1)/nn
+        Sz_T2 = Sz_T1 + uz* (Mz_T2 -Sz_T1)/nn  
+   
+   
         datTrailer[int_PCurve+1][0] = Sx_T2, Sy_T2, Sz_T2 #[0] - location, [1] - rotation
         
         # ------------  nur fuer die Ausgabe via writelog:  --------------
