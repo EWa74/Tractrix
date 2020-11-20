@@ -596,7 +596,67 @@ def pursuit_curve_solver_squint(datTraktor, datTrailerStart):
         
     return datTrailer
     
+def pursuit_curve_solver_guide_curve(datTraktor, datTrailerStart):
+    # Kopie von '_sovler_distance'
+    
+    distance=[]
 
+    Mx_T1 = []; My_T1 = []; Mz_T1 = [];
+    Sx_T1 = []; Sy_T1 = []; Sz_T1 = [];
+    Mx_T2 = []; My_T2 = []; Mz_T2 = [];
+    Sx_T2 = []; Sy_T2 = []; Sz_T2 = [];
+        
+    Term = float()
+    
+    Sx_T1 = datTrailerStart[0][0]
+    Sy_T1 = datTrailerStart[0][1]
+    Sz_T1 = datTrailerStart[0][2]
+    
+    int_Count           = len(datTraktor[:][:])
+    datTrailer          = create_matrix(int_Count,2)
+    datTrailer[0][0]    = [Sx_T1, Sy_T1, Sz_T1] # [0][0] location
+    datTrailer[:][1]    = datTrailerStart[1]    # [:][1] rotation, fuer alle Elemente da Rotation nicht genutzt
+        
+    Mx_T1, My_T1, Mz_T1 = [datTraktor[0][0][0],   datTraktor[0][0][1],   datTraktor[0][0][2]]
+    Mx_T2, My_T2, Mz_T2 = [datTraktor[0+1][0][0], datTraktor[0+1][0][1], datTraktor[0+1][0][2]]
+    nn= math.sqrt(math.pow((Mx_T1 - Sx_T1),2) + math.pow((My_T1 - Sy_T1),2) + math.pow((Mz_T1 - Sz_T1),2))
+    
+   
+    for int_PCurve in range(0,int_Count-1,1): 
+        
+        Mx_T1, My_T1, Mz_T1 = [datTraktor[int_PCurve][0][0],   datTraktor[int_PCurve][0][1],   datTraktor[int_PCurve][0][2]]
+        Mx_T2, My_T2, Mz_T2 = [datTraktor[int_PCurve+1][0][0], datTraktor[int_PCurve+1][0][1], datTraktor[int_PCurve+1][0][2]]       
+        
+        
+        Term = ((Mx_T2 -Mx_T1) *(Mx_T1 - Sx_T1)+
+                (My_T2 -My_T1) *(My_T1 - Sy_T1)+
+                (Mz_T2 -Mz_T1) *(Mz_T1 - Sz_T1))/nn
+              
+        Sx_T2 = Sx_T1 + Term * (Mx_T1 - Sx_T1)/nn
+        Sy_T2 = Sy_T1 + Term * (My_T1 - Sy_T1)/nn
+        Sz_T2 = Sz_T1 + Term * (Mz_T1 - Sz_T1)/nn 
+                                
+        datTrailer[int_PCurve+1][0] = Sx_T2, Sy_T2, Sz_T2 #[0] - location, [1] - rotation
+        
+        # ------------  nur fuer die Ausgabe via writelog:  --------------
+        distance   = distance + [math.pow(
+            math.pow((Mx_T2-Sx_T2),2)
+            +math.pow((My_T2-Sy_T2),2)
+            +math.pow((Mz_T2-Sz_T2),2), 0.5
+            )]
+        
+        distance_error_abs = - (distance[0]-distance[int_PCurve])
+        writelog(' distance_error_abs: %3.3f' % distance_error_abs)
+        distance_error_rel = -100* (distance[0]-distance[int_PCurve])/distance[0]
+        writelog('distance_error_rel: %3.3f' %distance_error_rel + " %")
+        # -----------------------------------------------------------------
+
+        Sx_T1 = deepcopy(Sx_T2)
+        Sy_T1 = deepcopy(Sy_T2)
+        Sz_T1 = deepcopy(Sz_T2)
+        
+    return datTrailer
+    
 class create_matrix(object):
     writelog('_____________________________________________________________________________')
     writelog('create_matrix')

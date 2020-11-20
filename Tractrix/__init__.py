@@ -273,9 +273,10 @@ class tractrixProperty(PropertyGroup):
         )
 
     intSolverItems = (
-        ('distance'  , 'Distance'    , 'Calculate path with constant distance to traktor (Tractrix)'),
-        ('velocity'  , 'Velocity'    , 'Calculate path with constant velocity (Hundekurve)'         ),
-        ('squint'    , 'Squint angle', 'Squint angle curve'                                         )
+        ('distance'   , 'Distance'    , 'Calculate path with constant distance to traktor (Tractrix)'),
+        ('velocity'   , 'Velocity'    , 'Calculate path with constant velocity (Hundekurve)'         ),
+        ('squint'     , 'Squint angle', 'Squint angle curve'                                         ),
+        ('guide_curve', 'Guide Curve' , 'oposite of <Distance>'                                       )
         )
     solver_mode: EnumProperty(
         items      = intSolverItems,
