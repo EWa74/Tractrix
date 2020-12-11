@@ -260,7 +260,7 @@ def clear_keyframes(obj):
 
 
  
-def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle):
+def get_relative_old(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle):
     # dataPATHPTS_Loc/Rot [rad]: absolute
     # BASEPos_Koord/Angle [rad]: absolute
     # Aufruf von: Diese Funktion wird nur bei Refresh und Import aufgerufen.
@@ -331,7 +331,144 @@ def get_relative(dataPATHPTS_Loc, dataPATHPTS_Rot, BASEPos_Koord, BASEPos_Angle)
     writelog('_____________________________________________________________________________')
     return PATHPTS_Koord, PATHPTS_Angle 
 
-def get_absolute(Obj_Koord, Obj_Angle, BASEPos_Koord, BASEPos_Angle): #objBase
+
+
+def get_relative(Vector_loc2, Vector_rot2, Vector_Punkt_loc, Vector_Punkt_rot):
+    # World2Local - OK
+    # Transformation eines Punkt-Vektors von local1 nach local2
+    # Status: OK
+    
+    # Punkt: (bezogen auf local1 (World))
+    #Vector_Punkt_loc = Vector(dataPATHPTS_Loc)
+    #Vector_Punkt_rot = Vector(dataPATHPTS_Rot)
+    
+    # Position des neuen Koordinatensystems in Bezug auf local1:
+    #Vector_loc2 = Vector(BASEPos_Koord) #(0.25, 0.75, 0.5)
+    # Ausrichtung des neuen Koordinatensystems in Bezug auf local1
+    #Vector_rot2 = Vector((math.pi/3, math.pi/4, math.pi/2))
+    #Vector_rot2 = Vector(BASEPos_Angle) # Blichrichtung am Punkt
+    
+    #=================================================================
+    # Translationsmatrix des local2-Koordinatensystem 
+    # in Bezug auf sein altes Koordinatensystem:
+    Mtranslation2 = mathutils.Matrix.Translation(Vector_loc2)
+    # Rotationsmatrix des local2-Koordinatensystem 
+    # in Bezug auf sein altes Koordinatensystem:
+    Mrot2X = mathutils.Matrix.Rotation(Vector_rot2[0], 4, 'X')
+    Mrot2Y = mathutils.Matrix.Rotation(Vector_rot2[1], 4, 'Y')
+    Mrot2Z = mathutils.Matrix.Rotation(Vector_rot2[2], 4, 'Z')
+    Mrot2 = Mrot2Z @ Mrot2Y @ Mrot2X  # XYZ
+    Mrot2Z = Mrot2Y = Mrot2X = 0
+    
+    # Transformationsmatrix
+    # neues Koordinatensystem mit Ursprung am Vector_loc2
+    # und Ausrichtung wie Vector_rot2
+    # d.h. Verschiebung von Mrot2 auf die Position von Mtrans2
+    local2 = Mtranslation2 @ Mrot2 
+    Mtranslation2 = Mrot2 = 0
+    #=================================================================
+    #=================================================================
+    # Translationsmatrix des Punktsvektors 
+    # in Bezug auf sein altes Koordinatensystem local1:
+    MtranslationP = mathutils.Matrix.Translation(Vector_Punkt_loc)
+    # Rotationsmatrix des Punktsvektors 
+    # in Bezug auf sein altes Koordinatensystem:
+    MrotPX = mathutils.Matrix.Rotation(Vector_Punkt_rot[0], 4, 'X')
+    MrotPY = mathutils.Matrix.Rotation(Vector_Punkt_rot[1], 4, 'Y')
+    MrotPZ = mathutils.Matrix.Rotation(Vector_Punkt_rot[2], 4, 'Z')
+    MrotP = MrotPZ @ MrotPY @ MrotPX  # XYZ
+    MrotPZ = MrotPY = MrotPX = 0
+    
+    # Transformationsmatrix
+    # neues Koordinatensystem mit Ursprung am Vector_Punkt_loc
+    # und Ausrichtung in Bezug auf Vector_Punkt_rot
+    # d.h. Verschiebung von MrotP auf die Position von local2
+    MtransformationP = MtranslationP @ MrotP
+    MtranslationP = MrotP = 0
+    
+    
+    # Umkehrung der Transformation
+    # Die Transformationsmatrix von Vector_Punkt wird auf local2 abgebildet:
+    MtranslationP2 = MtransformationP.inverted() @ local2 
+    
+    Vector_Punkt_loc2 = MtranslationP2.translation
+    Vector_Punkt_rot2 = MtranslationP2.to_euler('XYZ')
+
+
+    PATHPTS_Koord = Vector_Punkt_loc2
+    PATHPTS_Angle = Vector_Punkt_rot2
+
+    return PATHPTS_Koord, PATHPTS_Angle 
+
+def get_absolute(Vector_loc2, Vector_rot2, Vector_Punkt_loc, Vector_Punkt_rot):
+    # Local2World - OK
+    # Transformation eines Punkt-Vektors von local1 nach local2
+    # Status: OK
+    
+    # Punkt: (bezogen auf local1 (Loccal))
+    #Vector_Punkt_loc = Vector(dataPATHPTS_Loc)
+    #Vector_Punkt_rot = Vector(dataPATHPTS_Rot)
+    
+    # Position des neuen Koordinatensystems in Bezug auf local1:
+    #Vector_loc2 = Vector(BASEPos_Koord) #(0.25, 0.75, 0.5)
+    # Ausrichtung des neuen Koordinatensystems in Bezug auf local1
+    #Vector_rot2 = Vector((math.pi/3, math.pi/4, math.pi/2))
+    #Vector_rot2 = Vector(BASEPos_Angle) # Blichrichtung am Punkt
+    
+    #=================================================================
+    # Translationsmatrix des local2-Koordinatensystem 
+    # in Bezug auf sein altes Koordinatensystem:
+    Mtranslation2 = mathutils.Matrix.Translation(Vector_loc2)
+    # Rotationsmatrix des local2-Koordinatensystem 
+    # in Bezug auf sein altes Koordinatensystem:
+    Mrot2X = mathutils.Matrix.Rotation(Vector_rot2[0], 4, 'X')
+    Mrot2Y = mathutils.Matrix.Rotation(Vector_rot2[1], 4, 'Y')
+    Mrot2Z = mathutils.Matrix.Rotation(Vector_rot2[2], 4, 'Z')
+    Mrot2 = Mrot2Z @ Mrot2Y @ Mrot2X  # XYZ
+    Mrot2Z = Mrot2Y = Mrot2X = 0
+    
+    # Transformationsmatrix
+    # neues Koordinatensystem mit Ursprung am Vector_loc2
+    # und Ausrichtung wie Vector_rot2
+    # d.h. Verschiebung von Mrot2 auf die Position von Mtrans2
+    local2 = Mtranslation2 @ Mrot2 
+    Mtranslation2 = Mrot2 = 0
+    #=================================================================
+    #=================================================================
+    # Translationsmatrix des Punktsvektors 
+    # in Bezug auf sein altes Koordinatensystem local1:
+    MtranslationP = mathutils.Matrix.Translation(Vector_Punkt_loc)
+    # Rotationsmatrix des Punktsvektors 
+    # in Bezug auf sein altes Koordinatensystem:
+    MrotPX = mathutils.Matrix.Rotation(Vector_Punkt_rot[0], 4, 'X')
+    MrotPY = mathutils.Matrix.Rotation(Vector_Punkt_rot[1], 4, 'Y')
+    MrotPZ = mathutils.Matrix.Rotation(Vector_Punkt_rot[2], 4, 'Z')
+    MrotP = MrotPZ @ MrotPY @ MrotPX  # XYZ
+    MrotPZ = MrotPY = MrotPX = 0
+    
+    # Transformationsmatrix
+    # neues Koordinatensystem mit Ursprung am Vector_Punkt_loc
+    # und Ausrichtung in Bezug auf Vector_Punkt_rot
+    # d.h. Verschiebung von MrotP auf die Position von local2
+    MtransformationP = MtranslationP @ MrotP.transposed() #einzige Aenderung zu get_relative
+    MtranslationP = MrotP = 0
+
+    
+    # Umkehrung der Transformation
+    # Die Transformationsmatrix von Vector_Punkt wird auf local2 abgebildet:
+    MtranslationP2 = MtransformationP @ local2 
+    
+    Vector_Punkt_loc2 = MtranslationP2.translation
+    Vector_Punkt_rot2 = MtranslationP2.to_euler('XYZ')
+
+
+    PATHPTS_Koord = Vector_Punkt_loc2
+    PATHPTS_Angle = Vector_Punkt_rot2
+
+    return PATHPTS_Koord, PATHPTS_Angle 
+
+
+def get_absolute_old(Obj_Koord, Obj_Angle, BASEPos_Koord, BASEPos_Angle): #objBase
     '''
     BASEPos_Koord = objBase.location
     BASEPos_Angle = objBase.rotation_euler
