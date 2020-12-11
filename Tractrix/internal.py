@@ -467,7 +467,7 @@ def get_absolute(Vector_loc2, Vector_rot2, Vector_Punkt_loc, Vector_Punkt_rot):
 
     return PATHPTS_Koord, PATHPTS_Angle 
 
-
+ 
 def get_absolute_old(Obj_Koord, Obj_Angle, BASEPos_Koord, BASEPos_Angle): #objBase
     '''
     BASEPos_Koord = objBase.location
