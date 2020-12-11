@@ -364,7 +364,7 @@ def get_relative(Vector_loc2, Vector_rot2, Vector_Punkt_loc, Vector_Punkt_rot):
     # neues Koordinatensystem mit Ursprung am Vector_loc2
     # und Ausrichtung wie Vector_rot2
     # d.h. Verschiebung von Mrot2 auf die Position von Mtrans2
-    local2 = Mtranslation2 @ Mrot2 
+    Mlocal2 = Mtranslation2 @ Mrot2 
     Mtranslation2 = Mrot2 = 0
     #=================================================================
     #=================================================================
@@ -389,7 +389,7 @@ def get_relative(Vector_loc2, Vector_rot2, Vector_Punkt_loc, Vector_Punkt_rot):
     
     # Umkehrung der Transformation
     # Die Transformationsmatrix von Vector_Punkt wird auf local2 abgebildet:
-    MtranslationP2 = MtransformationP.inverted() @ local2 
+    MtranslationP2 = MtransformationP.inverted() @ Mlocal2 
     
     Vector_Punkt_loc2 = MtranslationP2.translation
     Vector_Punkt_rot2 = MtranslationP2.to_euler('XYZ')
@@ -431,7 +431,7 @@ def get_absolute(Vector_loc2, Vector_rot2, Vector_Punkt_loc, Vector_Punkt_rot):
     # neues Koordinatensystem mit Ursprung am Vector_loc2
     # und Ausrichtung wie Vector_rot2
     # d.h. Verschiebung von Mrot2 auf die Position von Mtrans2
-    local2 = Mtranslation2 @ Mrot2 
+    Mlocal2 = Mtranslation2 @ Mrot2 
     Mtranslation2 = Mrot2 = 0
     #=================================================================
     #=================================================================
@@ -456,7 +456,7 @@ def get_absolute(Vector_loc2, Vector_rot2, Vector_Punkt_loc, Vector_Punkt_rot):
     
     # Umkehrung der Transformation
     # Die Transformationsmatrix von Vector_Punkt wird auf local2 abgebildet:
-    MtranslationP2 = MtransformationP @ local2 
+    MtranslationP2 = MtransformationP @ Mlocal2 
     
     Vector_Punkt_loc2 = MtranslationP2.translation
     Vector_Punkt_rot2 = MtranslationP2.to_euler('XYZ')
