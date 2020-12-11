@@ -583,7 +583,7 @@ def pursuit_curve_solver_distance(datTraktor, datTrailerStart):
                 (My_T2 -My_T1) *(My_T1 - Sy_T1)+
                 (Mz_T2 -Mz_T1) *(Mz_T1 - Sz_T1))/nn
               
-        Sx_T2 = Sx_T1 + Term * (Mx_T1 - Sx_T1)/nn
+        Sx_T2 = Sx_T1 + Term * (Mx_T1 - Sx_T1)/nn #Mx_T1 oder Mx_T2 ?? Fehler scheinbar mit Mx_T1 kleiner; aber Mx_T2 halte ich fuer richtig
         Sy_T2 = Sy_T1 + Term * (My_T1 - Sy_T1)/nn
         Sz_T2 = Sz_T1 + Term * (Mz_T1 - Sz_T1)/nn  
         
@@ -673,7 +673,8 @@ def pursuit_curve_solver_velocity(datTraktor, datTrailerStart, velocity_fac):
     
 
 def pursuit_curve_solver_squint(datTraktor, datTrailerStart):
-    # nur Fakrot 0.5 für konst. Geschw. ; Erg. NOK; Herleitung unvollstaendig
+    #  ; Erg. NOK; Herleitung unvollstaendig
+    # Test von Distance solver mit Korrektur
     
     distance=[]
 
@@ -683,6 +684,9 @@ def pursuit_curve_solver_squint(datTraktor, datTrailerStart):
     Sx_T2 = []; Sy_T2 = []; Sz_T2 = [];
         
     Term = float()
+    TermX = float()
+    TermY = float()
+    TermZ = float()
     
     Sx_T1 = datTrailerStart[0][0]
     Sy_T1 = datTrailerStart[0][1]
@@ -703,14 +707,18 @@ def pursuit_curve_solver_squint(datTraktor, datTrailerStart):
         Mx_T1, My_T1, Mz_T1 = [datTraktor[int_PCurve][0][0],   datTraktor[int_PCurve][0][1],   datTraktor[int_PCurve][0][2]]
         Mx_T2, My_T2, Mz_T2 = [datTraktor[int_PCurve+1][0][0], datTraktor[int_PCurve+1][0][1], datTraktor[int_PCurve+1][0][2]]       
         
-        
+        '''
         Term = ((Mx_T2 -Mx_T1) *(Mx_T1 - Sx_T1)+
                 (My_T2 -My_T1) *(My_T1 - Sy_T1)+
                 (Mz_T2 -Mz_T1) *(Mz_T1 - Sz_T1))/nn
-              
-        Sx_T2 = Sx_T1 + Term * (Mx_T1 - Sx_T1)/nn
-        Sy_T2 = Sy_T1 + Term * (My_T1 - Sy_T1)/nn
-        Sz_T2 = Sz_T1 + Term * (Mz_T1 - Sz_T1)/nn 
+        '''
+        TermX = (Mx_T2 -Mx_T1) *(Mx_T1 - Sx_T1)/nn
+        TermY = (My_T2 -My_T1) *(My_T1 - Sy_T1)/nn
+        TermZ = (Mz_T2 -Mz_T1) *(Mz_T1 - Sz_T1)/nn      
+
+        Sx_T2 = Sx_T1 - TermX 
+        Sy_T2 = Sy_T1 - TermY
+        Sz_T2 = Sz_T1 - TermZ  
                                 
         datTrailer[int_PCurve+1][0] = Sx_T2, Sy_T2, Sz_T2 #[0] - location, [1] - rotation
         
@@ -734,7 +742,7 @@ def pursuit_curve_solver_squint(datTraktor, datTrailerStart):
     return datTrailer
     
 def pursuit_curve_solver_guide_curve(datTraktor, datTrailerStart):
-    # Kopie von '_sovler_distance'
+    # basierend auf Kopie von '_sovler_distance'
     
     distance=[]
 
@@ -757,6 +765,7 @@ def pursuit_curve_solver_guide_curve(datTraktor, datTrailerStart):
     Mx_T1, My_T1, Mz_T1 = [datTraktor[0][0][0],   datTraktor[0][0][1],   datTraktor[0][0][2]]
     Mx_T2, My_T2, Mz_T2 = [datTraktor[0+1][0][0], datTraktor[0+1][0][1], datTraktor[0+1][0][2]]
     nn= math.sqrt(math.pow((Mx_T1 - Sx_T1),2) + math.pow((My_T1 - Sy_T1),2) + math.pow((Mz_T1 - Sz_T1),2))
+    nnM= math.sqrt(math.pow((Mx_T2 - Mx_T1),2) + math.pow((My_T2 - My_T1),2) + math.pow((Mz_T2 - Mz_T1),2))
     
    
     for int_PCurve in range(0,int_Count-1,1): 
@@ -765,14 +774,16 @@ def pursuit_curve_solver_guide_curve(datTraktor, datTrailerStart):
         Mx_T2, My_T2, Mz_T2 = [datTraktor[int_PCurve+1][0][0], datTraktor[int_PCurve+1][0][1], datTraktor[int_PCurve+1][0][2]]       
         
         
-        Term = ((Mx_T2 -Mx_T1) *(Mx_T1 - Sx_T1)+
-                (My_T2 -My_T1) *(My_T1 - Sy_T1)+
-                (Mz_T2 -Mz_T1) *(Mz_T1 - Sz_T1))/nn
+        Term = ((Mx_T2 -Mx_T1) *(Mx_T2 - Mx_T1)+
+                (My_T2 -My_T1) *(My_T2 - My_T1)+
+                (Mz_T2 -Mz_T1) *(Mz_T2 - Mz_T1))/nn
               
-        Sx_T2 = Sx_T1 + Term * (Mx_T1 - Sx_T1)/nn
-        Sy_T2 = Sy_T1 + Term * (My_T1 - Sy_T1)/nn
-        Sz_T2 = Sz_T1 + Term * (Mz_T1 - Sz_T1)/nn 
-                                
+        
+        Sx_T2 = Sx_T1 + Term * (Mx_T2 - Mx_T1)/nn
+        Sy_T2 = Sy_T1 + Term * (My_T2 - My_T1)/nn
+        Sz_T2 = Sz_T1 + Term * (Mz_T2 - Mz_T1)/nnM 
+        
+                              
         datTrailer[int_PCurve+1][0] = Sx_T2, Sy_T2, Sz_T2 #[0] - location, [1] - rotation
         
         # ------------  nur fuer die Ausgabe via writelog:  --------------
