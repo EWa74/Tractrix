@@ -105,6 +105,8 @@ class TRACTRIX_OT_calculate (Operator):
             datTrailerCurve = pursuit_curve_solver_distance(datTraktorCurve, datTrailerStart)
         elif solver_mode == 'velocity':
             datTrailerCurve = pursuit_curve_solver_velocity(datTraktorCurve, datTrailerStart, velocity_fac)
+        elif solver_mode == 'guide_curve':
+            datTrailerCurve = pursuit_curve_solver_guide_curve(datTraktorCurve, datTrailerStart)
         elif solver_mode == 'squint':
             datTrailerCurve = pursuit_curve_solver_squint(datTraktorCurve, datTrailerStart)
         else:
